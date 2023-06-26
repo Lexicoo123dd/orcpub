@@ -1733,6 +1733,12 @@
         :page 72
         :description "When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die and must use the new roll, even if the new roll is a 1 or a 2. The weapon must have the two-handed or versatile property for you to gain this benefit."})]})
    (t/option-cfg
+    {:name "Interception"
+     :modifiers [(modifiers/trait-cfg
+       {:name "Interception Fighting Style"
+        :page 72
+        :description "When a creature you can see hits a target, other than you, within 5 feet of you with an attack, you can use your reaction to reduce the damage the target takes by 1d10 + your proficiency bonus (to a minimum of 0 damage). You must be wielding a shield or a simple or martial weapon to use this reaction."})]})
+   (t/option-cfg
     {:name "Protection"
      :modifiers [(modifiers/reaction
        {:name "Protection Fighting Style"

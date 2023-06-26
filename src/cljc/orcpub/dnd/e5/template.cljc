@@ -1448,6 +1448,43 @@
       [:td 15]
       [:td 9]]]]])
 
+(def cyra-point-buy-help
+  [:div
+   [:div "This allows you fine-grained control to customize your scores. You get 25 points to assign to the different scores, each value has a cost determined by the table below:"]
+   [:table.m-t-10
+    [:thead
+     [:tr.f-w-b
+      [:th.p-r-5 "Score"]
+      [:th.p-r-10 "Cost"]
+      [:th.p-r-5 "Score"]
+      [:th "Cost"]]]
+    [:tbody
+     [:tr
+      [:td 8]
+      [:td 0]
+      [:td 13]
+      [:td 5]]
+     [:tr
+      [:td 9]
+      [:td 1]
+      [:td 14]
+      [:td 6]]
+     [:tr
+      [:td 10]
+      [:td 2]
+      [:td 15]
+      [:td 8]]
+     [:tr
+      [:td 11]
+      [:td 3]
+      [:td 16]
+      [:td 10]]
+     [:tr
+      [:td 12]
+      [:td 4]
+      [:td 7]
+      [:td 13]]]]])
+
 (defn custom-race-builder []
   [:div.m-t-10
    [:span "Name"]
@@ -1483,6 +1520,10 @@
                {::t/name "Point Buy"
                 ::t/key :point-buy
                 ::t/help point-buy-help
+                ::t/modifiers [(mod5e/deferred-abilities)]}
+               {::t/name "Cyra Point Buy"
+                ::t/key :cyra-point-buy
+                ::t/help cyra-point-buy-help
                 ::t/modifiers [(mod5e/deferred-abilities)]}
                {::t/name "Standard Roll"
                 ::t/key :standard-roll

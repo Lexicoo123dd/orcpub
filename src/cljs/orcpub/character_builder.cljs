@@ -806,7 +806,21 @@
    14 7
    15 9})
 
+(def cyra-score-costs
+  {8 0
+   9 1
+   10 2
+   11 3
+   12 4
+   13 5
+   14 6
+   15 8
+   16 10
+   17 13})
+
 (def point-buy-points 27)
+
+(def cyra-point-buy-points 25)
 
 (defn ability-value [v]
   [:div.f-s-18.f-w-b v])
@@ -1005,6 +1019,57 @@
                               (if (not increase-disabled?) (set-abilities! (update abilities k inc)))))}]]]))
          char5e/ability-keys))]])))
 
+(defn cyra-point-buy-abilities [built-template asi-selections]
+  (let [default-base-abilities (char5e/abilities 8 8 8 8 8 8)
+        abilities (or @(subscribe [::char5e/ability-scores-option-value])
+                      default-base-abilities)
+        points-used (apply + (map (comp cyra-score-costs second) abilities))
+        points-remaining (- cyra-point-buy-points points-used)
+        total-abilities @(subscribe [::char5e/abilities])]
+    (abilities-component
+     built-template
+     asi-selections
+     [:div
+      [:div.flex.justify-cont-s-a
+       (for [i (range 6)]
+         ^{:key i}
+         [:div
+          (ability-value 8)
+          [:div.m-t-10 "+"]])]
+      [:div.flex.justify-cont-s-b.m-t-10.align-items-c
+       [:div.m-l-5 "Point Buys"]
+       (remaining-component 25 points-remaining)]
+      [:div.flex.justify-cont-s-a
+       (doall
+        (map
+         (fn [k]
+           (let [v (abilities k)
+                 increase-disabled? (or (zero? points-remaining)
+                                        (= 17 v)
+                                        (>= (total-abilities k) 20)
+                                        (> (- (cyra-score-costs (inc v))
+                                              (cyra-score-costs v))
+                                           points-remaining))
+                 decrease-disabled? (or (<= v 8) (>= points-remaining cyra-point-buy-points))]
+             ^{:key k}
+             [:div.t-a-c
+              (ability-subtitle "bought")
+              (ability-value (- v 8))
+              [:div.f-s-11.f-w-b (str "(" (cyra-score-costs v) " pts)")]
+              [:div.f-s-16
+               [:i.fa.fa-minus-circle.orange
+                {:class-name (if decrease-disabled? "opacity-5 cursor-disabled")
+                 :on-click (stop-prop-fn
+                            (fn [e]
+                              (if (not decrease-disabled?)
+                                (set-abilities! (update abilities k dec)))))}]
+               [:i.fa.fa-plus-circle.orange.m-l-5
+                {:class-name (if increase-disabled? "opacity-5 cursor-disabled")
+                 :on-click (stop-prop-fn
+                            (fn [_]
+                              (if (not increase-disabled?) (set-abilities! (update abilities k inc)))))}]]]))
+         char5e/ability-keys))]])))
+
 (defn abilities-standard []
   [:div.flex.justify-cont-s-a
    (let [abilities (or @(subscribe [::char5e/ability-scores-option-value])
@@ -1153,6 +1218,12 @@
                :point-buy
                selected-variant
                (point-buy-abilities built-template asi-selections)
+               point-buy-starting-abilities-fn)
+              (ability-variant-option-selector
+               "Cyra Point Buy"
+               :cyra-point-buy
+               selected-variant
+               (cyra-point-buy-abilities built-template asi-selections)
                point-buy-starting-abilities-fn)
               (ability-variant-option-selector
                "Dice Roll"
