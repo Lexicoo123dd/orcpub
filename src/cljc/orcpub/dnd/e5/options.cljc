@@ -1687,7 +1687,7 @@
 
 (def fighting-style-options
   [(t/option-cfg
-    {:name "Baahs"
+    {:name "Archery"
      :modifiers [(modifiers/ranged-attack-bonus 2)
       (modifiers/trait-cfg
        {:name "Archery Fighting Style"
