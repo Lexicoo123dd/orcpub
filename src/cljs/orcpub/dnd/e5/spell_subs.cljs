@@ -14,6 +14,7 @@
             [orcpub.dnd.e5.units :as units5e]
             [orcpub.dnd.e5.character :as char5e]
             [orcpub.dnd.e5.weapons :as weapon5e]
+            [orcpub.dnd.e5.skills :as skill5e]
             [orcpub.dnd.e5.spells :as spells5e]
             [orcpub.dnd.e5.monsters :as monsters5e]
             [orcpub.dnd.e5.selections :as selections5e]
@@ -476,6 +477,8 @@
 (def languages
   [{:name "Common"
     :key :common}
+   {:name "Centaur"
+    :key :centaur}
    {:name "Dwarvish"
     :key :dwarvish}
    {:name "Elvish"
@@ -521,12 +524,18 @@
  (fn [languages]
    (common/map-by-key languages)))
 
+(defn powerful-build [page]
+  {:name "Powerful Build"
+   :page page
+   :source :vgm
+   :summary "Count as one size larger for purposes of determining weight you can carry, push, drag, or lift."})
+
 (def elf-weapon-training-mods
   (opt5e/weapon-prof-modifiers [:longsword :shortsword :shortbow :longbow]))
 
 (defn sunlight-sensitivity [page & [source]]
   {:name "Sunlight Sensitivity"
-   :summary "Disadvantage on attack and perception rolls in direct sunlight"
+   :summary "Disadvantage on attack and perception rolls when there's direct sunlight"
    :source (or source :phb)
    :page 24})
 
@@ -590,6 +599,143 @@
              :page 23
              :summary "Trance 4 hrs. instead of sleep 8"}]})
 
+
+
+(defn aasimar-option-cfg [language-map]
+  {:name "Aasimar"
+   :key :aasimar
+   :help ""
+   :abilities {::char5e/cha 2}
+   :size :medium
+   :speed 30
+   :darkvision 60
+   :languages ["Common"]
+   :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/cha) 1 true)
+                (opt5e/language-selection-aux (vals language-map) 1)]
+   :subraces [{:name "Necrotic Shroud"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Necrotic Shroud"
+                             :level 3
+                             :page 7
+                             :source :mpmm
+                             :summary (str "Creatures other than allies within 10 ft. that you can see must succeed on a DC " (?spell-save-dc ::char5e/cha) " cha save or be frightened of you until the end of your next turn. For 1 minute, once per turn, deal an additional " ?prof-bonus " necrotic damage to one target you deal damage to with a spell or attack.")})]}
+              {:name "Radiant Consumption"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Radiant Consumption"
+                             :level 3
+                             :page 7
+                             :source :mpmm
+                             :summary (str "For 1 minute, shed 10 ft. bright light and 10 ft. dim light, deal " ?prof-bonus " radiant damage to each creature within 10 ft. at the end of your turn and once per turn, deal an additional " ?prof-bonus " radiant damage to one target you deal damage to with a spell or attack.")})]}
+              {:name "Radiant Soul"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Radiant Soul"
+                             :level 3
+                             :page 7
+                             :source :mpmm
+                             :summary (str "For 1 minute, sprout wings (flying speed equal to walking speed) and once per turn, deal an additional " ?prof-bonus " radiant damage to one target you deal damage to with a spell or attack.")})]}]
+   :modifiers [(mod5e/action
+                {:name "Healing Hands"
+                 :page 7
+                 :summary "Touch and heal a creature equal to your proficiency bonus d6 (use once/long rest)."})
+               (mod5e/damage-resistance :necrotic)
+               (mod5e/damage-resistance :radiant)
+               (mod5e/spells-known 0 :light ::char5e/cha "Aasimar")]})
+
+
+(defn cantrip-option [spells-map class-key class-name spellcasting-ability spell-lists]
+  (t/selection-cfg
+                  {:name "Cantrip"
+                   :order 1
+                   :tags #{:spells}
+                   :options (opt5e/spell-options spells5e/spell-map (get-in spell-lists [class-key 0]) spellcasting-ability class-name)
+                   :min 2
+                   :max 2}))
+
+(def centaur-option-cfg
+  {:name "Centaur"
+   :key :centaur
+   :help ""
+   :languages ["Common" "Centaur"]
+   :traits [{:name "Strong Build"
+             :summary "Count as one size larger for purposes of determining weight you can carry, push, drag, or lift.\nAny climb that requires hands and feet costs 4 more ft. instead of 1."}]
+   :modifiers [(mod5e/attack
+                {:name "Hoove/Horn"
+                 :attack-type :melee
+                 :damage-type :bludgeoning
+                 :damage-die 6
+                 :damage-die-count 1
+                 :damage-modifier (::char5e/str ?ability-bonuses)})]
+   :subraces [{:name "Equine"
+               :abilities {::char5e/str 2 ::char5e/con 1}
+               :size :medium
+               :speed 40
+               :profs {:skill-options {:choose 1 :options {:animal-handling true :athletics true :perception true :nature true :survival true}}}
+               :weapon-proficiencies [:battleaxe :flail :glaive :greataxe :greatsword :halberd :lance :longsword :maul :morningstar :pike :rapier :scimitar :shortsword :trident :war-pick :warhammer :whip :longbow]
+               :modifiers [(mod5e/bonus-action
+                            {:name "Charge"
+                            :summary "If you move at least 30 feet in a straight line, you can make an attack with your hooves or Dash"})]}
+              {:name "Ovine"
+               :abilities {::char5e/con 2 ::char5e/dex 1}
+               :size :medium
+               :speed 35
+               :weapon-proficiencies [:longbow]
+               :profs {:skill-options {:choose 1 :options {:animal-handling true :athletics true :perception true :nature true :survival true}}}
+               :modifiers [(mod5e/tool-proficiency :weavers-tools)]
+               :traits [{:name "Soft Pelt"
+                        :summary "Resistance to bludgeoning damage from melee weapon attacks while not wearing heavy armor"}]
+               :selections [(t/selection-cfg
+                             {:name "Tool Proficiencies"
+                              :tags #{:profs}
+                              :options [(t/option-cfg
+                                         {:name "Artisan's Tool"
+                                          :selections [(opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]})
+                                        (t/option-cfg
+                                         {:name "Musical Instrument"
+                                          :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})]})]}
+              {:name "Caprine"
+               :abilities {::char5e/dex 2 ::char5e/con 1}
+               :size :small
+               :speed 30
+               :profs {:skill {:athletics true}
+                       :tool {:masons-tools true}
+                       :skill-options {:choose 1 :options {:acrobatics true :perception true :nature true :survival true}}}
+               :traits [{:name "Skilled Climber"
+                         :summary "Unlike other centaurs, climbing does not cost you the extra feet. Climbing speed equals walking speed if the climb is less than 90 degrees with minimal footing"}
+                        {:name "Evasive Bounce"
+                         :summary "If you move at least 10 feet towards an enemy in a straight line and make a melee weapon attack, you can bounce off the enemy and move yourself 5 feet away from them without provoking opportunity attacks.\nYou can only bounce away toward where you came from and only once off the same target."}]}
+              {:name "Cervine"
+               :abilities {::char5e/dex 1 ::char5e/con 1 ::char5e/wis 1}
+               :size :medium
+               :speed 40
+               :profs {:skill {:nature true}
+                       :tool {:herbalism-kit true}
+                       :skill-options {:choose 1 :options {:acrobatics true :athletics true :perception true :stealth true :medicine true}}}
+               :modifiers [(mod5e/spells-known 2 :locate-animals-or-plants ::char5e/wis "Cervine Centaur")]
+               :traits [{:name "Connection to the Wilds"
+                        :summary "You can cast Locate Animals or Plants at will with a radius of 500 ft., 5 miles if cast as a Ritual"}
+                       {:name "Undergrowth Mobility"
+                        :summary "Treat difficult terrain created by plants as regular terrain, magical or not.\n   In terrain with plants of medium size or larger nearby, whether creature or part of the surroundings, you can Hide behind them with a bonus action"}]
+               :selections [(cantrip-option spells5e/spell-map :druid "Druid" ::char5e/wis sl5e/spell-lists)]
+              }
+              ]})
+
+(defn changeling-option-cfg [language-map]
+  {:name "Changeling"
+   :key :changeling
+   :help ""
+   :abilities {::char5e/cha 2}
+   :size :medium
+   :speed 30
+   :languages ["Common"]
+   :profs {:skill-options {:choose 2 :options {:deception true :insight true :intimidation true :performance true :persuasion true}}}
+   :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/cha) 1 true)
+                (opt5e/language-selection-aux (vals language-map) 1)]
+   :modifiers [(mod5e/action
+                {:name "Shapechanger"
+                 :page 10
+                 :summary "you change your appearance and your voice. You determine the specifics of the changes, including your coloration, hair length, and sex. You can also adjust your height between Medium and Small. You can make yourself appear as a member of another race, though none of your game statistics change. You can't duplicate the appearance of an individual you've never seen, and you must adopt a form that has the same basic arrangement of limbs that you have. Your clothing and equipment aren't changed by this trait.
+                 You stay in the new form until you use an action to revert to your true form or until you die."})]})
+
 (def dwarf-option-cfg
   {:name "Dwarf",
    :key :dwarf
@@ -610,9 +756,29 @@
    :subraces [{:name "Hill Dwarf",
                :abilities {::char5e/wis 1}
                :modifiers [(mod/modifier ?hit-point-level-bonus (+ 1 ?hit-point-level-bonus))]}
-              #_{:name "Mountain Dwarf"
+              {:name "Mountain Dwarf"
                :abilities {::char5e/str 2}
-               :armor-proficiencies [:light :medium]}]
+               :armor-proficiencies [:light :medium]}
+              {:name "Duergar"
+               :abilities {::char5e/str 1}
+               :darkvision 120
+               :modifiers [(mod5e/saving-throw-advantage [:charmed])
+                           (mod5e/saving-throw-advantage [:paralyzed])
+                           (mod5e/spells-known 1 :enlarge-reduce ::char5e/int "Duergar Dwarf" 3)
+                           (mod5e/spells-known 2 :invisibility ::char5e/int "Duergar Dwarf" 5)
+                           (mod5e/action
+                            {:name "Duergar Magic"
+                            :page 81
+                            :summary (str "You can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Enlarge/Reduce, using only Enlarge,")
+                                                (>= lvl 5) (conj "Invisibility"))))
+                                          " on yourself once per day while not in direct sunlight, without needing material components. INT is your spellcasting ability.")})]
+               :traits [{:name "Duergar Resilience"
+                         :summary "Advantage on saving throws against illusions, being charmed and paralyzed."}
+                        (sunlight-sensitivity 81)]}]
    :modifiers [(mod5e/damage-resistance :poison)
                (mod5e/saving-throw-advantage [:poisoned])]})
 
@@ -630,17 +796,35 @@
      :abilities {::char5e/cha 1}
      :traits [{:name "Naturally Stealthy"
                :page 28
-               :summary "Hide behind creatures larger than you"}]}
-    #_{:name "Stout"
+               :summary "Can attempt to hide behind creatures larger than you"}]}
+    {:name "Stout"
      :abilities {::char5e/con 1}
      :modifiers [(mod5e/damage-resistance :poison)
-                 (mod5e/saving-throw-advantage [:poisoned])]}]
+                 (mod5e/saving-throw-advantage [:poisoned])]
+     :traits [{:name "Stout Resilience"
+               :summary "Advantage on poison saves, resistance to poison damage"}]}
+    {:name "Lotusden"
+     :abilities {::char5e/wis 1}
+     :modifiers [(mod5e/spells-known 0 :druidcraft ::char5e/wis "Lotusden Halfling")
+                 (mod5e/spells-known 1 :entangle ::char5e/wis "Lotusden Halfling" 3)
+                 (mod5e/spells-known 2 :spike-growth ::char5e/wis "Lotusden Halfling" 5)
+                 (mod5e/dependent-trait
+                  {:name "Children of the Woods"
+                  :summary (str "You know druidcraft and can cast "
+                                (common/list-print
+                                  (let [lvl ?total-levels]
+                                    (cond-> []
+                                      (>= lvl 3) (conj "Entangle")
+                                      (>= lvl 5) (conj "Spike Growth"))))
+                                " once per long rest, without material components. WIS is your spellcasting ability.")})]
+     :traits [{:name "Timberwalk"
+               :summary "Ability checks made to track you are at disadvantage and you can move through difficult terrain made of non-magical plants and overgrowth without expending extra movement."}]}]
    :traits [{:name "Lucky"
              :page 28
-             :summary "Reroll 1s on d20"}
-            {:name "Halfling Nimbleness"
+             :summary "Reroll 1s on d20 once"}
+            {:name "Nimble"
              :page 28
-             :summary "move through the space of larger creatures"}
+             :summary "Move through the space of creatures larger than you"}
             {:name "Brave"
              :page 28
              :summary "you have advantage on saves against being frightened"}]})
@@ -673,7 +857,25 @@
                                           (mod5e/race-ability ::char5e/dex 1)
                                           (mod5e/race-ability ::char5e/int 1)
                                           (mod5e/race-ability ::char5e/wis 1)
-                                          (mod5e/race-ability ::char5e/cha 1)]})
+                                          (mod5e/race-ability ::char5e/cha 1)]
+                              :selections [(t/selection-cfg
+                                            {:name "Proficiency"
+                                             :tags #{:profs}
+                                             :options [(t/option-cfg
+                                                        {:name "Skill"
+                                                         :selections [(t/selection-cfg
+                                                                       {:name "Skill Proficiency"
+                                                                        :tags #{:profs}
+                                                                        :options (opt5e/skill-options skill5e/skills)})]})
+                                                       (t/option-cfg
+                                                        {:name "Artisan's Tool"
+                                                         :selections [(opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]})
+                                                       (t/option-cfg
+                                                        {:name "Musical Instrument"
+                                                         :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})
+                                                       (t/option-cfg
+                                                        {:name "Language"
+                                                         :selections [(opt5e/language-selection-aux (vals language-map) 1)]})]})]})
                             (t/option-cfg
                              {:name "Variant Human"
                               :selections [(opt5e/feat-selection spell-lists spells-map 1)
@@ -686,9 +888,9 @@
     :modifiers [(mod5e/damage-resistance (:damage-type breath-weapon))
                 (mod/modifier ?draconic-ancestry-breath-weapon breath-weapon)]}))
 
-(def dragonborn-option-cfg
-  {:name "Dragonborn"
-   :key :dragonborn
+(def dragonborn-standard-option-cfg
+  {:name "Dragonborn (Standard)"
+   :key :dragonborn-standard
    :help "Kin to dragons, dragonborn resemble humanoid dragons, without wings or tail and standing erect. They tend to make excellent warriors."
    :abilities {::char5e/str 2 ::char5e/cha 1}
    :size :medium
@@ -718,6 +920,53 @@
                             draconic-ancestry-option
                             opt5e/draconic-ancestries)})]})
 
+(def dragonborn-option-cfg
+  {:name "Dragonborn"
+   :key :dragonborn
+   :help "Kin to dragons, dragonborn resemble humanoid dragons, without wings or tail and standing erect. They tend to make excellent warriors."
+   :size :medium
+   :speed 30
+   :languages ["Draconic" "Common"]
+   :subraces [{:name "Draconblood"
+               :abilities {::char5e/int 2 ::char5e/cha 1}
+               :darkvision 60
+               :modifiers [(mod5e/trait-cfg
+                            {:name "Forceful Presence"
+                             :page 168
+                             :source :egw
+                             :summary (str "When you make a Intimidation or Persuasion check, you can do so with advantage once per long rest.")})]}
+              {:name "Ravenite"
+               :abilities {::char5e/str 2 ::char5e/con 1}
+               :darkvision 60
+               :modifiers [(mod5e/reaction
+                            {:name "Vengeful Assault"
+                             :page 168
+                             :source :egw
+                             :frequency units5e/rests-1
+                             :summary (str "When you take damage from a creature in range of a weapon you are wielding, you can make an attack with the weapon against that creature.")})]}]
+   :modifiers [(mod5e/attack
+                (let [breath-weapon ?draconic-ancestry-breath-weapon
+                      damage-type (:damage-type breath-weapon)]
+                  (merge
+                   breath-weapon
+                   {:name "Breath Weapon"
+                    :summary (if damage-type
+                               (common/safe-capitalize-kw damage-type))
+                    :attack-type :area
+                    :damage-die 6
+                    :page 34
+                    :damage-die-count (condp <= ?total-levels
+                                        16 5
+                                        11 4
+                                        6 3
+                                        2)
+                    :save-dc (?spell-save-dc ::char5e/con)})))]
+   :selections [(t/selection-cfg
+                 {:name "Draconic Ancestry"
+                  :tags #{:subrace}
+                  :options (map
+                            draconic-ancestry-option
+                            opt5e/draconic-ancestries)})]})
 
 (def gnome-option-cfg
   {:name "Gnome"
@@ -741,13 +990,58 @@
                :summary "Add 2X prof bonus on magical, alchemical, or technological item-related history checks."}
               {:name "Tinker"
                :page 37
-               :summary "Construct tiny clockwork devices."}]}
-    #_{:name "Forest Gnome"
+               :summary "Using tinker's tools, you can spend 1 hour and 10 gp worth of materials to construct a Tiny clockwork device (AC 5, 1 hp). The device ceases to function after 24 hours (unless you spend 1 hour repairing it to keep the device functioning), or when you use your action to dismantle it; at that time, you can reclaim the materials used to create it. You can have up to three such devices active at a time. When you create a device, choose one of the following options:
+
+Clockwork Toy: This toy is a clockwork animal, monster, or person, such as a frog, mouse, bird, dragon, or soldier. When placed on the ground, the toy moves 5 feet across the ground on each of your turns in a random direction. It makes noises as appropriate to the creature it represents.
+
+Fire Starter: The device produces a miniature flame, which you can use to light a candle, torch, or campfire. Using the device requires your action.
+
+Music Box: When opened, this music box plays a single song at a moderate volume. The box stops playing when it reaches the song's end or when it is closed.
+
+May make other objects at the DM's discretion."}]}
+    {:name "Forest Gnome"
      :abilities {::char5e/dex 1}
      :modifiers [(mod5e/spells-known 0 :minor-illusion ::char5e/int "Forest Gnome")]
      :traits [{:name "Speak with Small Beasts"
                :page 37
-               :summary "Communicate with Small or smaller beasts."}]}]})
+               :summary "Through sound and gestures, you may communicate simple ideas with Small or smaller beasts."}]}
+    {:name "Svirfneblin (Deep Gnome)"
+     :abilities {::char5e/dex 1}
+     :darkvision 120
+     :traits [{:name "Stone Camouflage"
+               :summary "Advantage on Stealth checks to hide in rocky terrain."}]}]})
+
+(defn deep-gnome-option-cfg [language-map]
+  {:name "Deep Gnome"
+   :key :deep-gnome
+   :help "Gnomes are small, intelligent humanoids who live life with the utmost of enthusiasm."
+   :abilities {::char5e/int 2 ::char5e/dex 1}
+   :size :small
+   :speed 30
+   :darkvision 120
+   :languages ["Common"]
+   :selection [(opt5e/language-selection-aux (vals language-map) 1)]
+   :modifiers [(mod5e/saving-throw-advantage [:magic] [::char5e/int ::char5e/wis ::char5e/cha])
+              (mod5e/spells-known 1 :disguise-self ::char5e/int "Deep Gnome" 3)
+              (mod5e/spells-known 2 :nondetection ::char5e/int "Deep Gnome" 5)
+              (mod5e/action
+              {:name "Gift of the Svirfneblin"
+              :page 11
+              :summary (str "You can cast "
+                            (common/list-print
+                              (let [lvl ?total-levels]
+                                (cond-> []
+                                  (>= lvl 3) (conj "Disguise Self")
+                                  (>= lvl 5) (conj "Nondetection"))))
+                            " on yourself once per long rest without needing material components. You can also cast these using spell slots of the appropriate level. INT, WIS, or CHA is your spellcasting ability.")})
+               (mod5e/action
+                {:name "Svirfneblin Camouflage"
+                 :page 11
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary "Make a Stealth check with advantage"})]
+   :traits [{:name "Gnome"
+             :page 11
+             :summary "You are considered a gnome for any prerequisite or effect that requires you to be a gnome."}]})
 
 (defn half-elf-option-cfg [language-map]
   {:name "Half-Elf"
@@ -781,10 +1075,68 @@
    :modifiers [(mod5e/skill-proficiency :intimidation)]
    :traits [{:name "Relentless Endurance"
              :page 41
+             :frequency units5e/long-rests-1
              :summary "Drop to 1 hp instead of being reduced to 0."}
             {:name "Savage Attacks"
              :page 41
-             :summary "On critical hit, add additional damage dice roll"}]})
+             :summary "On critical hit with melee weapon attack, add additional damage dice roll"}]})
+
+(defn orc-option-cfg [language-map]
+  {:name "Orc"
+   :key :orc
+   :help ""
+   :abilities {::char5e/str 2 ::char5e/con 1}
+   :size :medium
+   :speed 30
+   :darkvision 60
+   :languages ["Common"]
+   :selections [(opt5e/language-selection-aux (vals language-map) 1)]
+   :modifiers [(mod5e/bonus-action
+                {:name "Adrenaline Rush"
+                 :page 28
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary "Take the Dash action as a bonus action"})]
+   :traits [{:name "Relentless Endurance"
+             :page 28
+             :frequency units5e/long-rests-1
+             :summary "Drop to 1 hp instead of being reduced to 0"}
+            (powerful-build 28)]})
+
+(defn shifter-option-cfg [language-map]
+  {:name "Shifter"
+   :key :shifter
+   :help ""
+   :size :medium
+   :speed 30
+   :darkvision 60
+   :languages ["Common"]
+   :profs {:skill-options {:choose 1 :options {:acrobatics true :athletics true :intimidation true :survival true}}}
+   :selections [(opt5e/language-selection-aux (vals language-map) 1)
+                (opt5e/ability-increase-option 2 true char5e/ability-keys)
+                (opt5e/ability-increase-selection char5e/ability-keys 1 true)]
+   :subraces [{:name "Beasthide"
+               :traits [{:name "Beasthide"
+                         :page 32
+                         :summary "Gain 1d6 more temp HP when shifting. +1 AC while shifted"}]}
+              {:name "Longtooth"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Longtooth"
+                             :page 32
+                             :summary (str "When shifting and then while shifted, make an unarmed strike with your fangs, dealing 1d6 + " (::char5e/str ?ability-bonuses) " piercing damage")})]}
+              {:name "Swiftstride"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Longtooth"
+                             :page 32
+                             :summary "While shifted, your walking speed increases by 10 ft. When a creature ends its turn within 5 ft., move up to 10 ft. without provoking opportunity attacks"})]}
+              {:name "Wildhunt"
+               :traits [{:name "Wildhunt"
+                         :page 32
+                         :summary "While shifted, advantage on WIS checks, and no creature within 30 ft. can attack with advantage against you unless incapacitated"}]}]
+   :modifiers [(mod5e/bonus-action
+                {:name "Shifting"
+                 :page 32
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "Transform for 1 minute, until you die, or revert back. While shifted, gain " (* 2 ?prof-bonus) " temp HP")})]})
 
 (def tiefling-option-cfg
   {:name "Tiefling"
@@ -847,14 +1199,21 @@
           race))
       (concat
        (reverse plugin-races)
-       [dwarf-option-cfg
+       [(aasimar-option-cfg language-map)
+        centaur-option-cfg
+        (changeling-option-cfg language-map)
+        dwarf-option-cfg
         (elf-option-cfg spell-lists spells-map language-map)
         halfling-option-cfg
         (human-option-cfg spell-lists spells-map language-map)
+        dragonborn-standard-option-cfg
         dragonborn-option-cfg
         gnome-option-cfg
+        (deep-gnome-option-cfg language-map)
         (half-elf-option-cfg language-map)
         half-orc-option-cfg
+        (orc-option-cfg language-map)
+        (shifter-option-cfg language-map)
         tiefling-option-cfg]))))))
 
 
