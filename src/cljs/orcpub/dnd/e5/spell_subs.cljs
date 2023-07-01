@@ -442,6 +442,25 @@
  (fn [plugins _]
    (mapcat #(-> % ::e5/boons vals) plugins)))
 
+(defn criminal-background [nm]
+  {:name nm
+   :help "You have a history of criminal activity."
+   :traits [{:name "Criminal Contact"
+             :page 129
+             :summary "You have a contact into a network of criminals"}]
+   :profs {:skill {:deception true, :stealth true}
+           :tool {:thieves-tools true}
+           :tool-options {:gaming-set 1}}
+   :equipment {:crowbar 1
+               :clothes-common 1
+               :pouch 1}
+   :treasure {:gp 15}})
+
+(def ships-passage-trait-cfg
+  {:name "Ship's Passage"
+   :page 139
+   :summary "You are able to secure free passage on a sailing ship"})
+
 (def acolyte-bg
   {:name "Acolyte"
    :help "Your life has been devoted to serving a god or gods."
@@ -466,7 +485,333 @@
              :page 127
              :summary "You and your companions can expect free healing at an establishment of your faith."}]})
 
+(def athlete-bg
+  {:name "Athlete"
+   :help "You have participated in physical contests."
+   :profs {:skill {:acrobatics true, :athletics true}
+           :language-options {:choose 1 :options {:any true}}
+           :tool {:land-vehicles true}}
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Bronze discus or leather ball" 1
+                      "Lucky charm or past trophy" 1}
+   :treasure {:gp 10}
+   :traits [{:name "Echoes of Victory"
+             :summary "50% chance there's an admirer who is willing to provide information and shelter when visiting a settlement within 100 miles of where you grew up. During downtime, compete in athletic events sufficient enough to provide a comfortable lifestyle."}]})
+
+(def charlatan-bg
+  {:name "Charlatan"
+   :help "You have a history of being able to work people to your advantage."
+   :traits [{:name "False Identity"
+             :page 128
+             :summary "you have a false identity; you can forge documents"}]
+   :profs {:skill {:deception true :sleight-of-hand true}
+           :tool {:disguise-kit true :forgery-kit true}}
+   :equipment {:clothes-fine 1
+               :disguise-kit 1
+               :pouch 1}
+   :treasure {:gp 15}})
+
+(def entertainer-bg
+  {:name "Entertainer"
+   :help "You have a history of entertaining people."
+   :traits [{:name "By Popular Demand"
+             :page 130
+             :summary "you are able to find a place to perform, in which you will recieve free food and lodging"}]
+   :profs {:skill {:acrobatics true :performance true}
+           :tool {:disguise-kit true}
+           :tool-options {:musical-instrument 1}}
+   :equipment-choices [classes5e/musical-instrument-choice-cfg]
+   :equipment {:costume 1
+               :pouch 1}
+   :treasure {:gp 15}})
+
+(def gladiator-bg
+  {:name "Gladiator"
+   :help "You have a history of gladiatorial entertainment."
+   :traits [{:name "By Popular Demand"
+             :page 130
+             :summary "you are able to find a place to perform, in which you will recieve free food and lodging"}]
+   :profs {:skill {:acrobatics true :performance true}
+           :tool {:disguise-kit true}
+           :tool-options {:musical-instrument 1}}
+   :selections [(opt5e/new-starting-equipment-selection
+                 nil
+                 {:name "Gladiator Weapon"
+                  :options (opt5e/weapon-options weapon5e/weapons)})]
+   :equipment {:costume 1
+               :pouch 1}
+   :treasure {:gp 15}})
+
+(def feylost-bg
+  {:name "Feylost"
+   :help "You grew up in the Feywild."
+   :traits [{:name "Feywild Visitor"
+             :summary "A spirit of the Feywild might visit you while you're sound asleep."}
+            {:name "Feywild Connection"
+             :summary "Your mannerisms and knowledge of fey customs are recognized by natives of the Feywild, who see you as one of their own. Friendly Fey creatures are inclined to come to your aid if you are lost or need help in the Feywild."}]
+   :profs {:skill {:deception true :survival true}
+           :tool-options {:musical-instrument 1}
+           :language-options {:choose 1 :options {:elvish true :gnomish true :goblin true :sylvan true}}}
+   :equipment-choices [classes5e/musical-instrument-choice-cfg]
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Feywild trinket" 3}
+   :treasure {:gp 8}})
+
+(def folk-hero-bg
+  {:name "Folk Hero"
+   :help "You are regarded as a hero by the people of your home village."
+   :traits [{:name "Rustic Hospitality"
+             :page 131
+             :summary "find a place to rest, hide, or recuperate among commoners"}]
+   :profs {:skill {:animal-handling true :survival true}
+           :tool {:land-vehicles true}
+           :tool-options {:artisans-tool 1}}
+   :equipment-choices [opt5e/artisans-tools-choice-cfg]
+   :equipment {:shovel 1
+               :pot-iron 1
+               :clothes-common 1
+               :pouch 1}
+   :treasure {:gp 10}})
+
+(def guild-artisan-bg
+  {:name "Guild Artisan"
+   :help "You are an artisan and a member of a guild in a particular field."
+   :traits [{:name "Guild Membership"
+             :page 133
+             :summary "fellow guild members will provide you with food and lodging; you have powerful political connections through your guild"}]
+   :profs {:skill {:insight true :persuasion true}
+           :tool-options {:artisans-tool 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment-choices [opt5e/artisans-tools-choice-cfg]
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Letter of introduction" 1}
+   :treasure {:gp 15}})
+
+(def guild-merchant-bg
+  {:name "Guild Merchant"
+   :help "You are member of a guild of merchants"
+   :traits [{:name "Guild Membership"
+             :page 133
+             :summary "fellow guild members will provide you with food and lodging; you have powerful political connections through your guild"}]
+   :profs {:skill {:insight true :persuasion true}
+           :language-options {:choose 1 :options {:any true}}}
+   :selections [(t/selection-cfg
+                 {:name "Proficiency: Navigator's Tools or Language"
+                  :tags #{:profs}
+                  :options [(t/option-cfg
+                             {:name "Navigator's Tools"
+                              :modifiers [(mod5e/tool-proficiency :navigators-tools)]})
+                            (t/option-cfg
+                             {:name "Language"
+                              :selections [(opt5e/language-selection ::langs5e/language-map 1)]})]})]
+   :equipment {:clothes-traveler-s 1
+               :pouch 1
+               :mule 1
+               :cart 1}
+   :custom-equipment {"Letter of introduction" 1}
+   :treasure {:gp 15}})
+
+(def hermit-bg
+  {:name "Hermit"
+   :help "You have lived a secluded life."
+   :traits [{:name "Discovery"
+             :page 134
+             :summary "You have made a powerful and unique discovery"}]
+   :profs {:skill {:medicine true :religion true}
+           :tool {:herbalism-kit true}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:case-map-or-scroll 1
+               :clothes-common 1
+               :herbalism-kit 1}
+   :custom-equipment {"Winter Blanket" 1
+                      "Notes from studies/prayers" 1}
+   :treasure {:gp 5}})
+
+
+(def noble-bg
+  {:name "Noble"
+   :help "You are of noble birth."
+   :traits []
+   :profs {:skill {:history true :persuasion true}
+           :tool-options {:gaming-set 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :selections [(t/selection-cfg
+                 {:name "Noble Feature"
+                  :tags #{:background}
+                  :options [(t/option-cfg
+                             {:name "Position of Privilege"
+                              :modifiers [(mod5e/trait-cfg
+                                           {:name "Position of Privilege"
+                                            :page 135
+                                            :summary "you are welcome in high society and common folk try to accomodate you"})]})
+                            (t/option-cfg
+                             {:name "Retainers"
+                              :modifiers [(mod5e/trait-cfg
+                                           {:name "Retainers"
+                                            :page 136
+                                            :summary "You have 3 commoner retainers"})]})]})]
+   :equipment {:clothes-fine 1
+               :signet-ring 1
+               :purse 1}
+   :custom-equipment {"Scroll of Pedigree" 1}
+   :treasure {:gp 25}})
+
+(def knight-bg
+  {:name "Knight"
+   :help "You are a knight."
+   :traits [{:name "Retainers"
+             :page 136
+             :summary "You have 2 commoner retainers and 1 noble squire"}]
+   :profs {:skill {:history true :persuasion true}
+           :tool-options {:gaming-set 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:clothes-fine 1
+               :signet-ring 1
+               :purse 1}
+   :custom-equipment {"Scroll of Pedigree" 1
+                      "Emblem of Chivalry" 1}
+   :treasure {:gp 25}})
+
+(def outlander-bg
+  {:name "Outlander"
+   :help "You were raised in the wilds."
+   :traits [{:name "Wanderer"
+             :page 136
+             :summary "Your memory of maps, geography, settlements, and terrain is excellent. You can find fresh food and water for you and 5 other people."}]
+   :profs {:skill {:athletics true :survival true}
+           :tool-options {:musical-instrument 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:staff 1
+               :clothes-traveler-s 1
+               :pouch 1
+               :hunting-trap 1}
+   :custom-equipment {"Trophy from Animal You Killed" 1}
+   :treasure {:gp 10}})
+
+(def sage-bg
+  {:name "Sage"
+   :help "You spent your life studying lore."
+   :traits [{:name "Researcher"
+             :page 139
+             :summary "If you don't know a piece of info you often know where to find it"}]
+   :profs {:skill {:arcana true :history true}
+           :language-options {:choose 2 :options {:any true}}}
+   :equipment {:ink 1
+               :clothes-common 1
+               :pouch 1
+               :knife-small 1}
+   :custom-equipment {"Quill" 1
+                      "Letter with question from dead colleague" 1}
+   :treasure {:gp 10}})
+
+(def sailor-bg
+  {:name "Sailor"
+   :help "You were a member of a crew for a seagoing vessel."
+   :traits [ships-passage-trait-cfg]
+   :profs {:skill {:athletics true :perception true}
+           :tool {:navigators-tools true :water-vehicles true}}
+   :weapons {:club 1}
+   :equipment {:rope-silk 1
+               :clothes-common 1
+               :pouch 1}
+   :custom-equipment {"Belaying Pin" 1
+                      "Lucky Charm" 1}
+   :treasure {:gp 10}})
+
+
+(def pirate-bg
+  {:name "Pirate"
+   :help "You were a member of a crew for a seagoing vessel."
+   :profs {:skill {:athletics true :perception true}
+           :tool {:navigators-tools true :water-vehicles true}}
+   :weapons {:club 1}
+   :equipment {:rope-silk 1
+               :clothes-common 1
+               :pouch 1}
+   :selections [(t/selection-cfg
+                 {:name "Feature"
+                  :tags #{:background}
+                  :options [(t/option-cfg
+                             {:name "Ship's Passage"
+                              :modifiers [(mod5e/trait-cfg
+                                           ships-passage-trait-cfg)]})
+                            (t/option-cfg
+                             {:name "Bad Reputation"
+                              :modifiers [(mod5e/trait-cfg
+                                           {:name "Bad Reputation"
+                                            :page 139
+                                            :summary "People in a civilized settlement are afraid of you and will let you get away with minor crimes"})]})]})]
+   :custom-equipment {"Belaying Pin" 1
+                      "Lucky Charm" 1}
+   :treasure {:gp 10}})
+
+(def soldier-bg
+  {:name "Soldier"
+   :help "You have spent your living by the sword."
+   :traits [{:name "Military Rank"
+             :page 140
+             :summary "Where recognized, your previous rank provides influence among military"}]
+   :profs {:skill {:athletics true :intimidation true}
+           :tool {:land-vehicles true}
+           :tool-options {:gaming-set 1}}
+   :equipment {:clothes-common 1
+               :pouch 1}
+   :equipment-choices [{:name "Dice or Cards"
+                        :options {:dice-set 1
+                                  :playing-card-set 1}}]
+   :custom-equipment {"Insignia of Rank" 1
+                      "Trophy from Fallen Enemy" 1}
+   :treasure {:gp 10}})
+
+(def urchin-bg
+  {:name "Urchin"
+   :help "You were a poor orphan living on the streets."
+   :traits [{:name "City Streets"
+             :page 141
+             :summary "You can travel twice your normal speed between city locations"}]
+   :profs {:skill {:sleight-of-hand true :stealth true}
+           :tool {:disguise-kit true :thieves-tools true}}
+   :equipment {:knife-small 1
+               :clothes-common 1
+               :pouch 1}
+   :custom-equipment {"Map of city you grew up in" 1
+                      "Pet mouse" 1
+                      "Token to remember your parents" 1}
+   :treasure {:gp 10}})
+
 (reg-sub
+ ::bg5e/backgrounds
+ :<- [::bg5e/plugin-backgrounds]
+ (fn [plugin-backgrounds]
+   (vec
+      (concat
+      (reverse plugin-backgrounds)
+      [acolyte-bg
+       athlete-bg
+       charlatan-bg
+       (criminal-background "Criminal")
+       (criminal-background "Spy")
+       entertainer-bg
+       gladiator-bg
+       feylost-bg
+       folk-hero-bg
+       guild-artisan-bg
+       guild-merchant-bg
+       hermit-bg
+       noble-bg
+       knight-bg
+       outlander-bg
+       sage-bg
+       sailor-bg
+       soldier-bg
+       urchin-bg
+       ])
+   )))
+
+#_(reg-sub
  ::bg5e/backgrounds
  :<- [::bg5e/plugin-backgrounds]
  (fn [plugin-backgrounds]
@@ -641,16 +986,6 @@
                (mod5e/damage-resistance :radiant)
                (mod5e/spells-known 0 :light ::char5e/cha "Aasimar")]})
 
-
-(defn cantrip-option [spells-map class-key class-name spellcasting-ability spell-lists]
-  (t/selection-cfg
-                  {:name "Cantrip"
-                   :order 1
-                   :tags #{:spells}
-                   :options (opt5e/spell-options spells5e/spell-map (get-in spell-lists [class-key 0]) spellcasting-ability class-name)
-                   :min 2
-                   :max 2}))
-
 (def centaur-option-cfg
   {:name "Centaur"
    :key :centaur
@@ -664,7 +999,7 @@
                  :damage-type :bludgeoning
                  :damage-die 6
                  :damage-die-count 1
-                 :damage-modifier (::char5e/str ?ability-bonuses)})]
+                 :damage-modifier (if (= (?class-level :monk) 0) (::char5e/str ?ability-bonuses) (max (::char5e/str ?ability-bonuses) (::char5e/dex ?ability-bonuses)))})]
    :subraces [{:name "Equine"
                :abilities {::char5e/str 2 ::char5e/con 1}
                :size :medium
@@ -715,7 +1050,7 @@
                         :summary "You can cast Locate Animals or Plants at will with a radius of 500 ft., 5 miles if cast as a Ritual"}
                        {:name "Undergrowth Mobility"
                         :summary "Treat difficult terrain created by plants as regular terrain, magical or not.\n   In terrain with plants of medium size or larger nearby, whether creature or part of the surroundings, you can Hide behind them with a bonus action"}]
-               :selections [(cantrip-option spells5e/spell-map :druid "Druid" ::char5e/wis sl5e/spell-lists)]
+               :selections [(opt5e/cantrip-selection :druid "Cervine Centaur" ::char5e/wis 1)]
               }
               ]})
 
@@ -1215,7 +1550,6 @@ May make other objects at the DM's discretion."}]}
         (orc-option-cfg language-map)
         (shifter-option-cfg language-map)
         tiefling-option-cfg]))))))
-
 
 (defn base-class-options [spell-lists spells-map plugin-subclasses-map language-map weapons-map invocations boons]
   [(classes5e/barbarian-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)

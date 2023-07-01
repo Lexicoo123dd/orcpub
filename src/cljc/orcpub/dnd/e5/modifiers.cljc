@@ -99,6 +99,12 @@
    "Darkvision"
    (common/bonus-str value)))
 
+
+
+;; (defn prereq-speed [value prereq-level class]
+;;   (mods/cum-sum-mod ?speed value "speed" (mods/bonus-str value) (fn [c] (let [class-level @(subscribe [::char5e/class-level-fn nil c])]
+;;                                                                   (>= (class-level class) prereq-level)))))
+
 (defn speed [value]
   (mods/cum-sum-mod ?speed value "speed" (mods/bonus-str value)))
 
@@ -120,7 +126,7 @@
 (defn swimming-speed-override [value]
   (mods/vec-mod ?swimming-speed-overrides value))
 
-(defn swimming-speed-equal-to-walking []
+(defn swimming-speed-equal-to-walking [& [prereq-level]]
   (mods/vec-mod ?swimming-speed-overrides ?speed))
 
 (defn climbing-speed [value]
@@ -129,7 +135,7 @@
 (defn climbing-speed-override [value]
   (mods/vec-mod ?climbing-speed-overrides value))
 
-(defn climbing-speed-equal-to-walking []
+(defn climbing-speed-equal-to-walking [& [prereq-level]]
   (mods/vec-mod ?climbing-speed-overrides ?speed))
 
 (defn unarmored-speed-bonus [value]
