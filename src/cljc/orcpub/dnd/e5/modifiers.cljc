@@ -126,7 +126,7 @@
 (defn swimming-speed-override [value]
   (mods/vec-mod ?swimming-speed-overrides value))
 
-(defn swimming-speed-equal-to-walking [& [prereq-level]]
+(defn swimming-speed-equal-to-walking []
   (mods/vec-mod ?swimming-speed-overrides ?speed))
 
 (defn climbing-speed [value]
@@ -135,7 +135,7 @@
 (defn climbing-speed-override [value]
   (mods/vec-mod ?climbing-speed-overrides value))
 
-(defn climbing-speed-equal-to-walking [& [prereq-level]]
+(defn climbing-speed-equal-to-walking []
   (mods/vec-mod ?climbing-speed-overrides ?speed))
 
 (defn unarmored-speed-bonus [value]

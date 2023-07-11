@@ -1678,6 +1678,29 @@
                                               :level 17
                                               :page 80
                                               :summary (str "when you hit a creature with unarmed strike, spend 3 ki to set up vibrations that last " (?class-level :monk) " days. Use an action to end the vibrations if on the same plane, reducing the target to 0 HPs on failed DC " (?spell-save-dc ::char5e/wis) " CON save. It takes 10d10 necrotic damage on successful save.\n\nCan only affect one creature at a time, and can end it harmlessly")})]}}}
+                  {:name "Way of the Kensei"
+                   :modifiers [
+                               (mod5e/bonus-action
+                                {:name "Kensei's Shot"
+                                 :summary "Any target you hit with a ranged attack using a kensei weapon takes an extra 1d4 damage of the weapon’s type for this turn"})]
+                   :selections [(opt5e/tool-selection [:calligraphers-supplies :painters-supplies] 1)]
+                   :levels {6 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Magic Kensei Weapons"
+                                             :summary "Attacks with kensei weapons count as magical"})
+                                           (mod5e/dependent-trait
+                                            {:name "Deft Strike"
+                                            :frequency units5e/turns-1
+                                            :summary (str "When you hit a target with a kensei weapon, spend 1 ki to deal 1d" ?martial-arts-die "extra damage")})]}
+                            11 {:modifiers [(mod5e/bonus-action
+                                             {:name "Sharpen the Blade"
+                                              :duration units5e/minutes-1
+                                              :summary "Expend up to 3 ki points to grant one kensei weapon you touch a bonus to attack and damage rolls when you attack with it. The bonus equals the number of ki points you spent. Has no effect on a magic weapon that already has a bonus to attack and damage rolls. Ends if you use this again"})]}
+                            17 {:modifiers [(mod5e/dependent-trait
+                                             {:name "Unerring Accuracy"
+                                              :frequency units5e/turns-1
+                                              :summary "If you miss with an attack roll using a monk weapon on your turn, you can reroll it"})]}}
+                   :traits [{:name "Agile Parry"
+                             :summary "If you make an unarmed strike as part of the Attack action on your turn and are holding a kensei weapon, gain +2 AC until your next turn, while the weapon is in your hand and you aren’t incapacitated."}]}
                   #_{:name "Way of Shadow"
                      :modifiers [(mod5e/spells-known 0 :minor-illusion ::char5e/wis "Monk (Way of Shadow)")
                                  (mod5e/action
@@ -2201,9 +2224,9 @@
                                {:name "Deft Explorer"
                                 :selections [(opt5e/language-selection-aux (vals language-map) 2)
                                              (opt5e/expertise-selection 1)]
-                                :modifiers [(mod5e/speed 5)
-                                            (mod5e/swimming-speed-equal-to-walking)
-                                            (mod5e/climbing-speed-equal-to-walking)
+                                :modifiers [(mod/cum-sum-mod ?speed (if (>= (?class-level :ranger) 6) 5 0))
+                                            (mod/vec-mod ?swimming-speed-overrides (if (>= (?class-level :ranger) 6) ?speed 0))
+                                            (mod/vec-mod ?climbing-speed-overrides (if (>= (?class-level :ranger) 6) ?speed 0))
                                             (mod5e/bonus-action
                                              {:name "Roving"
                                               :level 6
@@ -3338,6 +3361,12 @@
                   (mod5e/spells-known 2 :levitate ::char5e/cha "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
+     {:name "Aspect of the Moon"
+      :modifiers [(mod5e/trait-cfg
+                   {:name "Eldritch Invocation: Aspect of the Moon"
+                    :summary "don't need to sleep and can't be forced to sleep"})]
+      :prereqs [opt5e/pact-of-the-tome-prereq]})
+    (t/option-cfg
      {:name "Beast Speech"
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Beast Speech"
@@ -3360,6 +3389,14 @@
                     :frequency units5e/long-rests-1
                     :summary "cast compulsion once using warlock spell slot"})
                   (mod5e/spells-known 4 :compulsion ::char5e/cha "Warlock" 0 "once per long rest")]})
+    (t/option-cfg
+     {:name "Bond of the Talisman"
+      :modifiers [(mod5e/action
+                   {:name "Eldritch Invocation: Bond of the Talisman"
+                    :frequency (units5e/long-rests ?prof-bonus)
+                    :summary "teleport to the unoccupied space closest to the talisman wearer if on the same plane, or they can teleport to you"})]
+      :prereqs [opt5e/pact-of-the-talisman-prereq
+                (opt5e/total-levels-option-prereq 12 :warlock)]})
     (t/option-cfg
      {:name "Book of Ancient Secrets"
       :modifiers [(mod5e/trait-cfg
@@ -3396,6 +3433,13 @@
       :prereqs [opt5e/pact-of-the-chain-prereq
                 (opt5e/total-levels-option-prereq 15 :warlock)]})
     (t/option-cfg
+     {:name "Cloak of Flies"
+      :modifiers [(mod5e/bonus-action
+                   {:name "Eldritch Invocation: Cloak of Flies"
+                    :frequency units5e/rests-1
+                    :summary (str "advantage on Intimidation checks and disadvantage on all other CHA checks. Any other creature starting their turn within 5 ft. takes " (max 0 (?ability-bonuses ::char5e/cha)) " poison damage. Ends if incapacitated or dismissed as bonus action")})]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
+    (t/option-cfg
      {:name "Devil's Sight"
       :modifiers [(mod5e/darkvision 120 1)
                   (mod5e/trait-cfg
@@ -3413,12 +3457,25 @@
                   (mod5e/spells-known 4 :confusion ::char5e/cha "Warlock" 0 "once per long rest")]
       :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
     (t/option-cfg
+     {:name "Eldritch Mind"
+      :modifiers [(mod5e/trait-cfg
+                   {:name "Eldritch Invocation: Eldritch Mind"
+                    :summary "advantage on CON saves to mantain concentration on a spell"})]})
+    (t/option-cfg
      {:name "Eldritch Sight"
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Eldritch Sight"
                     :page 110
                     :summary "cast detect magic at will"})
                   (mod5e/spells-known 1 :detect-magic ::char5e/cha "Warlock" 0 "at will")]})
+    (t/option-cfg
+     {:name "Eldritch Smite"
+      :modifiers [(mod5e/trait-cfg
+                   {:name "Eldritch Invocation: Eldritch Smite"
+                    :frequency units5e/turns-1
+                    :summary "when you hit a creature with your pact weapon, expend a warlock spell slot to deal an extra 1d8 force damage plus 1d8 per level of the slot, and knock prone if it is Huge or smaller"})]
+      :prereqs [opt5e/pact-of-the-blade-prereq
+                (opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Eldritch Spear"
       :modifiers [(mod5e/trait-cfg
@@ -3433,6 +3490,14 @@
                     :page 111
                     :summary "read any writing."})]})
     (t/option-cfg
+     {:name "Far Scribe"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Far Scribe"
+                    :summary (str "a creature can use its action to write its name of a page in the book (max " ?prof-bonus " names). Cast sending without using spell slot or material components to the creature by writing the message on the page. Replies appear on the page, and disappears after 1 minute. Use action to erase name")})
+                  (mod5e/spells-known 3 :false-life ::char5e/cha "Warlock")]
+      :prereqs [opt5e/pact-of-the-tome-prereq
+                (opt5e/total-levels-option-prereq 5 :warlock)]})
+    (t/option-cfg
      {:name "Fiendish Vigor"
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Fiendish Vigor"
@@ -3440,9 +3505,64 @@
                     :summary "cast false life at will"})
                   (mod5e/spells-known 1 :false-life ::char5e/cha "Warlock" 0 "at will")]})
     (t/option-cfg
+     {:name "Ghostly Gaze"
+      :modifiers [(mod5e/action
+                   {:name "Eldritch Invocation: Ghostly Gaze"
+                    :duration units5e/minutes-1
+                    :summary "see through solid objects to a 30 ft. range. Darkvision within the range, and uses your concentration. Objects are percieved as ghostly, transparent images"})]
+      :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
+    (t/option-cfg
      {:name "Gaze of Two Minds"
       :modifiers [(mod5e/trait "Eldritch Invocation: Gaze of Two Minds"
                                "You can use your action to touch a willing humanoid and perceive through its senses until the end of your next turn. As long as the creature is on the same plane of existence as you, you can use your action on subsequent turns to maintain this connection, extending the duration until the end of your next turn. While perceiving through the other creature’s senses, you benefit from any special senses possessed by that creature, and you are blinded and deafened to your own surroundings.")]})
+    (t/option-cfg
+     {:name "Gift of the Depths"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Gift of the Depths"
+                    :frequency units5e/long-rests-1
+                    :summary "breathe underwater and gain swimming speed equal to your walking speed. Cast water breathing once for free"})
+                  (mod5e/swimming-speed-equal-to-walking)
+                  (mod5e/spells-known 3 :water-breathing ::char5e/cha "Warlock" 0 "once/long rest")]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
+    (t/option-cfg
+     {:name "Gift of the Ever-Living Ones"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Gift of the Ever-Living Ones"
+                    :summary "always roll max when rolling to regain hp while your familiar is within 100 ft"})]
+      :prereqs [opt5e/pact-of-the-chain-prereq]})
+    (t/option-cfg
+     {:name "Gift of the Protectors"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Gift of the Protectors"
+                    :frequency units5e/long-rests-1
+                    :summary (str "a creature can use its action to write its name of a page in the book (max " ?prof-bonus " names). Use action to erase name. Any creature on the page drops to 1 hp instead of 0")})]
+      :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)
+                opt5e/pact-of-the-tome-prereq]})
+    (t/option-cfg
+     {:name "Grasp of Hadar"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Grasp of Hadar"
+                    :frequency units5e/turns-1
+                    :summary "move a creature that you hit with eldritch blast 10 ft. straight closer to you"})]
+      :prereqs [opt5e/has-eldritch-blast-prereq]})
+    (t/option-cfg
+     {:name "Improved Pact Weapon"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Improved Pact Weapon"
+                    :summary "use any Pact of the Blade weapon as a warlock spellcasting focus. The weapon gains a +1 bonus to attack and damage rolls unless if it already has a bonus. You can conjure a shortbow, longbow, light crossbow, or heavy crossbow"})]
+      :prereqs [opt5e/pact-of-the-blade-prereq]})
+    (t/option-cfg
+     {:name "Investment of the Chain Master"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Investment of the Chain Master"
+                    :summary "familiars from find familiar gets these benefits:\n- gain flying or swimming speed of 40 ft.\n- as a bonus action, command the familiar to take the Attack action.\n- attacks are magical.\n- familiar uses your spell save DC.\n- you can use your reaction to grant the familiar resistance against damage it takes"})]
+      :prereqs [opt5e/pact-of-the-chain-prereq]})
+    (t/option-cfg
+     {:name "Lance of Lethargy"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Lance of Lethargy"
+                    :summary "reduce the speed of a creature you hit with eldritch blast by 10 ft. until the end of your next turn"})]
+      :prereqs [opt5e/has-eldritch-blast-prereq]})
     (t/option-cfg
      {:name "Lifedrinker"
       :modifiers [(mod5e/dependent-trait
@@ -3451,6 +3571,12 @@
                     :summary (str "extra " (max 1 (?ability-bonuses ::char5e/cha)) " necrotic damage with your pact weapon")})]
       :prereqs [(opt5e/total-levels-option-prereq 12 :warlock)
                 opt5e/pact-of-the-blade-prereq]})
+    (t/option-cfg
+     {:name "Maddening Hex"
+      :modifiers [(mod5e/bonus-action
+                   {:name "Eldritch Invocation: Maddening Hex"
+                    :summary (str "deal " (max 1 (?ability-bonuses ::char5e/cha)) "psychic damage to a creature within 30 ft. cursed by your hex spell or by a warlock feature of yours that you can see, and each creature you can see within 5 ft. of it of your choice")})]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]}) ;; curse prereq
     (t/option-cfg
      {:name "Mask of Many Faces"
       :modifiers [(mod5e/trait-cfg
@@ -3508,6 +3634,26 @@ long rest."})
                   (mod5e/spells-known 1 :jump ::char5e/cha "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
+     {:name "Protection of the Talisman"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Protection of the Talisman"
+                    :frequency (units5e/long-rests ?prof-bonus)
+                    :summary "the wearer of your talisman can add a d4 to a failed saving throw"})]
+      :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)
+                opt5e/pact-of-the-talisman-prereq]})
+    (t/option-cfg
+     {:name "Rebuke of the Talisman"
+      :modifiers [(mod5e/reaction
+                   {:name "Eldritch Invocation: Rebuke of the Talisman"
+                    :summary (str "deal " ?prof-bonus " psychic damage to an attacker that you can see within 30 ft. that hit the wearer of your talisman and push it up to 10 ft. away from the wearer")})]
+      :prereqs [opt5e/pact-of-the-talisman-prereq]})
+    (t/option-cfg
+     {:name "Relentless Hex"
+      :modifiers [(mod5e/bonus-action
+                   {:name "Eldritch Invocation: Relentless Hex"
+                    :summary "teleport up to 30 ft. to an unoccupied space you can see within 5 ft. of a target you can see cursed by your hex spell of by a warlock feature of yours"})]
+      :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]}) ;; curse prereq
+    (t/option-cfg
      {:name "Repelling Blast"
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Repelling Blast"
@@ -3523,6 +3669,13 @@ long rest."})
                     :summary "cast polymorph using a warlock spell slot"})
                   (mod5e/spells-known 4 :polymorph ::char5e/cha "Warlock" 0 "once per long rest")]
       :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
+    (t/option-cfg
+     {:name "Shroud of Shadow"
+      :modifiers [(mod5e/trait-cfg
+                   {:name "Eldritch Invocation: Shroud of Shadow"
+                    :summary "cast invisibility at will without expending a spell slot"})
+                  (mod5e/spells-known 2 :invisibility ::char5e/cha "Warlock")]
+      :prereqs [(opt5e/total-levels-option-prereq 15 :warlock)]})
     (t/option-cfg
      {:name "Sign of Ill Omen"
       :modifiers [(mod5e/trait-cfg
@@ -3548,6 +3701,27 @@ long rest."})
                     :summary "when using Attack action, attack with pact blade twice"})]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)
                 opt5e/pact-of-the-blade-prereq]})
+    (t/option-cfg
+     {:name "Tomb of Levistus"
+      :modifiers [(mod5e/reaction
+                   {:name "Eldritch Invocation: Tomb of Levistus"
+                    :frequency units5e/rests-1
+                    :summary (str "when you take damage, entomb yourself in ice until the end of your next turn. You gain " (* 10 (?class-level :warlock)) " temp HP, which take from the triggering damage. Immediately afterwards, you gain vulnerability to fire damage, speed is reduced to 0, and you are incapacitated. These effects end when the ice melts, including the temp HP")})]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
+    (t/option-cfg
+     {:name "Trickster's Escape"
+      :modifiers [(mod5e/reaction
+                   {:name "Eldritch Invocation: Trickster's Escape"
+                    :frequency units5e/long-rests-1
+                    :summary "cast freedom of movement on yourself without expending a spell slot"})]
+      :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
+    (t/option-cfg
+     {:name "Undying Servitude"
+      :modifiers [(mod5e/reaction
+                   {:name "Eldritch Invocation: Undying Servitude"
+                    :frequency units5e/long-rests-1
+                    :summary "cast animate dead without expending a spell slot"})]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Visions of Distant Realms"
       :modifiers [(mod5e/trait-cfg
