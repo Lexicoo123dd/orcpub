@@ -3287,7 +3287,7 @@ At the end of each of its turns, an affected target can make a Wisdom saving thr
     :duration "Concentration, up to 1 hour"
     :description "Uttering a dark incantation, you summon a devil from the Nine Hells. You choose the devil's type, which must be one of challenge rating 6 or lower, such as a barbed devil or a bearded devil. The devil appears in an unoccupied space that you can see within range. The devil disappears when it drops to 0 hit points or when the spell ends.
 The devil is unfriendly toward you and your companions. Roll initiative for the devil, which has its own turns. It is under the Dungeon Master's control and acts according to its nature on each of its turns, which might result in its attacking you if it thinks it can prevail, or trying to tempt you to undertake an evil act in exchange for limited service. The DM has the creature's statistics.
-On each of your turns, you can try to issue a verbal command to the devil (no action required by you). It obeys the command if the likely outcome is in accordance with its desires, especially if the result would draw you toward evil. Otherwise, you must make a Charisma (Deception, Intimidation, or Persuasion) check contested by its Wisdom (Insight) check. You make the check with advantage if you say the devil's true name. If your check fails, the devil becomes immune to your verbal commands for the duration of the spell, though it can still carry out your commands if it chooses. If your check succeeds, the devil carries out your command—such as "attack my enemies," "explore the room ahead," or "bear this message to the queen"—until it completes the activity, at which point it returns to you to report having done so.
+On each of your turns, you can try to issue a verbal command to the devil (no action required by you). It obeys the command if the likely outcome is in accordance with its desires, especially if the result would draw you toward evil. Otherwise, you must make a Charisma (Deception, Intimidation, or Persuasion) check contested by its Wisdom (Insight) check. You make the check with advantage if you say the devil's true name. If your check fails, the devil becomes immune to your verbal commands for the duration of the spell, though it can still carry out your commands if it chooses. If your check succeeds, the devil carries out your command—such as \"attack my enemies,\" \"explore the room ahead,\" or \"bear this message to the queen\"—until it completes the activity, at which point it returns to you to report having done so.
 If your concentration ends before the spell reaches its full duration, the devil doesn't disappear if it has become immune to your verbal commands. Instead, it acts in whatever manner it chooses for 3d6 minutes, and then it disappears.
 If you possess an individual devil's talisman, you can summon that devil if it is of the appropriate challenge rating plus 1, and it obeys all your commands, with no Charisma checks required.
 At Higher Levels. When you cast this spell using a spell slot of 6th level or higher, the challenge rating increases by 1 for each slot level above 5th."
@@ -4199,7 +4199,7 @@ Similarly, this spell doesn't directly affect plant growth. The moved earth carr
   [
    {
     :name "Nathair's Mischief"
-    :key "nathairs mischief"
+    :key :nathairs-mischief
     :school illusion
     :level 2
     :casting-time actions-1
@@ -5806,7 +5806,7 @@ You can exert fine control on objects with your telekinetic grip, such as manipu
     :level 8
     :casting-time actions-1
     :range "Unlimited"
-    :components {:verbal true :somatic true :material :material-component "a pair of linked silver rings"}
+    :components {:verbal true :somatic true :material true :material-component "a pair of linked silver rings"}
     :duration "24 hours"
     :description "You create a telepathic link between yourself and a willing creature with which you are familiar. The creature can be anywhere on the same plane of existence as you. The spell ends if you or the target are no longer on the same plane.
 Until the spell ends, you and the target can instantaneously share words, images, sounds, and other sensory messages with one another through the link, and the target recognizes you as the creature it is communicating with. The spell enables a creature with an Intelligence score of at least 1 to understand the meaning of your words and take in the scope of any sensory messages you send to it."
@@ -6417,7 +6417,7 @@ The webs are flammable. Any 5-foot cube of webs exposed to fire burns away in 1 
                 :level 7
                 :casting-time actions-1
                 :range "300 feet"
-                :components {:verbal true :material :material-component "a piece of straw"}
+                :components {:verbal true :material true :material-component "a piece of straw"}
                 :duration conc-1-min
                 :description "A whirlwind howls down to a point that you can see on the ground within range. The whirlwind is a 10-foot-radius, 30-foot-high cylinder centered on that point. Until the spell ends, you can use your action to move the whirlwind up to 30 feet in any direction along the ground. The whirlwind sucks up any Medium or smaller objects that aren't secured to anything and that aren't worn or carried by anyone.
 A creature must make a Dexterity saving throw the first time on a turn that it enters the whirlwind or that the whirlwind enters its space, including when the whirlwind first appears. A creature takes 10d6 bludgeoning damage on a failed save, or half as much damage on a successful one. In addition, a Large or smaller creature that fails the save must succeed on a Strength saving throw or become restrained in the whirlwind until the spell ends. When a creature starts its turn restrained by the whirlwind, the creature is pulled 5 feet higher inside it, unless the creature is at the top. A restrained creature moves with the whirlwind and falls when the spell ends, unless the creature has some means to stay aloft.
