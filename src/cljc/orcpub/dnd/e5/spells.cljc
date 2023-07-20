@@ -668,7 +668,7 @@ At Higher Levels. When you cast this spell using a spell slot of 7th level or hi
 This spell's damage increases when you reach certain levels. At 5th level, the melee attack deals an extra 1d8 thunder damage to the target on a hit, and the damage the target takes for moving increases to 2d8. Both damage rolls increase by 1d8 at 11th level (2d8 and 3d8) and again at 17th level (3d8 and 4d8)."
     }
    {
-    :name "Booming Blade"
+    :name "Borrowed Knowledge"
     :school divination
     :level 2
     :casting-time actions-1

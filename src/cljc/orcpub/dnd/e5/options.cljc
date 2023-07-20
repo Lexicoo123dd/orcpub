@@ -154,6 +154,11 @@
 (defn weapon-proficiency-option [{:keys [name key]}]
   (t/option-cfg
    {:name name
+    :prereqs [(t/option-prereq
+               "You already have this weapon proficiency"
+               (fn [c]
+                 (let [weapon-profs @(subscribe [::character/weapon-profs nil c])]
+                   (not (get weapon-profs key)))))]
     :modifiers [(modifiers/weapon-proficiency key)]}))
 
 (defn tool-option [tool]
@@ -276,18 +281,26 @@
                    (fn [c] (let [prof-keys @(subscribe [::character/armor-profs nil c])]
                              (boolean (and prof-keys (prof-keys armor-kw)))))))
 
-(defn race-prereq [race-nms]
+(defn race-prereq [race-nms & [hide-if-fail?]]
   (let [name-set (if (string? race-nms)
                    #{race-nms}
                    (into #{} race-nms))]
     (t/option-prereq
      (str (common/list-print name-set "or") " Only")
-     (fn [c] (name-set @(subscribe [::character/race nil c]))))))
+     (fn [c] (name-set @(subscribe [::character/race nil c])))
+     hide-if-fail?)))
 
 #_(defn race-prereq [race-kw]
   (t/option-prereq (str "Requires being a " (s/upper-case (name race-kw)))
                    (fn [c] (let [race-key @(subscribe [::character/race nil c])]
                              (boolean (and race-key (= race-key race-kw)))))))
+
+(defn subrace-prereq [race-nm subrace-nm & [hide-if-fail?]]
+  (t/option-prereq
+   (str subrace-nm " Only")
+   (fn [c] (and (= race-nm @(subscribe [::character/race nil c]))
+                (= subrace-nm @(subscribe [::character/subrace nil c]))))
+   hide-if-fail?))
 
 (def elemental-disciplines
   [(t/option-cfg
@@ -460,8 +473,7 @@
       :key key
       :edit-event edit-event
       :help (spell-help spell)
-      :prereqs [(if prereq-fn
-                 (t/option-prereq "hej" prereq-fn))
+      :prereqs [prereq-fn
                 (t/option-prereq
                  "You already know this spell"
                  (fn [c] (let [spells-known @(subscribe [::character/spells-known nil c])]
@@ -483,9 +495,11 @@
 (defn spell-level-title [class-name level]
   (str class-name (if (and level (zero? level)) " Cantrips Known" (str " Spells Known" (if level (str " " level))))))
 
+(defn prereq-level-fn [prereq-level]
+  (fn [c] (let [total-levels @(subscribe [::character/total-levels nil c])]
+                               (>= total-levels prereq-level))))
 
-
-(defn spell-selection [spell-lists spells-map {:keys [title class-key level spellcasting-ability class-name num prepend-level? spell-keys options min max exclude-ref? ref prereq-level]}]
+(defn spell-selection [spell-lists spells-map {:keys [title class-key level spellcasting-ability class-name num prepend-level? spell-keys options min max exclude-ref? ref prereq-fn]}]
   (let [title (or title (spell-level-title class-name level))
         kw (common/name-to-kw title)
         ref (or ref (if (not exclude-ref?) [:class class-key kw]))]
@@ -495,19 +509,49 @@
        :ref ref
        :order (if (and level (zero? level)) 0 1)
        :multiselect? true
-       :prereq-fn (fn [c] (let [total-levels @(subscribe [::character/total-levels nil c])]
-                               (>= total-levels prereq-level)))
+       :prereq-fn prereq-fn
        :options (or options
                     (spell-options
-                     spells-map
-                     (or spell-keys (get-in spell-lists [class-key level]))
-                     spellcasting-ability
-                     class-name
-                     prepend-level?
-                     nil))
+                    spells-map
+                    (or spell-keys (get-in spell-lists [class-key level]))
+                    spellcasting-ability
+                    class-name
+                    prepend-level?
+                    nil))
        :min (or min num)
        :max (or max num)
        :tags #{:spells}})))
+
+      ;;  :options (flatten (concat (or options     
+      ;;                (spell-options
+      ;;                spells-map
+      ;;                (or spell-keys (get-in spell-lists [class-key level]))
+      ;;                spellcasting-ability
+      ;;                class-name
+      ;;                prepend-level?
+      ;;                nil)
+      ;;                )
+      ;;                (map (fn [[race-name]]
+      ;;                 (spell-options
+      ;;                 spells-map
+      ;;                 (get-in sl/race-spell-lists [race-name level])
+      ;;                 spellcasting-ability
+      ;;                 class-name
+      ;;                 prepend-level?
+      ;;                 nil
+      ;;                 (race-prereq race-name false))) sl/race-spell-lists)
+      ;;                (map (fn [[subrace-name race-name]]
+      ;;                 (spell-options
+      ;;                 spells-map
+      ;;                 (get-in sl/subrace-spell-lists [subrace-name 1 level])
+      ;;                 spellcasting-ability
+      ;;                 class-name
+      ;;                 prepend-level?
+      ;;                 nil
+      ;;                 (subrace-prereq race-name subrace-name false)))
+      ;;                   (into {} (map (fn [subrace-list] {(get subrace-list 0) (get-in subrace-list [1 0])}) sl/subrace-spell-lists)))
+      ;;                 )
+      ;;                 )
 
 (defn spell-slot-schedule [level-factor]
   (case level-factor
@@ -1374,6 +1418,10 @@
                      :page 165
                      :summary "ignore loading property of crossbows you are proficient with. You don't have ranged weapon disadvantage from being within 5 ft. of hostile creature"})]})
    (feat-option
+      {:name "Crusher"
+       :summary "increase STR or DEX by 1; when dealing bludgeoning damage, move target 5 ft. to an unoccupied space, provided it's no more than one size larger than you (once/turn); on critical dealing bludgeoning damage, attack rolls are made with advantage against the target until your next turn"
+       :selections [(ability-increase-selection [::character/str ::character/dex] 1)]})
+   (feat-option
       {:name "Defensive Duelist"
        :icon "spinning-sword"
        :page 165
@@ -1724,6 +1772,18 @@
                     {:name "Tavern Brawler: Grapple"
                      :page 170
                      :summary "attempt grapple when you hit with improvised weapon or unarmed strike"})]})
+   (feat-option
+      {:name "Telekinetic"
+       :exclude-trait? true
+       :summary "increase INT, WIS, or CHA by 1; cast invisible mage hand without components; shove as bonus action"
+       :selections [(ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false [(fn [k] (mods/modifier ?telekinetic-ability k)) (fn [k] (modifiers/spells-known 0 :mage-hand k "Telekinetic"))])]
+       :modifiers [(modifiers/spells-known 0 :mage-hand nil "Telekinetic")
+                   (modifiers/trait-cfg
+                    {:name "Telekinetic: Mage Hand"
+                     :summary "You learn the mage hand cantrip. You can cast it without somatic or verbal components and can make it invisible. If you already know the spell, its range increases by 30 ft."})
+                   (modifiers/bonus-action
+                    {:name "Telekinetic: Shove"
+                     :summary (str "Telekinetically shove one creature you can see within 30 ft. 5 ft. away or toward you if it fails a DC " (?spell-save-dc ?telekinetic-ability) " STR save")})]})
    (feat-option
       {:name "Tough"
        :icon "defensive-wall"
@@ -2151,8 +2211,122 @@
     :spell-keys spells
     :num num}))
 
-(defn warlock-subclass-spell-selection [spell-lists spells-map spells]
-  (subclass-spell-selection spell-lists spells-map :warlock "Warlock" ::character/cha spells 0))
+(defn warlock-subclass-spell-selection [spell-lists spells-map class-kw spellcasting-ability spells]
+  (subclass-spell-selection spell-lists spells-map class-kw (if (= class-kw :warlock-int) "Warlock (Int)" "Warlock (Cha)") spellcasting-ability spells 0))
+
+(def classes
+  {:bard "Bard"
+   :cleric "Cleric"
+   :druid "Druid"
+   :paladin "Paladin"
+   :ranger "Ranger"
+   :sorcerer "Sorcerer"
+   :warlock-int "Warlock (Int)"
+   :warlock-cha "Warlock (Cha)"
+   :wizard "Wizard"})
+
+(def unprepared-classes
+  {:bard "Bard"
+   :sorcerer "Sorcerer"
+   :warlock-int "Warlock (Int)"
+   :warlock-cha "Warlock (Cha)"
+   :wizard "Wizard"})
+
+(def prepared-classes
+  {:cleric "Cleric"
+   :druid "Druid"
+   :paladin "Paladin"
+   :ranger "Ranger"})
+
+(def class-prepares-spells?
+  {:bard false
+   :cleric true
+   :druid true
+   :paladin true
+   :ranger true
+   :sorcerer false
+   :warlock-int false
+   :warlock-cha false
+   :wizard false})
+
+(def class-spellcasting-ability
+  {:bard ::character/cha
+   :cleric ::character/wis
+   :druid ::character/wis
+   :paladin ::character/cha
+   :ranger ::character/wis
+   :sorcerer ::character/cha
+   :warlock-int ::character/cha
+   :warlock-cha ::character/cha
+   :wizard ::character/int})
+
+(def class-level-factors
+  {:bard 1
+   :cleric 1
+   :druid 1
+   :paladin 2
+   :ranger 2
+   :sorcerer 1
+   :warlock-int 5
+   :warlock-cha 5
+   :wizard 1})
+
+(def max-spell-slot-levels
+  {1 [1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 9 9]
+   2 [0 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5]
+   3 [0 0 1 1 1 1 2 2 2 2 2 2 3 3 3 3 3 3 4 4]
+   5 [1 1 2 2 3 3 4 4 5 5 5 5 5 5 5 5 5 5 5 5]})
+
+(defn spell-level-prereq [spell-level class-key]
+  (fn [c] (let [level-factor (get class-level-factors class-key)
+                class-level (@(subscribe [::character/class-level-fn nil c]) class-key)
+                max-spell-slot-level (get (get max-spell-slot-levels level-factor) (- class-level 1))]
+               (>= max-spell-slot-level spell-level))))
+
+(defn min-level-prereq [spell-level class-key]
+  (let [level-factor (get class-level-factors class-key)]
+        (+ 1 (.indexOf (max-spell-slot-levels level-factor) spell-level))))
+
+(defn race-spell-selection [spell-lists spells-map spells num]
+  (into []
+    (map
+      (fn [[class-key class-name]]
+        (let [spell-level (get-in spells-map [(get spells 0) :level])]
+        (spell-selection
+          spell-lists
+          spells-map
+          {:class-key class-key
+            :level (if (zero? spell-level) 0 nil)
+            :spell-keys spells
+            :spellcasting-ability (get class-spellcasting-ability class-key)
+            :class-name class-name
+            ;; :ref [:class class-key :bard-cantrips-known]
+            :num 0
+            :prepend-level? (if (zero? spell-level) false true)
+            :prereq-fn (spell-level-prereq spell-level class-key)})))
+      unprepared-classes
+      )))
+
+(defn race-spell-prepared-class [spell-lists spells-map spells num]
+  (into []
+    (map
+      (fn [[class-key class-name]]
+        (let [spell-level (get-in spells-map [(get spells 0) :level])]
+        (map (fn [spell] (modifiers/spells-known 1 spell (get class-spellcasting-ability class-key) "Cleric" (min-level-prereq spell-level class-key))) spells)))
+      prepared-classes
+      )))
+
+(defn subrace-spell-selections [spell-lists spells-map subrace-nm min-lvl max-lvl]
+  (mapcat (fn [spell-level] (race-spell-selection spell-lists spells-map (get-in sl/subrace-spell-lists [subrace-nm 1 spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
+
+(defn race-spell-selections [spell-lists spells-map race-nm min-lvl max-lvl]
+  (mapcat (fn [spell-level] (race-spell-selection spell-lists spells-map (get-in sl/race-spell-lists [race-nm spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
+
+(defn subrace-spells-known [spell-lists spells-map subrace-nm min-lvl max-lvl]
+  (mapcat (fn [spell-level] (race-spell-prepared-class spell-lists spells-map (get-in sl/subrace-spell-lists [subrace-nm 1 spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
+
+(defn race-spells-known [spell-lists spells-map race-nm min-lvl max-lvl]
+  (mapcat (fn [spell-level] (race-spell-prepared-class spell-lists spells-map (get-in sl/race-spell-lists [race-nm spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
 
 (defn traits-modifiers [traits & [class-key source]]
   (map
@@ -2489,6 +2663,10 @@
   {:name "Artisan's Tool"
    :options (zipmap (map :key equipment/artisans-tools) (repeat 1))})
 
+(def gaming-set-choice-cfg
+  {:name "Gaming Set"
+   :options (zipmap (map :key equipment/gaming-sets) (repeat 1))})
+
 (defn starting-equipment-option [equipment num]
   (t/option-cfg
    {:name (:name equipment)
@@ -2709,7 +2887,10 @@
 
 (defn total-levels-prereq [level & [class-key]]
   (fn [c] (>= (if class-key
-                (@(subscribe [::character/class-level-fn nil c]) class-key)
+                (if (= class-key :warlock)
+                  (max (@(subscribe [::character/class-level-fn nil c]) :warlock-cha)
+                       (@(subscribe [::character/class-level-fn nil c]) :warlock-int))
+                  (@(subscribe [::character/class-level-fn nil c]) class-key))
                 @(subscribe [::character/total-levels nil c]))
               level)))
 
@@ -2723,7 +2904,6 @@
                    (character/total-levels c))
                  0)
              (or level 0)))))
-
 
 (defn total-levels-option-prereq [level & [class-key]]
   (t/option-prereq
@@ -3278,12 +3458,12 @@
     :tags #{:spells}
     :options (spell-options spells-map (get-in spell-lists [:druid 0]) ::character/wis class-nm)}))
 
-(defn eldritch-invocation-selection [cfg]
+(defn eldritch-invocation-selection [cfg class-kw]
   (t/selection-cfg
    (merge
     {:name "Eldritch Invocations"
      :multiselect? true
-     :ref [:class :warlock :eldritch-invocations]
+     :ref [:class class-kw :eldritch-invocations]
      :tags #{:spells}}
     cfg)))
 
@@ -3348,12 +3528,6 @@
                    :summary ~summary
                    :frequency ~frequency
                    :range ~range}))}))
-
-(defn subrace-prereq [race-nm subrace-nm]
-  (t/option-prereq
-   (str subrace-nm " Only")
-   (fn [c] (and (= race-nm @(subscribe [::character/race nil c]))
-                (= subrace-nm @(subscribe [::character/subrace nil c]))))))
 
 #_(def deep-gnome-prereq
   (t/option-prereq

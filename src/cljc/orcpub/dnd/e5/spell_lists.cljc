@@ -2,6 +2,41 @@
   (:require [orcpub.dnd.e5.character :as char5e]
             [re-frame.core :refer [dispatch subscribe]]))
 
+(def warlock
+   {0
+    [:blade-ward :booming-blade :chill-touch :create-bonfire :eldritch-blast :friends
+     :frostbite :green-flame-blade :infestation :lightning-lure :mage-hand :magic-stone
+     :mind-sliver :minor-illusion :poison-spray :prestidigitation
+     :sword-burst :thunderclap :toll-the-dead :true-strike],
+    1
+    [:armor-of-agathys :arms-of-hadar :cause-fear :charm-person :comprehend-languages :distort-value :expeditious-retreat
+     :hellish-rebuke :hex :illusory-script :protection-from-evil-and-good :unseen-servant :witch-bolt],
+    2
+    [:borrowed-knowledge :cloud-of-daggers :crown-of-madness :darkness :earthbind :enthrall :hold-person :invisibility :mind-spike :mirror-image
+     :misty-step :ray-of-enfeeblement :shadow-blade :shatter :spider-climb
+     :suggestion],
+    3
+    [:counterspell :dispel-magic :enemies-abound :fear :fly :gaseous-form :hunger-of-hadar :hypnotic-pattern
+     :incite-greed :intellect-fortress :magic-circle :major-image :remove-curse :spirit-shroud :summon-fey
+     :summon-lesser-demons :summon-shadowspawn :summon-undead :thunder-step :tongues :vampiric-touch],
+    4 
+    [:banishment :blight :charm-monster :dimension-door :elemental-bane :hallucinatory-terrain
+     :raulothims-psychic-lance :shadow-of-moil :sickening-radiance :summon-aberration :summon-greater-demon],
+    5 
+    [:contact-other-plane :danse-macabre :dream :enervation :far-step :hold-monster :infernal-calling :mislead
+     :negative-energy-flood :planar-binding :scrying :synaptic-static :teleportation-circle :wall-of-light],
+    6
+    [:arcane-gate :circle-of-death :conjure-fey :create-undead :eyebite
+     :flesh-to-stone :investiture-of-flame :investiture-of-ice :investiture-of-stone
+     :investiture-of-wind :mass-suggestion :mental-prison :scatter :soul-cage :summon-fiend :tashas-otherworldly-guise :true-seeing],
+    7 
+    [:crown-of-stars :dream-of-the-blue-veil :etherealness :finger-of-death :forcecage :plane-shift :power-word-pain],
+    8
+    [:demiplane :dominate-monster :feeblemind :glibness
+     :maddening-darkness :power-word-stun],
+    9 
+    [:astral-projection :blade-of-disaster :foresight :gate :imprisonment :power-word-kill :psychic-scream :true-polymorph :weird]})
+
 (def phb-spell-lists
   {
    :bard
@@ -207,40 +242,9 @@
      :sunburst],
     9 
     [:blade-of-disaster :gate :mass-polymorph :meteor-swarm :power-word-kill :psychic-scream :time-stop :wish]},
-   :warlock
-   {0
-    [:blade-ward :booming-blade :chill-touch :create-bonfire :eldritch-blast :friends
-     :frostbite :green-flame-blade :infestation :lightning-lure :mage-hand :magic-stone
-     :mind-sliver :minor-illusion :poison-spray :prestidigitation
-     :sword-burst :thunderclap :toll-the-dead :true-strike],
-    1
-    [:armor-of-agathys :arms-of-hadar :cause-fear :charm-person :comprehend-languages :distort-value :expeditious-retreat
-     :hellish-rebuke :hex :illusory-script :protection-from-evil-and-good :unseen-servant :witch-bolt],
-    2
-    [:borrowed-knowledge :cloud-of-daggers :crown-of-madness :darkness :earthbind :enthrall :hold-person :invisibility :mind-spike :mirror-image
-     :misty-step :ray-of-enfeeblement :shadow-blade :shatter :spider-climb
-     :suggestion],
-    3
-    [:counterspell :dispel-magic :enemies-abound :fear :fly :gaseous-form :hunger-of-hadar :hypnotic-pattern
-     :incite-greed :intellect-fortress :magic-circle :major-image :remove-curse :spirit-shroud :summon-fey
-     :summon-lesser-demons :summon-shadowspawn :summon-undead :thunder-step :tongues :vampiric-touch],
-    4 
-    [:banishment :blight :charm-monster :dimension-door :elemental-bane :hallucinatory-terrain
-     :raulothims-psychic-lance :shadow-of-moil :sickening-radiance :summon-aberration :summon-greater-demon],
-    5 
-    [:contact-other-plane :danse-macabre :dream :enervation :far-step :hold-monster :infernal-calling :mislead
-     :negative-energy-flood :planar-binding :scrying :synaptic-static :teleportation-circle :wall-of-light],
-    6
-    [:arcane-gate :circle-of-death :conjure-fey :create-undead :eyebite
-     :flesh-to-stone :investiture-of-flame :investiture-of-ice :investiture-of-stone
-     :investiture-of-wind :mass-suggestion :mental-prison :scatter :soul-cage :summon-fiend :tashas-otherworldly-guise :true-seeing],
-    7 
-    [:crown-of-stars :dream-of-the-blue-veil :etherealness :finger-of-death :forcecage :plane-shift :power-word-pain],
-    8
-    [:demiplane :dominate-monster :feeblemind :glibness
-     :maddening-darkness :power-word-stun],
-    9 
-    [:astral-projection :blade-of-disaster :foresight :gate :imprisonment :power-word-kill :psychic-scream :true-polymorph :weird]},
+   :warlock warlock,
+   :warlock-cha warlock,
+   :warlock-int warlock,
    :wizard
    {0
     [:acid-splash :blade-ward :booming-blade :chill-touch :control-flames :create-bonfire
@@ -264,7 +268,7 @@
      :gift-of-gab :gust-of-wind :hold-person :invisibility :jims-glowing-coin :kinetic-jaunt :knock :levitate
      :locate-object :magic-mouth :magic-weapon :maximilians-earthen-grasp :melfs-acid-arrow :mind-spike :mirror-image :misty-step
      :nathairs-mischief :nystuls-magic-aura :phantasmal-force :pyrotechnics :ray-of-enfeeblement :rimes-binding-ice :rope-trick :scorching-ray :see-invisibility
-     :shadow-blade :shatter :skywrite :snillocs-snowball-swarm :spider-climb :suggestion :tashas-mind-whip :vortex-warp :warding-wing :web :wither-and-bloom],
+     :shadow-blade :shatter :skywrite :snillocs-snowball-swarm :spider-climb :suggestion :tashas-mind-whip :vortex-warp :warding-wind :web :wither-and-bloom],
     3
     [:animate-dead :ashardalons-stride :bestow-curse :blink :catnap :clairvoyance :counterspell :dispel-magic :enemies-abound
      :erupting-earth :fast-friends :fear :feign-death :fireball :flame-arrows :fly :gaseous-form :glyph-of-warding :haste
@@ -308,20 +312,41 @@
      :power-word-kill :prismatic-wall :psychic-scream :shapechange :time-stop
      :true-polymorph :weird :wish]}})
 
-(def graviturgy-spell-list
-  {0 [:mage-hand :mold-earth :sapping-sting]
-   1 [:catapult :earth-tremor :expeditious-retreat :feather-fall :tensers-floating-disk :jump :magnify-gravity]})
+#_(def subrace-spell-lists
+  {"Halfling" [{"Mark of Hospitality" {1 [:goodberry :sleep]
+                                      2 [:aid :calm-emotions]
+                                      3 [:create-food-and-water :leomunds-tiny-hut]
+                                      4 [:aura-of-purity :mordenkainens-private-sanctum]
+                                      5 [:hallow]}}
+              {"Mark of Healing" {1 [:cure-wounds :healing-word]
+                                  2 [:lesser-restoration :prayer-of-healing]
+                                  3 [:aura-of-vitality :mass-healing-word]
+                                  4 [:aura-of-purity :aura-of-life]
+                                  5 [:greater-restoration]}}]})
 
-#_(def graviturgy-spell-list
-  {
-   :bard
-    {0
-     [:dancing-lights :mold-earth]
-     1
-     [:tensers-floating-disk]
-     2
-     [:earthbind]}
-  })
+(def subrace-spell-lists
+  {"Mark of Hospitality" ["Halfling" {1 [:goodberry :sleep]
+                                      2 [:aid :calm-emotions]
+                                      3 [:create-food-and-water :leomunds-tiny-hut]
+                                      4 [:aura-of-purity :mordenkainens-private-sanctum]
+                                      5 [:hallow]}]
+   "Mark of Healing" ["Halfling" {1 [:cure-wounds :healing-word]
+                                  2 [:lesser-restoration :prayer-of-healing]
+                                  3 [:aura-of-vitality :mass-healing-word]
+                                  4 [:aura-of-purity :aura-of-life]
+                                  5 [:greater-restoration]}]})
+
+(def race-spell-lists
+  {"Lumini" {0 [:mage-hand :mold-earth :sapping-sting]
+             1 [:catapult :earth-tremor :expeditious-retreat :feather-fall :tensers-floating-disk :jump :magnify-gravity]
+             2 [:earthbind :immovable-object :kinetic-jaunt :levitate :moonbeam :spider-climb :vortex-warp :wristpocket]
+             3 [:erupting-earth :fly :melfs-minute-meteors :pulse-wave]
+             4 [:freedom-of-movement :gravity-sinkhole :mordenkainens-private-sanctum :stone-shape]
+             5 [:bigbys-hand :contact-other-plane :passwall :telekinesis :wall-of-force]
+             6 [:bones-of-the-earth :find-the-path :gravity-fissure :move-earth]
+             7 [:forcecage :reverse-gravity :tether-essence]
+             8 [:dark-star :demiplane :earthquake]
+             9 [:imprisonment :meteor-swarm :ravenous-void]}})
 
 (defn merge-class-lists [class-list-1 class-list-2]
   (merge-with
