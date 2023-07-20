@@ -585,6 +585,43 @@
    :custom-equipment {"Feywild trinket" 3}
    :treasure {:gp 8}})
 
+(def far-traveler-bg
+  {:name "Far Traveler"
+   :help "You come from a distant place."
+   :traits [{:name "All eyes on you"
+             :summary "You get curious glances because of your foreign accent, mannerisms, figures of speech, and perhaps appearance. You can use this attention to gain access to people and and places you might otherwise not have."}]
+   :selections [(t/selection-cfg
+                 {:name "Tool Proficiency"
+                  :tags #{:profs}
+                  :options [(t/option-cfg
+                             {:name "Musical Instrument"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})
+                            (t/option-cfg
+                             {:name "Gaming Set"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/gaming-sets) 1)]})]})
+                (t/selection-cfg
+                 {:name "Musical Instrument or Gaming Set"
+                  :tags #{:equipment}
+                  :options [(t/option-cfg
+                             {:name "Musical Instrument"
+                              :selections [(opt5e/new-starting-equipment-selection
+                                            nil
+                                            {:name "Musical Instrument"
+                                             :options (opt5e/tool-options (filter (comp (set (map :key equipment5e/musical-instruments)) :key) equipment5e/tools))})]})
+                            (t/option-cfg
+                             {:name "Gaming Set"
+                              :selections [(opt5e/new-starting-equipment-selection
+                                            nil
+                                            {:name "Gaming Set"
+                                             :options (opt5e/tool-options (filter (comp (set (map :key equipment5e/gaming-sets)) :key) equipment5e/tools))})]})]})]
+   :profs {:skill {:insight true :perception true}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Poorly wrought maps" 1
+                      "Jewelry (10 gp)" 1}
+   :treasure {:gp 5}})
+
 (def folk-hero-bg
   {:name "Folk Hero"
    :help "You are regarded as a hero by the people of your home village."
@@ -926,6 +963,7 @@ You can call upon the hospitality of your people, and those allied with your tri
        entertainer-bg
        gladiator-bg
        feylost-bg
+       far-traveler-bg
        folk-hero-bg
        guild-artisan-bg
        guild-merchant-bg
