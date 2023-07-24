@@ -1092,8 +1092,19 @@
     :tags #{:profs :expertise}}))
 
 (def maneuver-options
-  [(maneuver-option "Commander's Strike"
+  [(maneuver-option "Ambush"
+                    "Add superiority die to a Stealth check or initiative roll, if not incapacitated")
+   (maneuver-option "Bait and Switch"
+                    "When within 5 ft. of a creature on your turn, expend a superiority die and switch places with them without provoking opportunity attacks, provided you spend 5 ft. of movement, the creature is willing, and isn't incapacitated. Add superiority die to your or the creature's AC until your next turn")
+   (mod-maneuver-option
+    "Brace"
+    [(modifiers/reaction
+      {:name "Brace Maneuver"
+       :summary "When a creature you can see moves into your reach with a melee weapon, expend a superiority die and make one attack against them using the weapon, adding the superiority die to the damage"})])
+   (maneuver-option "Commander's Strike"
                     "When you take Attack action, forgo one attack, expend a superiority die, give a creature an immediate reaction attack, adding superiority die to damage")
+   (maneuver-option "Commanding Presense"
+                    "Add superiority die to an Intimidation, Performance, or Persuasion check")
    (maneuver-option "Disarming Attack"
                     "When you hit with a weapon attack, expend a superiority die and force the target to drop an item of your choice on failed STR save")
    (maneuver-option "Distracting Strike"
@@ -1112,6 +1123,11 @@
       {:name "Goading Attack Maneuver"
        :page 74
        :summary (str "add superiority die to a successful attack's damage, if target fails DC " ?maneuver-save-dc " WIS save, the next attack it makes must be against you or have disadvantage")})])
+   (mod-maneuver-option
+    "Grappling Strike"
+    [(modifiers/bonus-action
+      {:name "Grappling Strike Maneuver"
+       :summary "After you hit a creature with a melee attack on your turn, try to grapple the target, adding the superiority die to your Athletics check"})])
    (maneuver-option "Lunging Attack"
                     "increase melee attack reach by 5 ft., add superiority die to damage")
    (maneuver-option "Manuevering Attack"
@@ -1137,6 +1153,11 @@
        :page 74
        :summary (str "add superiority die to a successful attack's damage, if target is Large or smaller and fails a DC " ?maneuver-save-dc " STR save, it is pushed 15 ft. away")})])
    (mod-maneuver-option
+    "Quick Toss"
+    [(modifiers/bonus-action
+      {:name "Quick Toss Maneuver"
+       :summary "Expend a superiority die and make a ranged attack with a thrown weapon, adding the superiority die to the damage. You can draw the weapon as part of the attack"})])
+   (mod-maneuver-option
     "Rally"
     [(modifiers/bonus-action
       {:name "Rally Maneuver"
@@ -1152,6 +1173,8 @@
        :summary "if a creature misses you with a melee attack, attack as a reaction and add superiority die to damage"})])
    (maneuver-option "Sweeping Attack"
                     "if you hit a creature with an attack roll, choose another creature within 5 ft., if the roll would hit the creature, it takes superiority die worth of damage")
+   (maneuver-option "Tactical Assessment"
+                    "Add superiority die to an Investigation, History, or Insight check")
    (mod-maneuver-option
     "Trip Attack"
     [(modifiers/dependent-trait
@@ -1483,6 +1506,35 @@
      :modifiers [(modifiers/spells-known 2 :misty-step nil "Fey Touched")]
      :selections [ ;;(fey-touched-spell-selection)
                   (fey-touched-ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false)]})
+   (feat-option
+    {:name "Gift of the Metallic Dragon"
+     :summary "cast cure wounds once/long rest; use reaction to grant bonus to AC"
+     :selections [(t/selection-cfg
+                   {:name "Gift of the Metallic Dragon: Spellcasting ability"
+                    :tags #{:spells}
+                    :options [(t/option-cfg
+                               {:name "Intelligence"
+                                :modifiers [(modifiers/spells-known 1 :cure-wounds ::character/int "Gift of the Metallic Dragon")
+                                            (modifiers/trait-cfg
+                                             {:name "Gift of the Metallic Dragon: Draconic Healing"
+                                              :summary "You can cast cure wounds once/long rest or using a spell slot. INT is your spellcasting ability"})]})
+                              (t/option-cfg
+                               {:name "Wisdom"
+                                :modifiers [(modifiers/spells-known 1 :cure-wounds ::character/wis "Gift of the Metallic Dragon")
+                                            (modifiers/trait-cfg
+                                             {:name "Gift of the Metallic Dragon: Draconic Healing"
+                                              :summary "You can cast cure wounds once/long rest or using a spell slot. WIS is your spellcasting ability"})]})
+                              (t/option-cfg
+                               {:name "Charisma"
+                                :modifiers [(modifiers/spells-known 1 :cure-wounds ::character/cha "Gift of the Metallic Dragon")
+                                            (modifiers/trait-cfg
+                                             {:name "Gift of the Metallic Dragon: Draconic Healing"
+                                              :summary "You can cast cure wounds once/long rest or using a spell slot. CHA is your spellcasting ability"})]})]})]
+     :modifiers [(modifiers/spells-known 1 :cure-wounds nil "Gift of the Metallic Dragon")
+                 (modifiers/reaction
+                  {:name "Gift of the Metallic Dragon: Protective Wings"
+                   :frequency (units5e/long-rests ?prof-bonus)
+                   :summary (str "When you or another creature within 5 ft. is hit, grant a +" ?prof-bonus " to the AC")})]})
    (feat-option
     {:name "Grappler"
      :icon "muscle-up"
@@ -2225,6 +2277,10 @@
    :warlock-cha "Warlock (Cha)"
    :wizard "Wizard"})
 
+(def prepared-cantrip-classes
+  {:cleric "Cleric"
+   :druid "Druid"})
+
 (def unprepared-classes
   {:bard "Bard"
    :sorcerer "Sorcerer"
@@ -2284,8 +2340,9 @@
                (>= max-spell-slot-level spell-level))))
 
 (defn min-level-prereq [spell-level class-key]
-  (let [level-factor (get class-level-factors class-key)]
-        (+ 1 (.indexOf (max-spell-slot-levels level-factor) spell-level))))
+  (let [level-factor (get class-level-factors class-key)
+        level-prereq (+ 1 (.indexOf (max-spell-slot-levels level-factor) spell-level))]
+        (if (= 0 level-prereq) 21 level-prereq)))
 
 (defn race-spell-selection [spell-lists spells-map spells num]
   (into []
@@ -2307,12 +2364,31 @@
       unprepared-classes
       )))
 
+(defn race-cantrip-selection [spell-lists spells-map spells num]
+  (into []
+    (map
+      (fn [[class-key class-name]]
+        (spell-selection
+          spell-lists
+          spells-map
+          {:class-key class-key
+            :level 0
+            :spell-keys spells
+            :spellcasting-ability (get class-spellcasting-ability class-key)
+            :class-name class-name
+            ;; :ref [:class class-key :bard-cantrips-known]
+            :num 0
+            :prepend-level? false
+            :prereq-fn (spell-level-prereq 0 class-key)}))
+      prepared-cantrip-classes
+      )))
+
 (defn race-spell-prepared-class [spell-lists spells-map spells num]
   (into []
     (map
       (fn [[class-key class-name]]
         (let [spell-level (get-in spells-map [(get spells 0) :level])]
-        (map (fn [spell] (modifiers/spells-known 1 spell (get class-spellcasting-ability class-key) "Cleric" (min-level-prereq spell-level class-key))) spells)))
+        (map (fn [spell] (modifiers/spells-known 1 spell (get class-spellcasting-ability class-key) class-name (min-level-prereq spell-level class-key) nil class-key)) spells)))
       prepared-classes
       )))
 
@@ -2321,6 +2397,9 @@
 
 (defn race-spell-selections [spell-lists spells-map race-nm min-lvl max-lvl]
   (mapcat (fn [spell-level] (race-spell-selection spell-lists spells-map (get-in sl/race-spell-lists [race-nm spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
+
+(defn race-cantrip-selections [spell-lists spells-map race-nm min-lvl max-lvl]
+  (race-cantrip-selection spell-lists spells-map (get-in sl/race-spell-lists [race-nm 0]) 0))
 
 (defn subrace-spells-known [spell-lists spells-map subrace-nm min-lvl max-lvl]
   (mapcat (fn [spell-level] (race-spell-prepared-class spell-lists spells-map (get-in sl/subrace-spell-lists [subrace-nm 1 spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
@@ -3493,8 +3572,10 @@
   (t/option-prereq
    "You must know the edritch blast cantrip"
    (fn [c]
-     (get-in @(subscribe [::character/spells-known nil c])
-             [0 ["Warlock" :eldritch-blast]]))))
+     (or (get-in @(subscribe [::character/spells-known nil c])
+             [0 ["Warlock (Int)" :eldritch-blast]])
+         (get-in @(subscribe [::character/spells-known nil c])
+             [0 ["Warlock (Cha)" :eldritch-blast]])))))
 
 (defn deep-gnome-option-cfg [key source page]
   {:name "Gnome"

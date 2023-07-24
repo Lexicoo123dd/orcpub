@@ -538,6 +538,19 @@
                :pouch 1}
    :treasure {:gp 15}})
 
+(def city-watch-bg
+  {:name "City Watch"
+  ;;  :help "You have a history of being able to work people to your advantage."
+   :traits [{:name "Watcher's Eye"
+             :summary "You can easily find the local outpost of the watch or a similar organization, and just as easily pick out the dens of criminal activity in a community, although you're more likely to be welcome in the former locations rather than the latter."}]
+   :profs {:skill {:athletics true :insight true}
+           :language-options {:choose 2 :options {:any true}}}
+   :equipment {:horn 1
+               :manacles 1
+               :pouch 1}
+   :custom-equipment {"Uniform" 1}
+   :treasure {:gp 10}})
+
 (def entertainer-bg
   {:name "Entertainer"
    :help "You have a history of entertaining people."
@@ -958,6 +971,7 @@ You can call upon the hospitality of your people, and those allied with your tri
        archaeologist-bg
        athlete-bg
        charlatan-bg
+       city-watch-bg
        (criminal-background "Criminal")
        (criminal-background "Spy")
        entertainer-bg
@@ -1808,7 +1822,7 @@ May make other objects at the DM's discretion."}]}
 
 (defn lumini-spell-selection [spell-lists spells-map spellcasting-ability]
   (opt5e/spell-selection spell-lists spells-map 
-   {:spell-keys (get-in sl5e/race-spell-lists [:lumini 1])
+   {:spell-keys (get-in sl5e/race-spell-lists ["Lumini" 1])
     :spellcasting-ability spellcasting-ability
     :class-name "Lumini"
     :num 1
@@ -1841,14 +1855,15 @@ May make other objects at the DM's discretion."}]}
    :selections (into [] (concat
                 [(opt5e/ability-increase-selection [::char5e/wis ::char5e/int] 1 true)
                 (lumini-spellcasting-ability-selection spell-lists spells-map)]
-                (opt5e/race-spell-selections spell-lists spells-map "Lumini" 0 9)))
+                (opt5e/race-spell-selections spell-lists spells-map "Lumini" 0 9)
+                (opt5e/race-cantrip-selections spell-lists spells-map "Lumini" 0 0)))
    :modifiers (into [] (concat
                [(mod5e/skill-proficiency :perception)
                (mod/cum-sum-mod ?initiative ?prof-bonus)
                (mod5e/dependent-trait
                 {:name "Nimble Rabbit"
                  :summary (str "Advantage on skill checks and saves that would cause you to become grappled, prone, or restrained. Initiative increases by " (common/bonus-str ?prof-bonus))})]
-               (opt5e/race-spells-known spell-lists spells-map "Lumini" 0 9)))
+               (opt5e/race-spells-known spell-lists spells-map "Lumini" 1 9)))
    :traits [{:name "Moon Jump"
              :summary "High jump distance increases by 5 ft. and long jump by 10 ft."}
             {:name "Luminusborn"

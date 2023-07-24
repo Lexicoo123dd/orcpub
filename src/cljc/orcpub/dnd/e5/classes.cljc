@@ -1172,7 +1172,7 @@
                :page 75
                :summary "teleport up to 30 ft. when you use Action Surge. Can be before or after the additional action"}]})
 
-#_(defn martial-maneuvers-selection [num]
+(defn martial-maneuvers-selection [num]
     (t/selection-cfg
      {:name "Martial Maneuvers"
       :options opt5e/maneuver-options
@@ -1316,7 +1316,7 @@
                                                            #_(int (/ ?max-hit-points 2))
                                                            " HPs left, regain "
                                                            (+ 5 (?ability-bonuses ::char5e/con)) " HPs")})]}}}
-                 #_{:name "Battle Master"
+                 {:name "Battle Master"
                     :selections [(martial-maneuvers-selection 3)
                                  (opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]
                     :modifiers [(mod/modifier ?maneuver-save-dc (max (?spell-save-dc ::char5e/dex)
@@ -1721,6 +1721,14 @@
                                                 :page 80
                                                 :level 17
                                                 :summary "when a creature within 5 ft. is hit by attack from someone else, make a melee attack"})]}}}
+                  {:name "Wat of the Ascendant Dragon"
+                   :modifiers [(mod5e/reaction
+                                {:name "Draconic Disciple: Draconic Presence"
+                                 :summary "Reroll a failed Intimidation or Persuasion check. Once failure turns into success, you can't use it again until a long rest"})
+                               (mod5e/trait-cfg
+                                {:name "Draconic Disciple: Draconic Strike"
+                                 :summary "Change the damage type of an unarmed strike to acid, cold, fire, lightning, or poison"})]
+                   :selections [(opt5e/language-selection-aux (vals language-map) 1)]}
                   #_{:name "Way of the Four Elements"
                      :modifiers [(mod5e/dependent-trait
                                   {:name "Disciple of the Elements"
@@ -2390,6 +2398,7 @@
                                                                                          :summary "When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack’s damage against you."})]})]})]}}}
                   {:name "Drakewarden"
                    :modifiers [(mod5e/spells-known 0 :thaumaturgy ::char5e/wis "Drakewarden")
+                               (mod5e/language :draconic)
                                (mod5e/action
                                 {:name "Summon Drake"
                                  :frequency units5e/long-rests-1
