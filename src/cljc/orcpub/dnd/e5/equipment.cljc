@@ -11,6 +11,8 @@
     :name "Dulcimer"}
    {:key :flute
     :name "Flute"}
+   {:key :harmonica
+    :name "Harmonica"}
    {:key :lute
     :name "Lute"}
    {:key :lyre

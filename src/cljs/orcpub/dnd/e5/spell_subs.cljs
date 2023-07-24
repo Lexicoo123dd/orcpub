@@ -379,7 +379,7 @@
                  cleric-spells)
           (let [cleric-spell-mods (make-cleric-spell-mods cleric-spells)]
             {1 {:modifiers cleric-spell-mods}})))
-      (if (and (= class :warlock)
+      (if (and (or (= class :warlock-cha) (= class :warlock-int))
                (:warlock-spells option))
         (reduce-kv
          (fn [levels spell-level spells]
@@ -387,7 +387,7 @@
              (if (and spell-level (seq (vals spells)))
                (assoc-in levels
                          [level :selections]
-                         [(opt5e/warlock-subclass-spell-selection spell-lists spells-map (vals spells))]))))
+                         [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class (if (= class :warlock-cha) ::char5e/cha (if (= class :warlock-int) ::char5e/int)) (vals spells))]))))
          {}
          (:warlock-spells option))))
      by-level)))
@@ -538,6 +538,19 @@
                :pouch 1}
    :treasure {:gp 15}})
 
+(def city-watch-bg
+  {:name "City Watch"
+  ;;  :help "You have a history of being able to work people to your advantage."
+   :traits [{:name "Watcher's Eye"
+             :summary "You can easily find the local outpost of the watch or a similar organization, and just as easily pick out the dens of criminal activity in a community, although you're more likely to be welcome in the former locations rather than the latter."}]
+   :profs {:skill {:athletics true :insight true}
+           :language-options {:choose 2 :options {:any true}}}
+   :equipment {:horn 1
+               :manacles 1
+               :pouch 1}
+   :custom-equipment {"Uniform" 1}
+   :treasure {:gp 10}})
+
 (def entertainer-bg
   {:name "Entertainer"
    :help "You have a history of entertaining people."
@@ -584,6 +597,43 @@
                :pouch 1}
    :custom-equipment {"Feywild trinket" 3}
    :treasure {:gp 8}})
+
+(def far-traveler-bg
+  {:name "Far Traveler"
+   :help "You come from a distant place."
+   :traits [{:name "All eyes on you"
+             :summary "You get curious glances because of your foreign accent, mannerisms, figures of speech, and perhaps appearance. You can use this attention to gain access to people and and places you might otherwise not have."}]
+   :selections [(t/selection-cfg
+                 {:name "Tool Proficiency"
+                  :tags #{:profs}
+                  :options [(t/option-cfg
+                             {:name "Musical Instrument"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})
+                            (t/option-cfg
+                             {:name "Gaming Set"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/gaming-sets) 1)]})]})
+                (t/selection-cfg
+                 {:name "Musical Instrument or Gaming Set"
+                  :tags #{:equipment}
+                  :options [(t/option-cfg
+                             {:name "Musical Instrument"
+                              :selections [(opt5e/new-starting-equipment-selection
+                                            nil
+                                            {:name "Musical Instrument"
+                                             :options (opt5e/tool-options (filter (comp (set (map :key equipment5e/musical-instruments)) :key) equipment5e/tools))})]})
+                            (t/option-cfg
+                             {:name "Gaming Set"
+                              :selections [(opt5e/new-starting-equipment-selection
+                                            nil
+                                            {:name "Gaming Set"
+                                             :options (opt5e/tool-options (filter (comp (set (map :key equipment5e/gaming-sets)) :key) equipment5e/tools))})]})]})]
+   :profs {:skill {:insight true :perception true}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Poorly wrought maps" 1
+                      "Jewelry (10 gp)" 1}
+   :treasure {:gp 5}})
 
 (def folk-hero-bg
   {:name "Folk Hero"
@@ -640,6 +690,30 @@
    :custom-equipment {"Letter of introduction" 1}
    :treasure {:gp 15}})
 
+(def haunted-one-bg
+  {:name "Haunted One"
+   :help "You are haunted by something so terrible that you dare not speak of it"
+   :traits [{:name "Heart of Darkness"
+             :summary "Though commoners might fear you, they will extend you every courtesy and do their utmost to help you. Unless you have shown yourself to be a danger to them, they will even take up arms to fight alongside you, should you find yourself facing an enemy alone"}]
+   :profs {:skill-options {:choose 2 :options {:arcana true :investigation true :religion true :survival true}}
+           :language-options {:choose 1 :options {:abyssal true :celestial true :deep-speech true :draconic true :infernal true :primordial true :sylvan true :undercommon true}}}
+   :selections [(opt5e/language-selection ::langs5e/language-map 1)] ;;fix
+   :equipment {:monster-hunters-pack 1
+               :chest 1
+               :crowbar 1
+               :hammer 1
+               :wooden-stake 3
+               :holy-symbol 1
+               :holy-water 1
+               :manacles 1
+               :mirror-steel 1
+               :oil 1
+               :tinderbox 1
+               :torch 3
+               :clothes-common 1}
+   :custom-equipment {"Horror Trinket" 1}
+   :treasure {:sp 1}})
+
 (def hermit-bg
   {:name "Hermit"
    :help "You have lived a secluded life."
@@ -656,6 +730,17 @@
                       "Notes from studies/prayers" 1}
    :treasure {:gp 5}})
 
+(def investigator-bg
+  {:name "Investigator"
+  ;;  :help "You are haunted by something so terrible that you dare not speak of it"
+   :traits [{:name "Official Inquiry"
+             :summary "Through a combination of fast-talking, determination, and official-looking documentation, you can gain access to a place or an individual related to a crime you're investigating. Those who aren't involved in your investigation avoid impeding you or pass along your requests. Additionally, local law enforcement has firm opinions about you, viewing you as either a nuisance or one of their own"}]
+   :profs {:skill-options {:choose 2 :options {:insight true :investigation true :perception true}}
+           :tool {:disguise-kit true :thieves-tools true}}
+   :equipment {:magnifying-glass 1
+               :clothes-common 1}
+   :custom-equipment {"Evidence from a past case" 1}
+   :treasure {:gp 10}})
 
 (def noble-bg
   {:name "Noble"
@@ -740,8 +825,7 @@
            :tool {:land-vehicles true}}
    :equipment {:clothes-traveler-s 1
                :pouch 1}
-   :selections [(opt5e/tool-selection (map :key equipment5e/gaming-sets) 1)]
-   :equipment-choices [:gaming-set 1]
+   :equipment-choices [opt5e/gaming-set-choice-cfg]
    :custom-equipment {"Insignia of your rank" 1}
    :treasure {:gp 10}
   })
@@ -853,6 +937,29 @@
                       "Token to remember your parents" 1}
    :treasure {:gp 10}})
 
+(def uthgardt-tribe-member-bg
+  {:name "Uthgardt Tribe Member"
+   :help "You belong to the Uthgardt tribe."
+   :traits [{:name "Uthgardt Heritage"
+             :summary "You have an excellent knowledge of the terrain and natural resources of the North. You can find twice as much food and water as you normally would when you forage there.
+You can call upon the hospitality of your people, and those allied with your tribe, often including members of the druid circles, tribes of nomadic elves, the Harpers, and the priesthoods devoted to the gods of the First Circle."}]
+   :profs {:skill {:athletics true :survival true}
+           :language-options {:choose 1 :options {:any true}}}
+   :selections [(t/selection-cfg
+                 {:name "Tool Proficiency"
+                  :tags #{:profs}
+                  :options [(t/option-cfg
+                             {:name "Musical Instrument"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})
+                            (t/option-cfg
+                             {:name "Artisan's Tools"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]})]})]
+   :equipment {:hunting-trap 1
+               :clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Totemic token or tattoos" 1}
+   :treasure {:gp 10}})
+
 (reg-sub
  ::bg5e/backgrounds
  :<- [::bg5e/plugin-backgrounds]
@@ -864,15 +971,19 @@
        archaeologist-bg
        athlete-bg
        charlatan-bg
+       city-watch-bg
        (criminal-background "Criminal")
        (criminal-background "Spy")
        entertainer-bg
        gladiator-bg
        feylost-bg
+       far-traveler-bg
        folk-hero-bg
        guild-artisan-bg
        guild-merchant-bg
+       haunted-one-bg
        hermit-bg
+       investigator-bg
        noble-bg
        knight-bg
        mafia-member-bg
@@ -884,6 +995,7 @@
        pirate-bg
        soldier-bg
        urchin-bg
+       uthgardt-tribe-member-bg
        ])
    )))
 
@@ -1036,7 +1148,7 @@
     :spellcasting-ability ::char5e/int
     :class-name "High Elf"
     :num 1
-    :prereq-level prereq-level}))
+    :prereq-fn (opt5e/prereq-level-fn prereq-level)}))
 
 (defn wood-elf-aoa-cantrip-selection [spell-lists spells-map]
   (opt5e/spell-selection
@@ -1314,7 +1426,24 @@
    :modifiers [(mod5e/damage-resistance :poison)
                (mod5e/saving-throw-advantage [:poisoned])]})
 
-(def halfling-option-cfg
+(defn goliath-option-cfg [language-map]
+  {:name "Goliath"
+   :key :goliath
+   :abilities {::char5e/str 2 ::char5e/con 1}
+   :size :medium
+   :speed 30
+   :languages ["Common" "Giant"]
+   :profs {:skill {:athletics true}}
+   :modifiers [(mod5e/damage-resistance :cold)
+               (mod5e/reaction
+                {:name "Stone's Endurance"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "When you take damage, reduce the damage taken by 1d12+" (?ability-bonuses ::char5e/con))})]
+   :traits [(powerful-build 21)
+            {:name "Mountain Born"
+             :summary "You have resistance to cold damage. You also naturally acclimate to high altitudes, including elevations above 20,000 feet."}]})
+
+(defn halfling-option-cfg [spell-lists spells-map]
   {:name "Halfling"
    :key :halfling
    :help "Halflings are small and nimble, half the height of a human, but fairly stout. They are cheerful and practical."
@@ -1350,7 +1479,19 @@
                                       (>= lvl 5) (conj "Spike Growth"))))
                                 " once per long rest, without material components. WIS is your spellcasting ability.")})]
      :traits [{:name "Timberwalk"
-               :summary "Ability checks made to track you are at disadvantage and you can move through difficult terrain made of non-magical plants and overgrowth without expending extra movement."}]}]
+               :summary "Ability checks made to track you are at disadvantage and you can move through difficult terrain made of non-magical plants and overgrowth without expending extra movement."}]}
+    {:name "Mark of Hospitality"
+     :abilities {::char5e/cha 1}
+     :modifiers (into [] (concat
+                 [(mod5e/spells-known 0 :prestidigitation ::char5e/cha "Halfling")
+                 (mod5e/spells-known 1 :purify-food-and-drink ::char5e/cha "Halfling")
+                 (mod5e/spells-known 1 :unseen-servant ::char5e/cha "Halfling")]
+                 (opt5e/subrace-spells-known spell-lists spells-map "Mark of Hospitality" 1 5)))
+     :selections (opt5e/subrace-spell-selections spell-lists spells-map "Mark of Hospitality" 1 5)
+     :traits [{:name "Ever Hospitable"
+               :summary "Add 1d4 to any Persuasion check and ability checks involving Brewer's Tools or Cook's Utensils."}
+              {:name "Innkeeper's Magic"
+               :summary "You know prestidigitation and can cast Purify Foods and Drink and Unseen Servant once per long rest. Cha is your spellcasting ability."}]}]
    :traits [{:name "Lucky"
              :page 28
              :summary "Reroll 1s on d20 once"}
@@ -1361,6 +1502,12 @@
              :page 28
              :summary "you have advantage on saves against being frightened"}]})
 
+;; (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 1]) 0)
+;;                  (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 2]) 0)
+;;                  (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 3]) 0)
+;;                  (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 4]) 0)
+;;                  (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 5]) 0)
+
 (defn human-option-cfg [spell-lists spells-map language-map]
   {:name "Human"
    :key :human
@@ -1369,7 +1516,8 @@
    :speed 30
    :languages ["Common"]
    :subraces
-   [{:name "Calishite"}
+   [{:name "Calishite"
+     :help "test"}
     {:name "Chondathan"}
     {:name "Damaran"}
     {:name "Illuskan"}
@@ -1674,7 +1822,7 @@ May make other objects at the DM's discretion."}]}
 
 (defn lumini-spell-selection [spell-lists spells-map spellcasting-ability]
   (opt5e/spell-selection spell-lists spells-map 
-   {:spell-keys (sl5e/graviturgy-spell-list 1)
+   {:spell-keys (get-in sl5e/race-spell-lists ["Lumini" 1])
     :spellcasting-ability spellcasting-ability
     :class-name "Lumini"
     :num 1
@@ -1704,13 +1852,18 @@ May make other objects at the DM's discretion."}]}
    :size :medium
    :speed 35
    :languages ["Common" "Lunar"]
-   :selections [(opt5e/ability-increase-selection [::char5e/wis ::char5e/int] 1 true)
+   :selections (into [] (concat
+                [(opt5e/ability-increase-selection [::char5e/wis ::char5e/int] 1 true)
                 (lumini-spellcasting-ability-selection spell-lists spells-map)]
-   :modifiers [(mod5e/skill-proficiency :perception)
+                (opt5e/race-spell-selections spell-lists spells-map "Lumini" 0 9)
+                (opt5e/race-cantrip-selections spell-lists spells-map "Lumini" 0 0)))
+   :modifiers (into [] (concat
+               [(mod5e/skill-proficiency :perception)
                (mod/cum-sum-mod ?initiative ?prof-bonus)
                (mod5e/dependent-trait
                 {:name "Nimble Rabbit"
                  :summary (str "Advantage on skill checks and saves that would cause you to become grappled, prone, or restrained. Initiative increases by " (common/bonus-str ?prof-bonus))})]
+               (opt5e/race-spells-known spell-lists spells-map "Lumini" 1 9)))
    :traits [{:name "Moon Jump"
              :summary "High jump distance increases by 5 ft. and long jump by 10 ft."}
             {:name "Luminusborn"
@@ -1841,7 +1994,8 @@ May make other objects at the DM's discretion."}]}
         dwarf-option-cfg
         (elf-option-cfg spell-lists spells-map language-map)
         (elf-aoa-option-cfg spell-lists spells-map language-map)
-        halfling-option-cfg
+        (goliath-option-cfg language-map)
+        (halfling-option-cfg spell-lists spells-map)
         (human-option-cfg spell-lists spells-map language-map)
         dragonborn-standard-option-cfg
         dragonborn-option-cfg
@@ -1867,7 +2021,8 @@ May make other objects at the DM's discretion."}]}
    (classes5e/ranger-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
    (classes5e/rogue-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
    (classes5e/sorcerer-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
-   (classes5e/warlock-option spell-lists spells-map plugin-subclasses-map language-map  weapons-map invocations boons)
+   (classes5e/warlock-cha-option spell-lists spells-map plugin-subclasses-map language-map  weapons-map invocations boons)
+   (classes5e/warlock-int-option spell-lists spells-map plugin-subclasses-map language-map  weapons-map invocations boons)
    (classes5e/wizard-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)])
 
 (reg-sub

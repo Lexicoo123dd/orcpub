@@ -1172,7 +1172,7 @@
                :page 75
                :summary "teleport up to 30 ft. when you use Action Surge. Can be before or after the additional action"}]})
 
-#_(defn martial-maneuvers-selection [num]
+(defn martial-maneuvers-selection [num]
     (t/selection-cfg
      {:name "Martial Maneuvers"
       :options opt5e/maneuver-options
@@ -1316,7 +1316,7 @@
                                                            #_(int (/ ?max-hit-points 2))
                                                            " HPs left, regain "
                                                            (+ 5 (?ability-bonuses ::char5e/con)) " HPs")})]}}}
-                 #_{:name "Battle Master"
+                 {:name "Battle Master"
                     :selections [(martial-maneuvers-selection 3)
                                  (opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]
                     :modifiers [(mod/modifier ?maneuver-save-dc (max (?spell-save-dc ::char5e/dex)
@@ -1721,6 +1721,14 @@
                                                 :page 80
                                                 :level 17
                                                 :summary "when a creature within 5 ft. is hit by attack from someone else, make a melee attack"})]}}}
+                  {:name "Wat of the Ascendant Dragon"
+                   :modifiers [(mod5e/reaction
+                                {:name "Draconic Disciple: Draconic Presence"
+                                 :summary "Reroll a failed Intimidation or Persuasion check. Once failure turns into success, you can't use it again until a long rest"})
+                               (mod5e/trait-cfg
+                                {:name "Draconic Disciple: Draconic Strike"
+                                 :summary "Change the damage type of an unarmed strike to acid, cold, fire, lightning, or poison"})]
+                   :selections [(opt5e/language-selection-aux (vals language-map) 1)]}
                   #_{:name "Way of the Four Elements"
                      :modifiers [(mod5e/dependent-trait
                                   {:name "Disciple of the Elements"
@@ -2390,6 +2398,7 @@
                                                                                          :summary "When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack’s damage against you."})]})]})]}}}
                   {:name "Drakewarden"
                    :modifiers [(mod5e/spells-known 0 :thaumaturgy ::char5e/wis "Drakewarden")
+                               (mod5e/language :draconic)
                                (mod5e/action
                                 {:name "Summon Drake"
                                  :frequency units5e/long-rests-1
@@ -3021,6 +3030,18 @@
                                true)]})))
               (get-in sl5e/spell-lists [:wizard 3]))}))
 
+(defn bladesinging-weapon-options [weapons]
+  (opt5e/weapon-proficiency-options
+   (filter
+    #(and (= nil (::weapon5e/two-handed? %)) (::weapon5e/melee? %))
+    weapons)))
+
+(defn bladesinging-weapon-prof-selection [weapon-map]
+  (t/selection-cfg
+   {:name "Weapon Proficiency"
+    :tags #{:profs}
+    :options (bladesinging-weapon-options (vals weapon-map))}))
+
 (defn wizard-option [spells spells-map plugin-subclasses-map language-map weapon-map] 
   (opt5e/class-option
    spells
@@ -3080,7 +3101,32 @@
                                              ", you always have them prepared and can cast them once without expending a slot")})]}}
     :subclass-level 2
     :subclass-title "Arcane Tradition"
-    :subclasses [{:name "School of Evocation"
+    :subclasses [{:name "School of Bladesinging"
+                  :profs {:armor {:light true}}
+                  :modifiers [(mod5e/skill-proficiency :performance)
+                              (mod5e/bonus-action
+                               {:name "Bladesong"
+                                :frequency (units5e/long-rests ?prof-bonus)
+                                :duration units5e/minutes-1
+                                :summary (str "Invoke an elven magic called the Bladesong, provided that you aren't wearing medium or heavy armor or using a shield.
+                                          \nThe bladesong lasts for 1 minute, and ends early if you are incapacitated, if you don medium or heavy armor or a shield, or if you use two hands to make an attack with a weapon. You can also dismiss the Bladesong at any time (no action required).
+                                          \nWhile your Bladesong is active, you gain the following benefits:
+                                          \n• You gain a +" (max 1 (?ability-bonuses ::char5e/int)) " bonus to your AC.
+                                          \n• Your walking speed increases by 10 ft.
+                                          \n• You have advantage on Acrobatics checks.
+                                          \n• You gain a +" (max 1 (?ability-bonuses ::char5e/int)) " bonus to any CON save you make to maintain your concentration on a spell.")})]
+                  :selections [(bladesinging-weapon-prof-selection weapon-map)]
+                  :levels {6 {:modifiers [(mod5e/num-attacks 2)
+                                          (mod5e/trait-cfg
+                                           {:name "Extra Attack"
+                                             :summary "Attack twice when taking the Attack action. Can cast a cantrip in place of one attack"})]}
+                           10 {:modifiers [(mod5e/reaction
+                                            {:name "Song of Defense"
+                                             :summary "When you take damage, expend one spell slot to reduce that damage to you by an amount equal to five times the spell slot's level"})]}
+                           14 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Song of Victory"
+                                             :summary (str "Add +" (max 1 (?ability-bonuses ::char5e/int) " to the damage of your melee weapon attacks while bladesong is active"))})]}}}
+                 {:name "School of Evocation"
                   :levels {10 {:modifiers [(mod5e/dependent-trait
                                             {:level 10
                                              :name "Empowered Evocation"
@@ -3280,7 +3326,7 @@
                              melee-weapons-xform
                              weapons)})]}))
 
-(defn pact-boon-options [plugin-boons spell-lists spells-map]
+(defn pact-boon-options [plugin-boons spell-lists spells-map ?ability]
  (concat
    (map
     (fn [{:keys [name description edit-event]}]
@@ -3293,7 +3339,7 @@
     plugin-boons)
   [(t/option-cfg
     {:name "Pact of the Chain"
-     :modifiers [(mod5e/spells-known 1 :find-familiar ::char5e/cha "Warlock")
+     :modifiers [(mod5e/spells-known 1 :find-familiar ?ability "Warlock")
                  (mod5e/trait-cfg
                   {:name opt5e/pact-of-the-chain-name
                    :page 107
@@ -3318,7 +3364,7 @@
                                                     (fn [[cls-kw spells-by-level]]
                                                       (spells-by-level 0))
                                                     spell-lists))
-                                                  ::char5e/cha
+                                                  ?ability
                                                   "Warlock"
                                                   false
                                                   "uses Book of Shadows")})]
@@ -3328,7 +3374,7 @@
                    :summary "you have a spellbook with 3 extra cantrips"})]})]))
 
 
-(defn eldritch-invocation-options [plugin-invocations spell-lists spells-map]
+(defn eldritch-invocation-options [plugin-invocations spell-lists spells-map ?ability]
   (concat
    (map
     (fn [{:keys [name description]}]
@@ -3343,7 +3389,7 @@
       :modifiers [(mod5e/dependent-trait
                    {:name "Eldritch Invocation: Agonizing Blast"
                     :page 110
-                    :summary (str "add " (?ability-bonuses ::char5e/cha) " to eldritch blast spell damage")})]
+                    :summary (str "add " (?ability-bonuses ?ability) " to eldritch blast spell damage")})]
       :prereqs [opt5e/has-eldritch-blast-prereq]})
     (t/option-cfg
      {:name "Armor of Shadows"
@@ -3351,14 +3397,14 @@
                    {:name "Eldritch Invocation: Armor of Shadows"
                     :page 110
                     :summary "cast mage armor on yourself at will"})
-                  (mod5e/spells-known 1 :mage-armor ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :mage-armor ?ability "Warlock" 0 "at will")]})
     (t/option-cfg
      {:name "Ascendant Step"
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Ascendant Step"
                     :page 110
                     :summary "cast levitate on yourself at will"})
-                  (mod5e/spells-known 2 :levitate ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 2 :levitate ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
      {:name "Aspect of the Moon"
@@ -3372,7 +3418,7 @@
                    {:name "Eldritch Invocation: Beast Speech"
                     :page 110
                     :summary "can cast speak with animals at will"})
-                  (mod5e/spells-known 1 :speak-with-animals ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :speak-with-animals ?ability "Warlock" 0 "at will")]})
     (t/option-cfg
      {:name "Beguiling Influence"
       :modifiers [(mod5e/trait-cfg
@@ -3388,7 +3434,15 @@
                     :page 110
                     :frequency units5e/long-rests-1
                     :summary "cast compulsion once using warlock spell slot"})
-                  (mod5e/spells-known 4 :compulsion ::char5e/cha "Warlock" 0 "once per long rest")]})
+                  (mod5e/spells-known 4 :compulsion ?ability "Warlock" 0 "once per long rest")]})
+    (t/option-cfg
+     {:name "Bond of the Talisman"
+      :modifiers [(mod5e/action
+                   {:name "Eldritch Invocation: Bond of the Talisman"
+                    :frequency (units5e/long-rests ?prof-bonus)
+                    :summary "teleport to the unoccupied space closest to the talisman wearer if on the same plane, or they can teleport to you"})]
+      :prereqs [opt5e/pact-of-the-talisman-prereq
+                (opt5e/total-levels-option-prereq 12 :warlock)]})
     (t/option-cfg
      {:name "Bond of the Talisman"
       :modifiers [(mod5e/action
@@ -3415,7 +3469,7 @@
                                 (filter
                                  (fn [s] (and (= 1 (:level s)) (opt5e/ritual-spell? s)))
                                  spells5e/spells))
-                               ::char5e/cha
+                               ?ability
                                "Warlock"
                                false
                                "Book of Ancient Secrets Ritual")
@@ -3429,7 +3483,7 @@
                     :page 110
                     :frequency units5e/long-rests-1
                     :summary "cast hold monster at will on celestials, fiends, or elementals"})
-                  (mod5e/spells-known 5 :hold-monster ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 5 :hold-monster ?ability "Warlock" 0 "at will")]
       :prereqs [opt5e/pact-of-the-chain-prereq
                 (opt5e/total-levels-option-prereq 15 :warlock)]})
     (t/option-cfg
@@ -3437,7 +3491,7 @@
       :modifiers [(mod5e/bonus-action
                    {:name "Eldritch Invocation: Cloak of Flies"
                     :frequency units5e/rests-1
-                    :summary (str "advantage on Intimidation checks and disadvantage on all other CHA checks. Any other creature starting their turn within 5 ft. takes " (max 0 (?ability-bonuses ::char5e/cha)) " poison damage. Ends if incapacitated or dismissed as bonus action")})]
+                    :summary (str "advantage on Intimidation checks and disadvantage on all other CHA checks. Any other creature starting their turn within 5 ft. takes " (max 0 (?ability-bonuses ?ability)) " poison damage. Ends if incapacitated or dismissed as bonus action")})]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Devil's Sight"
@@ -3454,7 +3508,7 @@
                     :page 110
                     :summary "use warlock spell slot to cast confusion"
                     :frequency units5e/long-rests-1})
-                  (mod5e/spells-known 4 :confusion ::char5e/cha "Warlock" 0 "once per long rest")]
+                  (mod5e/spells-known 4 :confusion ?ability "Warlock" 0 "once per long rest")]
       :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
     (t/option-cfg
      {:name "Eldritch Mind"
@@ -3467,7 +3521,15 @@
                    {:name "Eldritch Invocation: Eldritch Sight"
                     :page 110
                     :summary "cast detect magic at will"})
-                  (mod5e/spells-known 1 :detect-magic ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :detect-magic ?ability "Warlock" 0 "at will")]})
+    (t/option-cfg
+     {:name "Eldritch Smite"
+      :modifiers [(mod5e/trait-cfg
+                   {:name "Eldritch Invocation: Eldritch Smite"
+                    :frequency units5e/turns-1
+                    :summary "when you hit a creature with your pact weapon, expend a warlock spell slot to deal an extra 1d8 force damage plus 1d8 per level of the slot, and knock prone if it is Huge or smaller"})]
+      :prereqs [opt5e/pact-of-the-blade-prereq
+                (opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Eldritch Smite"
       :modifiers [(mod5e/trait-cfg
@@ -3494,7 +3556,7 @@
       :modifiers [(mod5e/dependent-trait
                    {:name "Eldritch Invocation: Far Scribe"
                     :summary (str "a creature can use its action to write its name of a page in the book (max " ?prof-bonus " names). Cast sending without using spell slot or material components to the creature by writing the message on the page. Replies appear on the page, and disappears after 1 minute. Use action to erase name")})
-                  (mod5e/spells-known 3 :false-life ::char5e/cha "Warlock")]
+                  (mod5e/spells-known 3 :false-life ?ability "Warlock")]
       :prereqs [opt5e/pact-of-the-tome-prereq
                 (opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
@@ -3503,7 +3565,14 @@
                    {:name "Eldritch Invocation: Fiendish Vigor"
                     :page 111
                     :summary "cast false life at will"})
-                  (mod5e/spells-known 1 :false-life ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :false-life ?ability "Warlock" 0 "at will")]})
+    (t/option-cfg
+     {:name "Ghostly Gaze"
+      :modifiers [(mod5e/action
+                   {:name "Eldritch Invocation: Ghostly Gaze"
+                    :duration units5e/minutes-1
+                    :summary "see through solid objects to a 30 ft. range. Darkvision within the range, and uses your concentration. Objects are percieved as ghostly, transparent images"})]
+      :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
     (t/option-cfg
      {:name "Ghostly Gaze"
       :modifiers [(mod5e/action
@@ -3522,7 +3591,7 @@
                     :frequency units5e/long-rests-1
                     :summary "breathe underwater and gain swimming speed equal to your walking speed. Cast water breathing once for free"})
                   (mod5e/swimming-speed-equal-to-walking)
-                  (mod5e/spells-known 3 :water-breathing ::char5e/cha "Warlock" 0 "once/long rest")]
+                  (mod5e/spells-known 3 :water-breathing ?ability "Warlock" 0 "once/long rest")]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Gift of the Ever-Living Ones"
@@ -3568,14 +3637,14 @@
       :modifiers [(mod5e/dependent-trait
                    {:name "Eldritch Invocation: Lifedrinker"
                     :page 111
-                    :summary (str "extra " (max 1 (?ability-bonuses ::char5e/cha)) " necrotic damage with your pact weapon")})]
+                    :summary (str "extra " (max 1 (?ability-bonuses ?ability)) " necrotic damage with your pact weapon")})]
       :prereqs [(opt5e/total-levels-option-prereq 12 :warlock)
                 opt5e/pact-of-the-blade-prereq]})
     (t/option-cfg
      {:name "Maddening Hex"
       :modifiers [(mod5e/bonus-action
                    {:name "Eldritch Invocation: Maddening Hex"
-                    :summary (str "deal " (max 1 (?ability-bonuses ::char5e/cha)) "psychic damage to a creature within 30 ft. cursed by your hex spell or by a warlock feature of yours that you can see, and each creature you can see within 5 ft. of it of your choice")})]
+                    :summary (str "deal " (max 1 (?ability-bonuses ?ability)) "psychic damage to a creature within 30 ft. cursed by your hex spell or by a warlock feature of yours that you can see, and each creature you can see within 5 ft. of it of your choice")})]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]}) ;; curse prereq
     (t/option-cfg
      {:name "Mask of Many Faces"
@@ -3583,14 +3652,14 @@
                    {:name "Eldritch Invocation: Mask of Many Faces"
                     :page 111
                     :summary "cast disguise self at will"})
-                  (mod5e/spells-known 1 :disguise-self ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :disguise-self ?ability "Warlock" 0 "at will")]})
     (t/option-cfg
      {:name "Master of Myriad Forms"
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Master of Myriad Forms"
                     :page 111
                     :summary "cast alter self at will"})
-                  (mod5e/spells-known 2 :alter-self ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 2 :alter-self ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 15 :warlock)]})
     (t/option-cfg
      {:name "Minions of Chaos"
@@ -3600,7 +3669,7 @@
                     :frequency units5e/long-rests-1
                     :summary "cast conjure elemental using warlock spell slot
 long rest."})
-                  (mod5e/spells-known 5 :conjure-elemental ::char5e/cha "Warlock" 0 "once per rest")]
+                  (mod5e/spells-known 5 :conjure-elemental ?ability "Warlock" 0 "once per rest")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
      {:name "Mire the Mind"
@@ -3609,7 +3678,7 @@ long rest."})
                     :page 111
                     :frequency units5e/long-rests-1
                     :summary "cast slow using warlock spell slot"})
-                  (mod5e/spells-known 3 :slow ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 3 :slow ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Misty Visions"
@@ -3617,7 +3686,7 @@ long rest."})
                    {:name "Eldritch Invocation: Misty Visions"
                     :page 111
                     :summary "cast silent image at will"})
-                  (mod5e/spells-known 1 :silent-image ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :silent-image ?ability "Warlock" 0 "at will")]})
     (t/option-cfg
      {:name "One with Shadows"
       :modifiers [(mod5e/action
@@ -3631,7 +3700,7 @@ long rest."})
                    {:name "Eldritch Invocation: Otherworldly Leap"
                     :page 111
                     :summary "cast jump on yourself at will"})
-                  (mod5e/spells-known 1 :jump ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 1 :jump ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
      {:name "Protection of the Talisman"
@@ -3667,14 +3736,14 @@ long rest."})
                     :page 111
                     :frequency units5e/long-rests-1
                     :summary "cast polymorph using a warlock spell slot"})
-                  (mod5e/spells-known 4 :polymorph ::char5e/cha "Warlock" 0 "once per long rest")]
+                  (mod5e/spells-known 4 :polymorph ?ability "Warlock" 0 "once per long rest")]
       :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
     (t/option-cfg
      {:name "Shroud of Shadow"
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Shroud of Shadow"
                     :summary "cast invisibility at will without expending a spell slot"})
-                  (mod5e/spells-known 2 :invisibility ::char5e/cha "Warlock")]
+                  (mod5e/spells-known 2 :invisibility ?ability "Warlock")]
       :prereqs [(opt5e/total-levels-option-prereq 15 :warlock)]})
     (t/option-cfg
      {:name "Sign of Ill Omen"
@@ -3683,7 +3752,7 @@ long rest."})
                     :page 111
                     :frequency units5e/long-rests-1
                     :summary "cast bestow curse using warlock spell slot"})
-                  (mod5e/spells-known 3 :bestow-curse ::char5e/cha "Warlock" 0 "once per long rest")]
+                  (mod5e/spells-known 3 :bestow-curse ?ability "Warlock" 0 "once per long rest")]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Thief of Five Fates"
@@ -3692,7 +3761,7 @@ long rest."})
                     :page 111
                     :frequency units5e/long-rests-1
                     :summary "cast bane warlock spell slot"})
-                  (mod5e/spells-known 1 :bane ::char5e/cha "Warlock" 0 "once per long rest")]})
+                  (mod5e/spells-known 1 :bane ?ability "Warlock" 0 "once per long rest")]})
     (t/option-cfg
      {:name "Thirsting Blade"
       :modifiers [(mod5e/trait-cfg
@@ -3728,7 +3797,7 @@ long rest."})
                    {:name "Eldritch Invocation: Visions of Distant Realms"
                     :page 111
                     :summary "cast arcane eye at will"})
-                  (mod5e/spells-known 4 :arcane-eye ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 4 :arcane-eye ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 15 :warlock)]})
     (t/option-cfg
      {:name "Voice of the Chain Master"
@@ -3743,7 +3812,7 @@ long rest."})
                    {:name "Eldritch Invocation: Whispers of the Grave"
                     :page 111
                     :summary "cast speak with dead at will"})
-                  (mod5e/spells-known 3 :speak-with-dead ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 3 :speak-with-dead ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
      {:name "Witch Sight"
@@ -3771,46 +3840,40 @@ long rest."})
    17 1
    19 1})
 
-(defn eldritch-invocation-selection [plugin-invocations spell-lists spells-map & [num]]
+(defn eldritch-invocation-selection [plugin-invocations spell-lists spells-map ?ability class-kw & [num]]
   (opt5e/eldritch-invocation-selection
-   {:options (eldritch-invocation-options plugin-invocations spell-lists spells-map)
+   {:options (eldritch-invocation-options plugin-invocations spell-lists spells-map ?ability)
     :min (or num 1)
-    :max (or num 1)}))
+    :max (or num 1)}
+   class-kw))
 
-(defn mystic-arcanum-selection [spells-map spell-level]
+(defn mystic-arcanum-selection [spells-map spell-level ?ability class-kw]
   (t/selection-cfg
    {:name (str "Mystic Arcanum: Spell Level " spell-level)
     :tags #{:spells}
     :options (opt5e/spell-options
               spells-map
-              (get-in sl5e/spell-lists [:warlock spell-level])
-              ::char5e/cha
+              (get-in sl5e/spell-lists [class-kw spell-level])
+              ?ability
               "Warlock"
               false
               "uses Mystic Arcanum")}))
 
-(defn warlock-option [spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons]
-  (opt5e/class-option
-   spell-lists
-   spells-map
-   plugin-subclasses-map
-   language-map
-   weapon-map
-   {:name "Warlock"
-    :key :warlock
+(defn warlock-option [spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons ?ability ?ability-name class-kw]
+   {
     :spellcasting {:cantrips-known {1 2 4 1 10 1}
                    :spells-known warlock-spells-known
                    :slot-schedule t-base/warlock-spell-slot-schedule
                    :known-mode :schedule
                    :pact-magic? true
-                   :ability ::char5e/cha}
-    :multiclass-prereqs [(opt5e/ability-prereq ::char5e/cha 13)]
+                   :ability ?ability}
+    :multiclass-prereqs [(opt5e/ability-prereq ?ability 13)]
     :spellcaster true
     :hit-die 8
     :ability-increase-levels [4 8 12 16 19]
     :profs {:armor {:light false}
             :weapon {:simple false}
-            :save {::char5e/wis true ::char5e/cha true}
+            :save {::char5e/wis true ?ability true}
             :skill-options {:choose 2 :options {:arcana true :deception true :history true :intimidation true :investigation true :nature true :religion true}}}
     :modifiers [(mod/modifier ?pact-magic? true)]
     :selections [(opt5e/new-starting-equipment-selection
@@ -3837,15 +3900,15 @@ long rest."})
                                    :arcane-focus 1}}]
     :weapons {:dagger 2}
     :armor {:leather 1}
-    :levels {2 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map 2)]}
+    :levels {2 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw 2)]}
              3 {:selections [(t/selection-cfg
                               {:name "Pact Boon"
                                :tags #{:class}
-                               :options (pact-boon-options boons spell-lists spells-map)})]}
-             5 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}
-             7 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}
-             9 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}
-             11 {:selections [(mystic-arcanum-selection spells-map 6)]
+                               :options (pact-boon-options boons spell-lists spells-map ?ability)})]}
+             5 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}
+             7 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}
+             9 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}
+             11 {:selections [(mystic-arcanum-selection spells-map 6 ?ability class-kw)]
                  :modifiers [(mod5e/dependent-trait
                               {:name "Mystic Arcanum"
                                :level 11
@@ -3858,12 +3921,12 @@ long rest."})
                                              15 3
                                              17 4
                                              :default 1}))})]}
-             12 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}
-             13 {:selections [(mystic-arcanum-selection spells-map 7)]}
-             15 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)
-                              (mystic-arcanum-selection spells-map 8)]}
-             17 {:selections [(mystic-arcanum-selection spells-map 9)]}
-             18 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}}
+             12 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}
+             13 {:selections [(mystic-arcanum-selection spells-map 7 ?ability class-kw)]}
+             15 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)
+                              (mystic-arcanum-selection spells-map 8 ?ability class-kw)]}
+             17 {:selections [(mystic-arcanum-selection spells-map 9 ?ability class-kw)]}
+             18 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}}
     :traits [{:name "Eldrich Master"
               :level 20
               :page 108
@@ -3893,76 +3956,76 @@ long rest."})
                                            {:name "Dark One's Blessing"
                                             :page 109
                                             :summary (str "gain " (+ (?class-level :warlock)
-                                                                     (?ability-bonuses ::char5e/cha)) " temp HPs when you reduce a hostile creature to 0 HPs")})]
-                              :selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:burning-hands :command])]}
-                           3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:blindness-deafness :scorching-ray])]}
-                           5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:fireball :stinking-cloud])]}
-                           7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:fire-shield :wall-of-fire])]}
-                           9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:flame-strike :hallow])]}}}
+                                                                     (?ability-bonuses ?ability)) " temp HPs when you reduce a hostile creature to 0 HPs")})]
+                              :selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:burning-hands :command])]}
+                           3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:blindness-deafness :scorching-ray])]}
+                           5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:fireball :stinking-cloud])]}
+                           7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:fire-shield :wall-of-fire])]}
+                           9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:flame-strike :hallow])]}}}
                  #_{:name "The Archfey"
                     :modifiers [(mod5e/action
                                  {:name "Fey Presence"
                                   :page 109
-                                  :summary (str "charm or frighten creatures in a 10 ft cube from you unless the succeed on a DC " (?spell-save-dc ::char5e/cha) " WIS save.")
+                                  :summary (str "charm or frighten creatures in a 10 ft cube from you unless the succeed on a DC " (?spell-save-dc ?ability) " WIS save.")
                                   :duration units5e/turns-1
                                   :frequency units5e/rests-1})]
-                    :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection [:faerie-fire :sleep])]}
-                             3 {:selections [(opt5e/warlock-subclass-spell-selection [:calm-emotions :phantasmal-force])]}
-                             5 {:selections [(opt5e/warlock-subclass-spell-selection [:blink :plant-growth])]}
+                    :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:faerie-fire :sleep])]}
+                             3 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:calm-emotions :phantasmal-force])]}
+                             5 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:blink :plant-growth])]}
                              6 {:modifiers [(mod5e/reaction
                                              {:name "Misty Escape"
                                               :page 109
                                               :frequency units5e/rests-1
                                               :duration units5e/rounds-1
                                               :summary "when you take damage, turn invisible and teleport up to 60 ft."})]}
-                             7 {:selections [(opt5e/warlock-subclass-spell-selection [:dominate-beast :greater-invisibility])]}
-                             9 {:selections [(opt5e/warlock-subclass-spell-selection [:dominate-person :seeming])]}
+                             7 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:dominate-beast :greater-invisibility])]}
+                             9 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:dominate-person :seeming])]}
                              10 {:modifiers [(mod5e/condition-immunity :charmed)
                                              (mod5e/reaction
                                               {:name "Beguiling Defenses"
                                                :page 109
                                                :duration units5e/minutes-1
-                                               :summary (str "when a creature attempts to charm you, you can turn it back on them with a spell save DC " (?spell-save-dc ::char5e/cha) " WIS save")})]}
+                                               :summary (str "when a creature attempts to charm you, you can turn it back on them with a spell save DC " (?spell-save-dc ?ability) " WIS save")})]}
                              14 {:modifiers [(mod5e/action
                                               {:name "Dark Delerium"
                                                :page 109
-                                               :summary (str "charm or frighten a creature within 60 ft., spell save DC " (?spell-save-dc ::char5e/cha) "WIS save")
+                                               :summary (str "charm or frighten a creature within 60 ft., spell save DC " (?spell-save-dc ?ability) "WIS save")
                                                :frequency units5e/rests-1})]}}}
                  {:name "The Celestial"
-                  :modifiers [(mod5e/spells-known 0 :light ::char5e/cha "Warlock")
-                              (mod5e/spells-known 0 :sacred-flame ::char5e/cha "Warlock")]
-                  :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:cure-wounds :guiding-bolt])]
+                  :modifiers [(mod5e/spells-known 0 :light ?ability "Warlock")
+                              (mod5e/spells-known 0 :sacred-flame ?ability "Warlock")]
+                  :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:cure-wounds :guiding-bolt])]
                               :modifiers [(mod5e/bonus-action
                                            {:name "Healing Light"
                                             :frequency (units5e/long-rests (+ 1 (?class-level :warlock)))
-                                            :summary (str "Heal a creature within 60 ft. from a " (+ 1 (?class-level :warlock)) "d6 dice pool, spending at max " (max 1 (?ability-bonuses ::char5e/cha)) " dice at once")})]}
-                           3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:flaming-sphere :lesser-restoration])]}
-                           5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:daylight :revivify])]}
+                                            :summary (str "Heal a creature within 60 ft. from a " (+ 1 (?class-level :warlock)) "d6 dice pool, spending at max " (max 1 (?ability-bonuses ?ability)) " dice at once")})]}
+                           3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:flaming-sphere :lesser-restoration])]}
+                           5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:daylight :revivify])]}
                            6 {:modifiers [(mod5e/damage-resistance :radiant)
                                           (mod5e/dependent-trait
                                            {:name "Radiant Soul"
                                             :level 6
-                                            :summary (str "When you cast a spell that deals radiant or fire damage, add " (common/bonus-str (?ability-bonuses ::char5e/cha)) " to the damage against one target")})]}
-                           7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:guardian-of-faith :wall-of-fire])]}
-                           9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:flame-strike :greater-restoration])]}
+                                            :summary (str "When you cast a spell that deals radiant or fire damage, add " (common/bonus-str (?ability-bonuses ?ability)) " to the damage against one target")})]}
+                           7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:guardian-of-faith :wall-of-fire])]}
+                           9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:flame-strike :greater-restoration])]}
                            10 {:modifiers [(mod5e/dependent-trait
                                             {:name "Celestial Resistance"
-                                             :summary (str "Gain " (+ (?class-level :warlock) (?ability-bonuses ::char5e/cha)) " temp HP at the end of a rest. Choose up to 5 creatures that each gain " (+ (int (/ (?class-level :warlock) 2)) (?ability-bonuses ::char5e/cha)) " temp HP")})]}
+                                             :summary (str "Gain " (+ (?class-level :warlock) (?ability-bonuses ?ability)) " temp HP at the end of a rest. Choose up to 5 creatures that each gain " (+ (int (/ (?class-level :warlock) 2)) (?ability-bonuses ?ability)) " temp HP")})]}
                            14 {:modifiers [(mod5e/dependent-trait
                                             {:name "Searing Vengeance"
                                              :frequency units5e/long-rests-1
-                                             :summary (str "When you have to make a death saving throw, instead regain " (int (/ ?max-hit-points 2)) " HP, and stand up if you so choose. Each creature of choice within 30 ft. takes 2d8+" (?ability-bonuses ::char5e/cha) " radiant damage, and is blinded until the end the turn")})]}}}
+                                             :summary (str "When you have to make a death saving throw, instead regain " (int (/ ?max-hit-points 2)) " HP, and stand up if you so choose. Each creature of choice within 30 ft. takes 2d8+" (?ability-bonuses ?ability) " radiant damage, and is blinded until the end the turn")})]}}}
                  {:name "The Great Old One"
-                    :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:dissonant-whispers :hideous-laughter])]}
-                             3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:detect-thoughts :phantasmal-force])]}
-                             5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:clairvoyance :sending])]}
+                    :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:dissonant-whispers :hideous-laughter])]}
+                             3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:detect-thoughts :phantasmal-force])]}
+                             5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:clairvoyance :sending])]}
                              6 {:modifiers [(mod5e/reaction
                                              {:name "Entropic Ward"
                                               :page 110
                                               :frequency units5e/rests-1
                                               :summary "impose disadvantage on an attack roll against you, if it misses, gain advantage on your next attack roll against the attacker before the end of your next turn"})]}
-                             7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:dominate-beast :black-tentacles])]}
-                             9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:dominate-person :telekinesis])]}
+                             7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:dominate-beast :black-tentacles])]}
+                             9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:dominate-person :telekinesis])]}
                              10 {:modifiers [(mod5e/damage-resistance :psychic)]}
                              14 {:modifiers [(mod5e/action
                                               {:name "Create Thrall"
@@ -3976,4 +4039,58 @@ long rest."})
                              {:name "Thought Shield"
                               :level 10
                               :page 110
-                              :summary "your thoughts can't be read unless allowed; resistance to psychic damage; when a creature deals psychic damage to you it takes the same amount"}]}]}))
+                              :summary "your thoughts can't be read unless allowed; resistance to psychic damage; when a creature deals psychic damage to you it takes the same amount"}]}
+                 {:name "The Hexblade"
+                  :profs {:armor {:medium true :shields true}
+                          :weapon {:martial true}}
+                  :modifiers [(mod5e/bonus-action
+                                {:name "Hexblade's Curse"
+                                :frequency units5e/rests-1
+                                :duration units5e/minutes-1
+                                :summary (str "Curse a creature you can see within 30 ft. for 1 minute. Ends early if the target dies, you die, or you are incapacitated."
+                                          "\n• Gain a +" ?prof-bonus " bonus to damage rolls against the cursed target."
+                                          "\n• Attacks rolls against the cursed target are critical on 19s and 20s."
+                                          "\n• If the cursed target dies, regain " (max 1 (+ (?class-level class-kw) (?ability-bonuses ?ability))) " HP.")})
+                              (mod5e/dependent-trait
+                                {:name "Hex Warrior"
+                                 :summary (str "Touch one proficient, one-handed weapon when you finish a long rest. You can use your " (str ?ability-name) " modifier for attack and damage rolls with it. Lasts until you finish a long rest. Applies to every pact weapon conjured with the pact of the blade feature")})]
+                  :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:shield :wrathful-smite])]}
+                            3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:blur :branding-smite])]}
+                            5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:blink :elemental-weapon])]}
+                            6 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Accursed Specter"
+                                            :frequency units5e/long-rests-1
+                                            :summary (str "Cause a specter to appear when you slay a humanoid. It has " (int (/ (?class-level class-kw) 2)) " temp HP, its own initiative, obeys verbal commands, and a +" (max 0 (?ability-bonuses ?ability)) " bonus to its attack rolls."
+                                                      "\nRemains until the end of your next long rest")})]}
+                            7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:phantasmal-killer :staggering-smite])]}
+                            9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:banishing-smite :cone-of-cold])]}
+                            10 {:modifiers [(mod5e/reaction
+                                            {:name "Armor of Hexes"
+                                              :summary "If the target cursed by your Hexblade’s Curse hits you with an attack roll, roll a d6. On a 4 or higher, the attack instead misses"})]}}
+                  :traits [{:name "Master of Hexes"
+                            :level 14
+                            :summary "When the creature cursed by your Hexblade's Curse dies, you can apply the curse to a different creature you can see within 30 ft., provided you aren't incapacitated. You don't regain hit points from the death of the previously cursed creature"}]}]})
+
+(defn warlock-cha-option [spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons]
+  (opt5e/class-option
+   spell-lists
+   spells-map
+   plugin-subclasses-map
+   language-map
+   weapon-map
+   (merge 
+   {:name "Warlock (Cha)"
+    :key :warlock-cha}
+   (warlock-option spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons ::char5e/cha "Charisma" :warlock-cha))))
+
+(defn warlock-int-option [spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons]
+  (opt5e/class-option
+   spell-lists
+   spells-map
+   plugin-subclasses-map
+   language-map
+   weapon-map
+   (merge 
+   {:name "Warlock (Int)"
+    :key :warlock-int}
+   (warlock-option spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons ::char5e/int "Intelligence" :warlock-int))))
