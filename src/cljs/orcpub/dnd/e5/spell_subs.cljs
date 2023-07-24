@@ -830,6 +830,20 @@
    :treasure {:gp 10}
   })
 
+(def monastic-bg
+  {:name "Monastic"
+   :help ""
+   :traits [{:name "Monastic Influence"
+             :summary "Your monastic insignia tells those familiar with your monastery who you are and where you come from. This can bring you great respect or make you a target, depending on how those who see it feel about it. If you are in good standing with them, they may offer you shelter or help that they may not offer someone else."}]
+   :profs {:skill {:athletics true :perception true}
+           :tool-options {:artisans-tool 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:clothes-common 1
+               :pouch 1}
+   :equipment-choice [opt5e/artisans-tools-choice-cfg]
+   :custom-equipment {"Monastic Symbol" 1}
+   :treasure {:gp 10}})
+
 (def outlander-bg
   {:name "Outlander"
    :help "You were raised in the wilds."
@@ -989,6 +1003,7 @@ You can call upon the hospitality of your people, and those allied with your tri
        mafia-member-bg
        marine-bg
        mercenary-veteran-bg
+       monastic-bg
        outlander-bg
        sage-bg
        sailor-bg
