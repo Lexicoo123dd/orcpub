@@ -797,7 +797,7 @@
                     :spellcasting-ability spellcasting-ability
                     :class-name "Fey Touched"
                     :num 1
-                    ;; :prepend-level? false
+                    :prepend-level? false
                     :spell-keys (map :key (filter #(and (= 1 (:level %)) (fey-touched-spell? %)) spells/spells))
                     :exclude-ref? true
                     }))
@@ -808,6 +808,16 @@
                                  :different? different?
                                  :selection-fn (fn [k] (fey-touched-spell-selection k))
                                  :modifier-fns [(fn [k] (modifiers/spells-known 2 :misty-step k "Fey Touched"))
+                                                ]}))
+
+(defn gift-of-the-gem-dragon-ability-increase-selection [ability-keys num-increases & [different? modifier-fns]]
+  (ability-increase-selection-2 {:ability-keys ability-keys
+                                 :num-increases num-increases
+                                 :different? different?
+                                 :modifier-fns [(fn [k] (modifiers/reaction
+                                                         {:name "Gift of the Gem Dragon: Telekinetic Reprisal"
+                                                          :frequency (units5e/long-rests ?prof-bonus)
+                                                          :summary (str "When you take damage from a creature within 10 ft., the creature must make a DC " (?spell-save-dc k) " STR save or take 2d8 force damage and be pushed up to 10 ft. away, half damage and isn't pushed if successful")}))
                                                 ]}))
 
 (defn magic-initiate-option [spells-map class-key class-name spellcasting-ability spell-lists]
@@ -1507,7 +1517,13 @@
      :selections [ ;;(fey-touched-spell-selection)
                   (fey-touched-ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false)]})
    (feat-option
+    {:name "Gift of the Gem Dragon"
+     :exclude-trait? true
+     :summary "When you take damage from a creature within 10 ft., use reaction to force the creature to make a STR save or take 2d8 force damage and be pushed up to 10 ft. away, half damage and isn't pushed if successful"
+     :selections [(gift-of-the-gem-dragon-ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false)]})
+   (feat-option
     {:name "Gift of the Metallic Dragon"
+     :exclude-trait? true
      :summary "cast cure wounds once/long rest; use reaction to grant bonus to AC"
      :selections [(t/selection-cfg
                    {:name "Gift of the Metallic Dragon: Spellcasting ability"

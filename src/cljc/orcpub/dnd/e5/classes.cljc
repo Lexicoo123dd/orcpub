@@ -1721,14 +1721,38 @@
                                                 :page 80
                                                 :level 17
                                                 :summary "when a creature within 5 ft. is hit by attack from someone else, make a melee attack"})]}}}
-                  {:name "Wat of the Ascendant Dragon"
+                  {:name "Way of the Ascendant Dragon"
                    :modifiers [(mod5e/reaction
                                 {:name "Draconic Disciple: Draconic Presence"
                                  :summary "Reroll a failed Intimidation or Persuasion check. Once failure turns into success, you can't use it again until a long rest"})
                                (mod5e/trait-cfg
                                 {:name "Draconic Disciple: Draconic Strike"
-                                 :summary "Change the damage type of an unarmed strike to acid, cold, fire, lightning, or poison"})]
-                   :selections [(opt5e/language-selection-aux (vals language-map) 1)]}
+                                 :summary "Change the damage type of an unarmed strike to acid, cold, fire, lightning, or poison"})
+                               (mod5e/dependent-trait
+                                {:name "Breath of the Dragon"
+                                 :frequency (units5e/long-rests ?prof-bonus)
+                                 :summary (str "Replace an attack from the Attack Action with an exhalation of craconic energy in either a 20-foot cone or 30-foot line that is 5 ft. wide, dealing " (mod5e/level-val (?class-level :monk) {11 3 :default 2}) "d" ?martial-arts-die " acid, cold, fire, lightning, or poison damage on a failed DC " (?spell-save-dc ::char5e/wis) " DEX save, half if successful. You can spend 2 ki points if you have no uses left")})]
+                   :selections [(opt5e/language-selection-aux (vals language-map) 1)]
+                   :levels {6 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Wings Unfurled"
+                                             :frequency (units5e/long-rests ?prof-bonus)
+                                             :summary "When you use Step of the WInd, you can unfurl spectral draconic wings that vanish at the end of your turn, giving you a flying speed equal to your walking speed"})]}
+                            11 {:modifiers [(mod5e/bonus-action
+                                             {:name "Aspect of the Wyrm"
+                                              :frequency units5e/long-rests-1
+                                              :summary (str "Active a 10 ft. radius aura that lasts 1 minute and choose one of the following effects:"
+                                                        "\n• Frightful Presence. When you create the aura and as a bonus action on subsequent turns, choose a creature within the aura. The creature must succeed on a DC " (?spell-save-dc ::char5e/wis) " WIS save or become frightened of you for 1 minute, repeating the save at the end of its turns."
+                                                        "\n• Resistance. You and your allies within the aura are resistant to acid, cold, fire, lightning, or poison damage."
+                                                        "You can exoend 3 ki points to create it again if you have no uses left")})]}
+                            17 {:modifiers [(mod5e/dependent-trait
+                                             {:name "Ascendant Aspect: Augment Breath"
+                                              :summary (str "When you use Breath of the Dragon, spend 1 ki point to change the shape to either a 60-foot cone or a 90-foot line that is 5 ft. wide, and each creature takes 4d" ?martial-arts-die " damage on a failed save, half if successful")})
+                                             (mod5e/trait-cfg
+                                              {:name "Ascendant Aspect: Blindsight"
+                                               :summary "You gain 10 ft. blindsight. Within that range, you can effectively see anything that isn’t behind total cover, even if you’re blinded or in darkness. Moreover, you can see an invisible creature within that range, unless the creature successfully hides from you"})
+                                             (mod5e/dependent-trait
+                                              {:name "Ascendant Aspect: Explosive Fury"
+                                               :summary (str "When you activate Aspect of the Wyrm, any creature you choose in the aura must make a DC " (?spell-save-dc ::char5e/wis) " DEX save or take 3d10 acid, cold, fire, lightning, or poison damage")})]}}}
                   #_{:name "Way of the Four Elements"
                      :modifiers [(mod5e/dependent-trait
                                   {:name "Disciple of the Elements"
