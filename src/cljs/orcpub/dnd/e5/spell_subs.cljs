@@ -1577,6 +1577,45 @@ You can call upon the hospitality of your people, and those allied with your tri
                                            (opt5e/skill-selection 1)
                                            (opt5e/ability-increase-selection char5e/ability-keys 2 true)]})]})]})
 
+(defn kitsune-spellcasting-ability-option [name ability]
+  (t/option-cfg
+    {:name name
+     :modifiers [(mod5e/spells-known 1 :disguise-self ability "Kitsune")
+                 (mod5e/spells-known 2 :misty-step ability "Kitsune")
+                 (mod5e/spells-known 5 :modify-memory ability "Kitsune")]}))
+
+(def kitsune-option-cfg
+  {:name "Kitsune"
+   :key :kitsune
+   :abilities {::char5e/cha 2}
+   :size :medium
+   :speed 30
+   :languages ["Common" "Sylvan"]
+   :darkvision 60
+   :profs {:skill-options {:choose 1 :options {:persuasion true :deception true}}}}
+   :traits [{:name "Type"
+             :summary "You are humanoid but count as Fey for the purpose of any effects, abilities, or features"}
+            {:name "Fey Resistance"
+             :summary "You have advantage on saves against being charmed"}]
+   :modifiers [(mod5e/saving-throw-advantage [:charmed])
+               (mod5e/bonus-action
+                {:name "Fox Spirit"
+                 :summary (str "Hide or reveal your vulpine features (ears, tails). Spells like detect magic can discern that you are hiding something. Your features are revealed if unconcious. While revealed, your spell save DC for any spells that cause the charmed condition is increased by +" (max 1 (int (/ ?total-levels 4))) ".\n  You can speak with foxes as if affected by the spell speak with animals")})
+               (mod5e/dependent-trait
+                {:name "Kitsune Magic"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "You have " ?prof-bonus " charges to cast disguise self, misty step, and a modified modify memory. Each casting costs one charge and you regain one charge after a long rest. This modify memory can only affect the target's memory of an event within the last 10 minutes that lasted max 1 minute. You choose INT, WIS, or CHA as your spellcasting ability for these spells")})
+               (mod5e/spells-known 1 :disguise-self nil "Kitsune")
+               (mod5e/spells-known 2 :misty-step nil "Kitsune")
+               (mod5e/spells-known 5 :modify-memory nil "Kitsune")]
+   :selections [(opt5e/ability-increase-selection char5e/ability-keys 1)
+                (t/selection-cfg
+                 {:name "Kitsune Spellcasting Ability"
+                  :tags #{:spells}
+                  :options [(kitsune-spellcasting-ability-option "Intelligence" ::char5e/int)
+                            (kitsune-spellcasting-ability-option "Wisdom" ::char5e/wis)
+                            (kitsune-spellcasting-ability-option "Charisma" ::char5e/cha)]})])
+
 (defn draconic-ancestry-option [{:keys [name breath-weapon]}]
   (t/option-cfg
    {:name name
@@ -2012,6 +2051,7 @@ May make other objects at the DM's discretion."}]}
         (goliath-option-cfg language-map)
         (halfling-option-cfg spell-lists spells-map)
         (human-option-cfg spell-lists spells-map language-map)
+        kitsune-option-cfg
         dragonborn-standard-option-cfg
         dragonborn-option-cfg
         gnome-option-cfg
