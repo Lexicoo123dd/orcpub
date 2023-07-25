@@ -1985,7 +1985,7 @@ May make other objects at the DM's discretion."}]}
   {:name "Tiefling"
    :key :tiefling
    :help "Tieflings bear the distinct marks of their infernal ancestry: horns, a tail, pointed teeth, and solid-colored eyes. They are smart and charismatic."
-   :abilities {::char5e/int 1 ::char5e/cha 2}
+   :abilities {::char5e/cha 2}
    :size :medium
    :speed 30
    :darkvision 60
@@ -1994,20 +1994,22 @@ May make other objects at the DM's discretion."}]}
                 {:name "Hellish Resistance"
                  :page 43
                  :summary "Resistance to fire damage"})
-               (mod5e/dependent-trait
-                {:name "Infernal Legacy"
-                 :page 43
-                 :summary (str "You know thaumaturgy and can cast "
-                               (common/list-print
-                                (let [lvl ?total-levels]
-                                  (cond-> []
-                                    (>= lvl 3) (conj "Hellish Rebuke")
-                                    (>= lvl 5) (conj "Darkness"))))
-                               " once per day. CHA is the spellcasting ability.")})
-               (mod5e/damage-resistance :fire)
-               (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
-               (mod5e/spells-known 1 :hellish-rebuke ::char5e/cha "Tiefling" 3)
-               (mod5e/spells-known 2 :darkness ::char5e/cha "Tiefling" 5)]})
+               (mod5e/damage-resistance :fire)]
+   :subraces [{:name "Bloodline of Asmodeus"
+               :abilities {::char5e/int 1}
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Infernal Legacy"
+                            :page 43
+                            :summary (str "You know thaumaturgy and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Hellish Rebuke")
+                                                (>= lvl 5) (conj "Darkness"))))
+                                          " once per day. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :hellish-rebuke ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :darkness ::char5e/cha "Tiefling" 5)]}]})
 
 (reg-sub
  ::races5e/plugin-subraces-map
