@@ -1608,7 +1608,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                (mod5e/spells-known 1 :disguise-self nil "Kitsune")
                (mod5e/spells-known 2 :misty-step nil "Kitsune")
                (mod5e/spells-known 5 :modify-memory nil "Kitsune")]
-   :selections [(opt5e/ability-increase-selection char5e/ability-keys 1)
+   :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/cha) 1)
                 (t/selection-cfg
                  {:name "Kitsune Spellcasting Ability"
                   :tags #{:spells}
@@ -2011,6 +2011,35 @@ May make other objects at the DM's discretion."}]}
                            (mod5e/spells-known 1 :hellish-rebuke ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :darkness ::char5e/cha "Tiefling" 5)]}]})
 
+(defn tiefling-aoa-option-cfg [language-map]
+  {:name "Tiefling (AoA)"
+   :key :tiefling-aoa
+   :help "Tieflings bear the distinct marks of their infernal ancestry: horns, a tail, pointed teeth, and solid-colored eyes. They are smart and charismatic."
+   :size :medium
+   :speed 30
+   :darkvision 60
+   :selections [(opt5e/language-selection-aux (vals language-map) 1)]
+   :subraces [{:name "Third Plane"
+               :abilities {::char5e/str 2}
+               :profs {:skill-options {:choose 1 :options {:athletics true :intimidation true}}}
+               :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/str) 1)]
+               :modifiers [(mod5e/trait-cfg
+                            {:name "Devilish Resistance"
+                            :summary "Resistance to fire damage"})
+                           (mod5e/damage-resistance :fire)
+                           (mod5e/dependent-trait
+                            {:name "Devil's Wrath"
+                            :summary (str "You know produce flame and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Searing Smite")
+                                                (>= lvl 5) (conj "Enhance Ability"))))
+                                          " once per long rest or use spell slots. STR is your spellcasting ability.")})
+                           (mod5e/spells-known 0 :produce-flame ::char5e/str "Tiefling")
+                           (mod5e/spells-known 1 :searing-smite ::char5e/str "Tiefling" 3)
+                           (mod5e/spells-known 2 :enhance-ability ::char5e/str "Tiefling" 5)]}]})
+
 (reg-sub
  ::races5e/plugin-subraces-map
  :<- [::races5e/plugin-subraces]
@@ -2065,7 +2094,8 @@ May make other objects at the DM's discretion."}]}
         (lumini-option-cfg spell-lists spells-map)
         (orc-option-cfg language-map)
         (shifter-option-cfg language-map)
-        tiefling-option-cfg]))))))
+        tiefling-option-cfg
+        (tiefling-aoa-option-cfg language-map)]))))))
 
 (defn base-class-options [spell-lists spells-map plugin-subclasses-map language-map weapons-map invocations boons]
   [(classes5e/barbarian-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
