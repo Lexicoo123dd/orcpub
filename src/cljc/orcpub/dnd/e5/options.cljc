@@ -1194,12 +1194,14 @@
 
 (defn rune-selection [num order prereq]
   (t/selection-cfg
-   {:name (str "Rune Carver " order)
+   {:name "Rune Carver"
+    :ref [:class :fighter :levels :level-3 :martial-archetype :rune-knight :rune-carver]
     :tags #{:class}
     :min num
     :max num
     :options [(t/option-cfg
-                {:name "Cloud Rune"
+               {:name "Cloud Rune"
+                :help "Sleight of Hand and Deception advantage; use reaction to change target of attack"
                 :modifiers [(modifiers/trait-cfg
                               {:name "Cloud Rune"
                               :summary "Advantage on Sleight of Hand and Deception checks"})
@@ -1208,7 +1210,8 @@
                               :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
                               :summary "When you or a creature you can see within 30 feet of you is hit by an attack roll, choose a different creature within 30 feet of you, other than the attacker. The chosen creature becomes the target of the attack, using the same roll."})]})
               (t/option-cfg
-                {:name "Fire Rune"
+               {:name "Fire Rune"
+                :help "Expertise on proficient tools; restrain enemy hit by weapon attack with fiery shackles"
                 :modifiers [(modifiers/trait-cfg
                               {:name "Fire Rune"
                               :summary "2X proficiency for any proficient tool"})
@@ -1217,7 +1220,8 @@
                               :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
                               :summary (str "When you hit a creature with an attack using a weapon, summon fiery shackles: the target takes an extra 2d6 fire damage, and it must succeed on a DC " (?spell-save-dc ::character/con) " STR save or be restrained for 1 minute. While restrained by the shackles, the target takes 2d6 fire damage at the start of each of its turns. The target can repeat the saving throw at the end of each of its turns")})]})
               (t/option-cfg
-                {:name "Frost Rune"
+               {:name "Frost Rune"
+                :help "Animal Handling and Charisma advantage; +2 to STR and CON ability checks for 10 min"
                 :modifiers [(modifiers/trait-cfg
                               {:name "Frost Rune"
                               :summary "Advantage on Animal Handling and Charisma checks"})
@@ -1227,7 +1231,8 @@
                               :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
                               :summary "+2 to all ability checks using Strength or Constitution"})]})
               (t/option-cfg
-                {:name "Stone Rune"
+               {:name "Stone Rune"
+                :help "Insight advantage; 120 ft. darkvision; use reaction to charm creature that ends turn within 30 ft."
                 :modifiers [(modifiers/darkvision 120 1)
                             (modifiers/trait-cfg
                               {:name "Stone Rune"
@@ -1238,9 +1243,10 @@
                               :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
                               :summary (str "When a creature you can see ends its turn within 30 feet of you, force the creature to make a DC " (?spell-save-dc ::character/con) " WIS Save, charming the creature for 1 minute. While charmed in this way, the creature has a speed of 0 and is incapacitated. The creature repeats the saving throw at the end of each of its turns")})]})
               (t/option-cfg
-                {:name "Hill Rune"
-                 :prereqs [prereq]
-                 :modifiers [(modifiers/damage-resistance :poison)
+               {:name "Hill Rune"
+                :help "Poison save advantage; resistance to poison; gain resistance to bludgeoning, piercing, and slashing for 1 min"
+                :prereqs [prereq]
+                :modifiers [(modifiers/damage-resistance :poison)
                              (modifiers/saving-throw-advantage [:poisoned])
                              (modifiers/trait-cfg
                               {:name "Hill Rune"
@@ -1251,7 +1257,8 @@
                                :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
                                :summary "Gain resistance to bludgeoning, piercing, and slashing damage"})]})
               (t/option-cfg
-                {:name "Storm Rune"
+               {:name "Storm Rune"
+                :help "Arcana advantage; surprise immunity; for 1 min., use reaction to give advantage to rolls"
                 :prereqs [prereq]
                 :modifiers [(modifiers/trait-cfg
                               {:name "Storm Rune"
