@@ -1516,7 +1516,7 @@
      :page 74
      :summary "increase DEX, INT, WIS, or DEX by 1; Reroll die on attacks with advantage using dex, int, wis, or cha"
      :selections [(ability-increase-selection [::character/dex ::character/int ::character/wis ::character/cha] 1 false)]
-     :prereq [(race-prereq "Elf")]})
+     :prereqs [(race-prereq "Elf")]})
    (feat-option
     {:name "Fey Touched"
      :summary "increase INT, WIS, or CHA by 1; learn misty step; learn 1 divination or enchantment 1st-level spell that can be casted without expending a spell slot once per long rest"
