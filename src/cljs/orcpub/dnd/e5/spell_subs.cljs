@@ -1592,7 +1592,7 @@ You can call upon the hospitality of your people, and those allied with your tri
    :speed 30
    :languages ["Common" "Sylvan"]
    :darkvision 60
-   :profs {:skill-options {:choose 1 :options {:persuasion true :deception true}}}}
+   :profs {:skill-options {:choose 1 :options {:persuasion true :deception true}}}
    :traits [{:name "Type"
              :summary "You are humanoid but count as Fey for the purpose of any effects, abilities, or features"}
             {:name "Fey Resistance"
@@ -1614,7 +1614,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                   :tags #{:spells}
                   :options [(kitsune-spellcasting-ability-option "Intelligence" ::char5e/int)
                             (kitsune-spellcasting-ability-option "Wisdom" ::char5e/wis)
-                            (kitsune-spellcasting-ability-option "Charisma" ::char5e/cha)]})])
+                            (kitsune-spellcasting-ability-option "Charisma" ::char5e/cha)]})]})
 
 (defn draconic-ancestry-option [{:keys [name breath-weapon]}]
   (t/option-cfg
