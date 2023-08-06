@@ -1270,6 +1270,59 @@ You can call upon the hospitality of your people, and those allied with your tri
              :summary "Trance 4 hrs. instead of sleep 8. After trance, gain proficiency with a weapon or tool"}]
    })
 
+(defn goblin-aoa-option-cfg [spell-lists spells-map]
+  {:name "Goblin (AoA)"
+   :key :goblin-aoa
+   :abilities {::char5e/dex 1}
+   :size :small
+   :speed 30
+   :darkvision 60
+   :languages ["Common" "Goblin"]
+   :modifiers [(mod5e/saving-throw-advantage [:charmed])
+               (mod5e/bonus-action
+                {:name "Nimble Escape"
+                 :frequency units5e/turns-1
+                 :summary "Take the Disengage or Hide action"})
+               (mod5e/dependent-trait
+                {:name "Fury of the Small"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "Once per turn, when you damage a larger creature with an attack or spell, deal " ?prof-bonus "extra damage")})]
+   :traits [{:name "Fey Ancestry"
+             :summary "advantage on charmed saves"}]
+   :subraces [{:name "Forest Goblin"
+               :abilities {::char5e/dex 1 ::char5e/con 1}
+               :modifiers [(mod5e/tool-proficiency :leatherworkers-tools)]
+               :traits [{:name "Keen Hearing"
+                         :summary "Advantage on Perception checks that rely on hearing"}
+                        {:name "Resourceful Hunter"
+                         :summary "During a short rest, use the corpse of a small or larger beast with usable materials to create a dagger, spear, light shield, or 1d6 arrows, darts, or blowing needles"}]}
+              {:name "Desert Goblin"
+               :abilities {::char5e/str 1 ::char5e/con 1}
+               :modifiers [(mod5e/damage-resistance :fire)]
+               :traits [{:name "Shield Expert"
+                         :summary "You can carry a shield with the bulky property without a movement speed penalty. You can use shields one level above your proficient armor level"}]}
+              {:name "Swamp Goblin"
+               :abilities {::char5e/con 1}
+               :selections [(opt5e/ability-increase-selection [::char5e/wis ::char5e/cha] 1 true)
+                            (t/selection-cfg
+                             {:name "Cantrip"
+                              :order 1
+                              :tags #{:spells}
+                              :options (concat (opt5e/spell-options spells-map (get-in spell-lists [:druid 0]) ::char5e/wis "Druid") (opt5e/spell-options spells-map (get-in spell-lists [:warlock 0]) ::char5e/cha "Warlock"))
+                              :min 1
+                              :max 1})]
+               :modifiers [(mod5e/tool-proficiency :poisoners-kit)]
+               :traits [{:name "Swamp Hunter"
+                         :summary "Advantage on Nature checks to extract poison from beasts"}]}
+              {:name "Frost Goblin"
+               :abilities {::char5e/con 1 ::char5e/int 1}
+               :modifiers [(mod5e/damage-resistance :cold)
+                           (mod5e/weapon-proficiency :crossbow-hand)
+                           (mod5e/weapon-proficiency :crossbow-light)
+                           (mod5e/tool-proficiency :tinkers-tools)]}
+             ]
+  })
+
 (defn aasimar-option-cfg [language-map]
   {:name "Aasimar"
    :key :aasimar
@@ -2079,6 +2132,7 @@ May make other objects at the DM's discretion."}]}
         dwarf-option-cfg
         (elf-option-cfg spell-lists spells-map language-map)
         (elf-aoa-option-cfg spell-lists spells-map language-map)
+        (goblin-aoa-option-cfg spell-lists spells-map)
         (goliath-option-cfg language-map)
         (halfling-option-cfg spell-lists spells-map)
         (human-option-cfg spell-lists spells-map language-map)
