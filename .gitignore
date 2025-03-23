@@ -34,3 +34,7 @@ deploy/homebrew/*
 
 # As created by some LSP-protocol tooling, e.g. nvim-lsp
 .lsp
+
+# Private (Contain sensitive data)
+docker-compose-build.yaml
+docker-compose.yaml
