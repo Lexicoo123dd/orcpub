@@ -394,12 +394,25 @@
                                    (- 11.0 y 0.55)
                                    (- box-width 0.24)
                                    0.5))
-               (draw-imagex cs
-                            card-logo-img
-                            (+ x 1.9)
-                            (+ y 0.02)
-                            1.0
-                            0.25)
+               (if (= (str (first
+                            (s/split
+                             casting-time
+                             #",")))
+                      "1 reaction")
+                 (draw-text-to-box cs
+                                   casting-time
+                                   (:italic fonts)
+                                   8
+                                   (+ x 0.12)
+                                   (- 11.0 y 0.70)
+                                   (- box-width 0.24)
+                                   0.35))
+              ;;  (draw-imagex cs
+              ;;               card-logo-img
+              ;;               (+ x 1.9)
+              ;;               (+ y 0.02)
+              ;;               1.0
+              ;;               0.25)
                (draw-text-to-box cs
                                  (:name spell)
                                  (:bold fonts)
