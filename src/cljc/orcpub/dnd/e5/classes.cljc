@@ -2566,16 +2566,19 @@
                                 :modifiers [(mod/cum-sum-mod ?speed (if (>= (?class-level :ranger) 6) 5 0))
                                             (mod/vec-mod ?swimming-speed-overrides (if (>= (?class-level :ranger) 6) ?speed 0))
                                             (mod/vec-mod ?climbing-speed-overrides (if (>= (?class-level :ranger) 6) ?speed 0))
-                                            (mod5e/bonus-action
+                                            (mod5e/trait-cfg
                                              {:name "Roving"
                                               :level 6
                                               :summary "Your walking speed increases by 5, and you gain a climbing speed and a swimming speed equal to your walking speed"})
+                                            (mod5e/trait-cfg
+                                             {:name "Tireless"
+                                              :level 10
+                                              :summary "Whenever you finish a short rest, your exhaustion level, if any, is decreased by 1."})
                                             (mod5e/action
                                              {:name "Tireless"
                                               :level 10
                                               :frequency (units5e/long-rests ?prof-bonus)
-                                              :summary (str "Whenever you finish a short rest, your exhaustion level, if any, is decreased by 1."
-                                                            "\n\nAs an action, you can give yourself a number of temporary hit points equal to 1d8 + your Wisdom modifier (" (common/bonus-str (?ability-bonuses ::char5e/wis)) ") (minimum of 1 temporary hit point).")})]})]})]
+                                              :summary (str "As an action, you can give yourself a number of temporary hit points equal to 1d8 + your Wisdom modifier (" (common/bonus-str (?ability-bonuses ::char5e/wis)) ") (minimum of 1 temporary hit point).")})]})]})]
      :levels {2 {:selections [(opt5e/fighting-style-selection :ranger #{:archery :blind-fighting :defense :druidic-warrior :dueling :thrown-weapon-fighting :two-weapon-fighting})]}
               3 {:selections [(t/selection-cfg
                                {:name "Awareness"
