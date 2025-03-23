@@ -585,12 +585,15 @@
 (defn critical [roll-value]
   (mods/set-mod ?critical roll-value))
 
+;; ORIGINAL ACTION MACRO
+;; (defmacro action [action]
+;;   `(mods/modifier ~'?actions
+;;                   (conj
+;;                    ~'?actions
+;;                    ~action)))
 
 (defmacro action [action]
-  `(mods/modifier ~'?actions
-                  (conj
-                   ~'?actions
-                   ~action)))
+  `(prop-trait ~'?actions ~action))
 
 (defmacro bonus-action [action]
   `(prop-trait ~'?bonus-actions ~action))
