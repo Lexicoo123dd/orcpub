@@ -14,6 +14,7 @@
             [orcpub.dnd.e5.units :as units5e]
             [orcpub.dnd.e5.character :as char5e]
             [orcpub.dnd.e5.weapons :as weapon5e]
+            [orcpub.dnd.e5.skills :as skill5e]
             [orcpub.dnd.e5.spells :as spells5e]
             [orcpub.dnd.e5.monsters :as monsters5e]
             [orcpub.dnd.e5.selections :as selections5e]
@@ -29,6 +30,7 @@
             [orcpub.dnd.e5.template-base :as t-base]
             [reagent.ratom :as ra]
             [clojure.string :as s]
+            [clojure.set :as set]
             [cljs-http.client :as http]))
 
 (reg-sub
@@ -377,7 +379,7 @@
                  cleric-spells)
           (let [cleric-spell-mods (make-cleric-spell-mods cleric-spells)]
             {1 {:modifiers cleric-spell-mods}})))
-      (if (and (= class :warlock)
+      (if (and (or (= class :warlock-cha) (= class :warlock-int))
                (:warlock-spells option))
         (reduce-kv
          (fn [levels spell-level spells]
@@ -385,7 +387,7 @@
              (if (and spell-level (seq (vals spells)))
                (assoc-in levels
                          [level :selections]
-                         [(opt5e/warlock-subclass-spell-selection spell-lists spells-map (vals spells))]))))
+                         [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class (if (= class :warlock-cha) ::char5e/cha (if (= class :warlock-int) ::char5e/int)) (vals spells))]))))
          {}
          (:warlock-spells option))))
      by-level)))
@@ -441,6 +443,25 @@
  (fn [plugins _]
    (mapcat #(-> % ::e5/boons vals) plugins)))
 
+(defn criminal-background [nm]
+  {:name nm
+   :help "You have a history of criminal activity."
+   :traits [{:name "Criminal Contact"
+             :page 129
+             :summary "You have a contact into a network of criminals"}]
+   :profs {:skill {:deception true, :stealth true}
+           :tool {:thieves-tools true}
+           :tool-options {:gaming-set 1}}
+   :equipment {:crowbar 1
+               :clothes-common 1
+               :pouch 1}
+   :treasure {:gp 15}})
+
+(def ships-passage-trait-cfg
+  {:name "Ship's Passage"
+   :page 139
+   :summary "You are able to secure free passage on a sailing ship"})
+
 (def acolyte-bg
   {:name "Acolyte"
    :help "Your life has been devoted to serving a god or gods."
@@ -465,7 +486,594 @@
              :page 127
              :summary "You and your companions can expect free healing at an establishment of your faith."}]})
 
+(def archaeologist-bg
+  {:name "Archaeologist"
+   :help ""
+   :profs {:skill {:history true :survival true}
+           :language-options {:choose 1 :options {:any true}}}
+   :selections [(t/selection-cfg
+                 {:name "Proficiency: Cartographer's Tools or Navigator's Tools"
+                  :tags #{:profs}
+                  :options [(t/option-cfg
+                             {:name "Cartographer's Tools"
+                              :modifiers [(mod5e/tool-proficiency :cartographers-tools)]})
+                            (t/option-cfg
+                             {:name "Navigator's Tools"
+                              :modifiers [(mod5e/tool-proficiency :navigators-tools)]})]})]
+   :equipment {:case-map-or-scroll 1
+               :lantern-bullseye 1
+               :pick-miner-s 1
+               :clothes-traveler-s 1
+               :shovel 1
+               :tent-two-person 1
+               :pouch 1}
+   :custom-equipment {"Trinket" 1}
+   :treasure {:gp 25}
+  })
+
+(def athlete-bg
+  {:name "Athlete"
+   :help "You have participated in physical contests."
+   :profs {:skill {:acrobatics true, :athletics true}
+           :language-options {:choose 1 :options {:any true}}
+           :tool {:land-vehicles true}}
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Bronze discus or leather ball" 1
+                      "Lucky charm or past trophy" 1}
+   :treasure {:gp 10}
+   :traits [{:name "Echoes of Victory"
+             :summary "50% chance there's an admirer who is willing to provide information and shelter when visiting a settlement within 100 miles of where you grew up. During downtime, compete in athletic events sufficient enough to provide a comfortable lifestyle."}]})
+
+(def charlatan-bg
+  {:name "Charlatan"
+   :help "You have a history of being able to work people to your advantage."
+   :traits [{:name "False Identity"
+             :page 128
+             :summary "you have a false identity; you can forge documents"}]
+   :profs {:skill {:deception true :sleight-of-hand true}
+           :tool {:disguise-kit true :forgery-kit true}}
+   :equipment {:clothes-fine 1
+               :disguise-kit 1
+               :pouch 1}
+   :treasure {:gp 15}})
+
+(def city-watch-bg
+  {:name "City Watch"
+  ;;  :help "You have a history of being able to work people to your advantage."
+   :traits [{:name "Watcher's Eye"
+             :summary "You can easily find the local outpost of the watch or a similar organization, and just as easily pick out the dens of criminal activity in a community, although you're more likely to be welcome in the former locations rather than the latter."}]
+   :profs {:skill {:athletics true :insight true}
+           :language-options {:choose 2 :options {:any true}}}
+   :equipment {:horn 1
+               :manacles 1
+               :pouch 1}
+   :custom-equipment {"Uniform" 1}
+   :treasure {:gp 10}})
+
+(def entertainer-bg
+  {:name "Entertainer"
+   :help "You have a history of entertaining people."
+   :traits [{:name "By Popular Demand"
+             :page 130
+             :summary "you are able to find a place to perform, in which you will recieve free food and lodging"}]
+   :profs {:skill {:acrobatics true :performance true}
+           :tool {:disguise-kit true}
+           :tool-options {:musical-instrument 1}}
+   :equipment-choices [classes5e/musical-instrument-choice-cfg]
+   :equipment {:costume 1
+               :pouch 1}
+   :treasure {:gp 15}})
+
+(def gladiator-bg
+  {:name "Gladiator"
+   :help "You have a history of gladiatorial entertainment."
+   :traits [{:name "By Popular Demand"
+             :page 130
+             :summary "you are able to find a place to perform, in which you will recieve free food and lodging"}]
+   :profs {:skill {:acrobatics true :performance true}
+           :tool {:disguise-kit true}
+           :tool-options {:musical-instrument 1}}
+   :selections [(opt5e/new-starting-equipment-selection
+                 nil
+                 {:name "Gladiator Weapon"
+                  :options (opt5e/weapon-options weapon5e/weapons)})]
+   :equipment {:costume 1
+               :pouch 1}
+   :treasure {:gp 15}})
+
+(def feylost-bg
+  {:name "Feylost"
+   :help "You grew up in the Feywild."
+   :traits [{:name "Feywild Visitor"
+             :summary "A spirit of the Feywild might visit you while you're sound asleep."}
+            {:name "Feywild Connection"
+             :summary "Your mannerisms and knowledge of fey customs are recognized by natives of the Feywild, who see you as one of their own. Friendly Fey creatures are inclined to come to your aid if you are lost or need help in the Feywild."}]
+   :profs {:skill {:deception true :survival true}
+           :tool-options {:musical-instrument 1}
+           :language-options {:choose 1 :options {:elvish true :gnomish true :goblin true :sylvan true}}}
+   :equipment-choices [classes5e/musical-instrument-choice-cfg]
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Feywild trinket" 3}
+   :treasure {:gp 8}})
+
+(def faceless-bg
+  {:name "Faceless"
+   :help "You have two personas."
+   :traits [{:name "Dual Personalities"
+             :summary "Upon donning a disguise and behaving as your persona, you are unidentifiable as your true self. By removing your disguise and revealing your true face, you are no longer identifiable as your persona. This allows you to change appearances between your two personalities as often as you wish, using one to hide the other or serve as convenient camouflage. However, should someone realize the connection between your persona and your true self, your deception might lose its effectiveness."}]
+   :profs {:skill {:deception true :intimidation true}
+           :tool {:disguise-kit true}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:disguise-kit 1
+               :costume 1
+               :pouch 1}
+   :treasure {:gp 10}})
+
+(def far-traveler-bg
+  {:name "Far Traveler"
+   :help "You come from a distant place."
+   :traits [{:name "All eyes on you"
+             :summary "You get curious glances because of your foreign accent, mannerisms, figures of speech, and perhaps appearance. You can use this attention to gain access to people and and places you might otherwise not have."}]
+   :selections [(t/selection-cfg
+                 {:name "Tool Proficiency"
+                  :tags #{:profs}
+                  :options [(t/option-cfg
+                             {:name "Musical Instrument"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})
+                            (t/option-cfg
+                             {:name "Gaming Set"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/gaming-sets) 1)]})]})
+                (t/selection-cfg
+                 {:name "Musical Instrument or Gaming Set"
+                  :tags #{:equipment}
+                  :options [(t/option-cfg
+                             {:name "Musical Instrument"
+                              :selections [(opt5e/new-starting-equipment-selection
+                                            nil
+                                            {:name "Musical Instrument"
+                                             :options (opt5e/tool-options (filter (comp (set (map :key equipment5e/musical-instruments)) :key) equipment5e/tools))})]})
+                            (t/option-cfg
+                             {:name "Gaming Set"
+                              :selections [(opt5e/new-starting-equipment-selection
+                                            nil
+                                            {:name "Gaming Set"
+                                             :options (opt5e/tool-options (filter (comp (set (map :key equipment5e/gaming-sets)) :key) equipment5e/tools))})]})]})]
+   :profs {:skill {:insight true :perception true}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Poorly wrought maps" 1
+                      "Jewelry (10 gp)" 1}
+   :treasure {:gp 5}})
+
+(def folk-hero-bg
+  {:name "Folk Hero"
+   :help "You are regarded as a hero by the people of your home village."
+   :traits [{:name "Rustic Hospitality"
+             :page 131
+             :summary "find a place to rest, hide, or recuperate among commoners"}]
+   :profs {:skill {:animal-handling true :survival true}
+           :tool {:land-vehicles true}
+           :tool-options {:artisans-tool 1}}
+   :equipment-choices [opt5e/artisans-tools-choice-cfg]
+   :equipment {:shovel 1
+               :pot-iron 1
+               :clothes-common 1
+               :pouch 1}
+   :treasure {:gp 10}})
+
+(def guild-artisan-bg
+  {:name "Guild Artisan"
+   :help "You are an artisan and a member of a guild in a particular field."
+   :traits [{:name "Guild Membership"
+             :page 133
+             :summary "fellow guild members will provide you with food and lodging; you have powerful political connections through your guild"}]
+   :profs {:skill {:insight true :persuasion true}
+           :tool-options {:artisans-tool 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment-choices [opt5e/artisans-tools-choice-cfg]
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Letter of introduction" 1}
+   :treasure {:gp 15}})
+
+(def guild-merchant-bg
+  {:name "Guild Merchant"
+   :help "You are member of a guild of merchants"
+   :traits [{:name "Guild Membership"
+             :page 133
+             :summary "fellow guild members will provide you with food and lodging; you have powerful political connections through your guild"}]
+   :profs {:skill {:insight true :persuasion true}
+           :language-options {:choose 1 :options {:any true}}}
+   :selections [(t/selection-cfg
+                 {:name "Proficiency: Navigator's Tools or Language"
+                  :tags #{:profs}
+                  :options [(t/option-cfg
+                             {:name "Navigator's Tools"
+                              :modifiers [(mod5e/tool-proficiency :navigators-tools)]})
+                            (t/option-cfg
+                             {:name "Language"
+                              :selections [(opt5e/language-selection ::langs5e/language-map 1)]})]})]
+   :equipment {:clothes-traveler-s 1
+               :pouch 1
+               :mule 1
+               :cart 1}
+   :custom-equipment {"Letter of introduction" 1}
+   :treasure {:gp 15}})
+
+(def haunted-one-bg
+  {:name "Haunted One"
+   :help "You are haunted by something so terrible that you dare not speak of it"
+   :traits [{:name "Heart of Darkness"
+             :summary "Though commoners might fear you, they will extend you every courtesy and do their utmost to help you. Unless you have shown yourself to be a danger to them, they will even take up arms to fight alongside you, should you find yourself facing an enemy alone"}]
+   :profs {:skill-options {:choose 2 :options {:arcana true :investigation true :religion true :survival true}}
+           :language-options {:choose 1 :options {:abyssal true :celestial true :deep-speech true :draconic true :infernal true :primordial true :sylvan true :undercommon true}}}
+   :selections [(opt5e/language-selection ::langs5e/language-map 1)] ;;fix
+   :equipment {:monster-hunters-pack 1
+               :chest 1
+               :crowbar 1
+               :hammer 1
+               :wooden-stake 3
+               :holy-symbol 1
+               :holy-water 1
+               :manacles 1
+               :mirror-steel 1
+               :oil 1
+               :tinderbox 1
+               :torch 3
+               :clothes-common 1}
+   :custom-equipment {"Horror Trinket" 1}
+   :treasure {:sp 1}})
+
+(def hermit-bg
+  {:name "Hermit"
+   :help "You have lived a secluded life."
+   :traits [{:name "Discovery"
+             :page 134
+             :summary "You have made a powerful and unique discovery"}]
+   :profs {:skill {:medicine true :religion true}
+           :tool {:herbalism-kit true}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:case-map-or-scroll 1
+               :clothes-common 1
+               :herbalism-kit 1}
+   :custom-equipment {"Winter Blanket" 1
+                      "Notes from studies/prayers" 1}
+   :treasure {:gp 5}})
+
+(def investigator-bg
+  {:name "Investigator"
+  ;;  :help "You are haunted by something so terrible that you dare not speak of it"
+   :traits [{:name "Official Inquiry"
+             :summary "Through a combination of fast-talking, determination, and official-looking documentation, you can gain access to a place or an individual related to a crime you're investigating. Those who aren't involved in your investigation avoid impeding you or pass along your requests. Additionally, local law enforcement has firm opinions about you, viewing you as either a nuisance or one of their own"}]
+   :profs {:skill-options {:choose 2 :options {:insight true :investigation true :perception true}}
+           :tool {:disguise-kit true :thieves-tools true}}
+   :equipment {:magnifying-glass 1
+               :clothes-common 1}
+   :custom-equipment {"Evidence from a past case" 1}
+   :treasure {:gp 10}})
+
+(def noble-bg
+  {:name "Noble"
+   :help "You are of noble birth."
+   :traits []
+   :profs {:skill {:history true :persuasion true}
+           :tool-options {:gaming-set 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :selections [(t/selection-cfg
+                 {:name "Noble Feature"
+                  :tags #{:background}
+                  :options [(t/option-cfg
+                             {:name "Position of Privilege"
+                              :modifiers [(mod5e/trait-cfg
+                                           {:name "Position of Privilege"
+                                            :page 135
+                                            :summary "you are welcome in high society and common folk try to accomodate you"})]})
+                            (t/option-cfg
+                             {:name "Retainers"
+                              :modifiers [(mod5e/trait-cfg
+                                           {:name "Retainers"
+                                            :page 136
+                                            :summary "You have 3 commoner retainers"})]})]})]
+   :equipment {:clothes-fine 1
+               :signet-ring 1
+               :purse 1}
+   :custom-equipment {"Scroll of Pedigree" 1}
+   :treasure {:gp 25}})
+
+(def knight-bg
+  {:name "Knight"
+   :help "You are a knight."
+   :traits [{:name "Retainers"
+             :page 136
+             :summary "You have 2 commoner retainers and 1 noble squire"}]
+   :profs {:skill {:history true :persuasion true}
+           :tool-options {:gaming-set 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:clothes-fine 1
+               :signet-ring 1
+               :purse 1}
+   :custom-equipment {"Scroll of Pedigree" 1
+                      "Emblem of Chivalry" 1}
+   :treasure {:gp 25}})
+
+(def mafia-member-bg
+  {:name "Mafia Member"
+   :help "You belong or have belonged to a mafia"
+   :traits [{:name "Mafia Connections"
+             :summary (str "As an established and respected member of the mafia, you can rely on certain benefits that membership provides."
+                      "Your fellow guild members will provide you with lodging and food if necessary, and pay for your funeral if needed."
+                      "In some cities and towns, a mafia family offers a central place to meet other members of your profession, which can be a good place to meet potential patrons, allies, or hirelings.")}]
+   :profs {:skill-options {:choose 2 :options {:deception true :insight true :intimidation true :persuasion true}}
+           :tool-options {:gaming-set 1}
+           :tool {:forgery-kit true}}
+   :equipment {:clothes-fine 1
+               :forgery-kit 1
+               :pouch 1}
+   :treasure {:gp 15}})
+
+(def marine-bg
+  {:name "Marine"
+   :help ""
+   :traits [{:name "Steady"
+             :page 31
+             :summary "Can move twice the normal amount of time (16 hours). Can automatically find a safe route to land a boat on a shore, if one exists."}]
+   :profs {:skill {:athletics true :survival true}
+           :tool {:water-vehicles true :land-vehicles true}}
+   :equipment {:dagger 1
+               :clothes-traveler-s 1
+               :pouch 1}
+   :treasure {:gp 10}})
+
+(def mercenary-veteran-bg
+  {:name "Mercenary Veteran"
+   :help ""
+   :traits [{:name "Mercenary Life"
+             :page 152
+             :summary "Identify and know a little about mercenary companies by their emblems, including who has hired them recently. Find the taverns and festhalls where mercenaries abide in any area, as long as you speak the language. Find mercenary work between adventures sufficient to maintain a comfortable lifestyle."}]
+   :profs {:skill {:athletics true :persuasion true}
+           :tool-options {:gaming-set 1}
+           :tool {:land-vehicles true}}
+   :equipment {:clothes-traveler-s 1
+               :pouch 1}
+   :equipment-choices [opt5e/gaming-set-choice-cfg]
+   :custom-equipment {"Insignia of your rank" 1}
+   :treasure {:gp 10}
+  })
+
+(def monastic-bg
+  {:name "Monastic"
+   :help ""
+   :traits [{:name "Monastic Influence"
+             :summary "Your monastic insignia tells those familiar with your monastery who you are and where you come from. This can bring you great respect or make you a target, depending on how those who see it feel about it. If you are in good standing with them, they may offer you shelter or help that they may not offer someone else."}]
+   :profs {:skill {:athletics true :perception true}
+           :tool-options {:artisans-tool 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:clothes-common 1
+               :pouch 1}
+   :equipment-choice [opt5e/artisans-tools-choice-cfg]
+   :custom-equipment {"Monastic Symbol" 1}
+   :treasure {:gp 10}})
+
+(def outlander-bg
+  {:name "Outlander"
+   :help "You were raised in the wilds."
+   :traits [{:name "Wanderer"
+             :page 136
+             :summary "Your memory of maps, geography, settlements, and terrain is excellent. You can find fresh food and water for you and 5 other people."}]
+   :profs {:skill {:athletics true :survival true}
+           :tool-options {:musical-instrument 1}
+           :language-options {:choose 1 :options {:any true}}}
+   :equipment {:staff 1
+               :clothes-traveler-s 1
+               :pouch 1
+               :hunting-trap 1}
+   :custom-equipment {"Trophy from Animal You Killed" 1}
+   :treasure {:gp 10}})
+
+(def sage-bg
+  {:name "Sage"
+   :help "You spent your life studying lore."
+   :traits [{:name "Researcher"
+             :page 139
+             :summary "If you don't know a piece of info you often know where to find it"}]
+   :profs {:skill {:arcana true :history true}
+           :language-options {:choose 2 :options {:any true}}}
+   :equipment {:ink 1
+               :clothes-common 1
+               :pouch 1
+               :knife-small 1}
+   :custom-equipment {"Quill" 1
+                      "Letter with question from dead colleague" 1}
+   :treasure {:gp 10}})
+
+(def sailor-bg
+  {:name "Sailor"
+   :help "You were a member of a crew for a seagoing vessel."
+   :traits [ships-passage-trait-cfg]
+   :profs {:skill {:athletics true :perception true}
+           :tool {:navigators-tools true :water-vehicles true}}
+   :weapons {:club 1}
+   :equipment {:rope-silk 1
+               :clothes-common 1
+               :pouch 1}
+   :custom-equipment {"Belaying Pin" 1
+                      "Lucky Charm" 1}
+   :treasure {:gp 10}})
+
+
+(def pirate-bg
+  {:name "Pirate"
+   :help "You were a member of a crew for a seagoing vessel."
+   :profs {:skill {:athletics true :perception true}
+           :tool {:navigators-tools true :water-vehicles true}}
+   :weapons {:club 1}
+   :equipment {:rope-silk 1
+               :clothes-common 1
+               :pouch 1}
+   :selections [(t/selection-cfg
+                 {:name "Feature"
+                  :tags #{:background}
+                  :options [(t/option-cfg
+                             {:name "Ship's Passage"
+                              :modifiers [(mod5e/trait-cfg
+                                           ships-passage-trait-cfg)]})
+                            (t/option-cfg
+                             {:name "Bad Reputation"
+                              :modifiers [(mod5e/trait-cfg
+                                           {:name "Bad Reputation"
+                                            :page 139
+                                            :summary "People in a civilized settlement are afraid of you and will let you get away with minor crimes"})]})]})]
+   :custom-equipment {"Belaying Pin" 1
+                      "Lucky Charm" 1}
+   :treasure {:gp 10}})
+
+(def smuggler-bg
+  {:name "Smuggler"
+   :help "You are acquainted with a network of smugglers who are willing to help you out of tight situations."
+   :traits [{:name "Down Low"
+             :summary "You are acquainted with a network of smugglers who are willing to help you out of tight situations. While in a particular town, city, or other similarly sized community (DM's discretion), you and your companions can stay for free in safe houses. Safe houses provide a poor lifestyle. While staying at a safe house, you can choose to keep your presence (and that of your companions) a secret."}]
+   :profs {:skill {:athletics true :deception true}
+           :tool {:water-vehicles true}}
+   :equipment {:clothes-common 1
+               :pouch 1}
+   :equipment-choices [{:name "Dice or Cards"
+                        :options {:dice-set 1
+                                  :playing-card-set 1}}]
+   :custom-equipment {"Fancy leather vest or a pair of boots" 1}
+   :treasure {:gp 15}})
+
+(def soldier-bg
+  {:name "Soldier"
+   :help "You have spent your living by the sword."
+   :traits [{:name "Military Rank"
+             :page 140
+             :summary "Where recognized, your previous rank provides influence among military"}]
+   :profs {:skill {:athletics true :intimidation true}
+           :tool {:land-vehicles true}
+           :tool-options {:gaming-set 1}}
+   :equipment {:clothes-common 1
+               :pouch 1}
+   :equipment-choices [{:name "Dice or Cards"
+                        :options {:dice-set 1
+                                  :playing-card-set 1}}]
+   :custom-equipment {"Insignia of Rank" 1
+                      "Trophy from Fallen Enemy" 1}
+   :treasure {:gp 10}})
+
+(def urban-bounty-hunter-bg
+  {:name "Urban Bounty Hunter"
+   :traits [{:name "Ear to the Ground"
+             :summary "You are in frequent contact with people in the segment of society that your chosen quarries move through. These people might be associated with the criminal underworld, the rough-and-tumble folk of the streets, or members of high society. This connection comes in the form of a contact in any city you visit, a person who provides information about the people and places of the local area."}]
+   :profs {:skill-options {:choose 2 :options {:deception true :insight true :persuasion true :stealth true}}}
+   :selections [(t/selection-cfg
+                 {:name "Tool Proficiency"
+                  :tags #{:profs}
+                  :min 2
+                  :max 2
+                  :options [(t/option-cfg
+                             {:name "Gaming Set"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/gaming-sets) 1)]})
+                            (t/option-cfg
+                             {:name "Musical Instrument"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})
+                            (t/option-cfg
+                             {:name "Theives' Tools"
+                              :modifiers [(mod5e/tool-proficiency :thieves-tools)]})]})]
+   :equipment {:pouch 1}
+   :equipment-choices [{:name "Set of Clothes"
+                        :options {:clothes-common 1
+                                  :costume 1
+                                  :clothes-fine 1
+                                  :clothes-traveler-s 1}}]
+   :treasure {:gp 20}
+   })
+
+(def urchin-bg
+  {:name "Urchin"
+   :help "You were a poor orphan living on the streets."
+   :traits [{:name "City Streets"
+             :page 141
+             :summary "You can travel twice your normal speed between city locations"}]
+   :profs {:skill {:sleight-of-hand true :stealth true}
+           :tool {:disguise-kit true :thieves-tools true}}
+   :equipment {:knife-small 1
+               :clothes-common 1
+               :pouch 1}
+   :custom-equipment {"Map of city you grew up in" 1
+                      "Pet mouse" 1
+                      "Token to remember your parents" 1}
+   :treasure {:gp 10}})
+
+(def uthgardt-tribe-member-bg
+  {:name "Uthgardt Tribe Member"
+   :help "You belong to the Uthgardt tribe."
+   :traits [{:name "Uthgardt Heritage"
+             :summary "You have an excellent knowledge of the terrain and natural resources of the North. You can find twice as much food and water as you normally would when you forage there.
+You can call upon the hospitality of your people, and those allied with your tribe, often including members of the druid circles, tribes of nomadic elves, the Harpers, and the priesthoods devoted to the gods of the First Circle."}]
+   :profs {:skill {:athletics true :survival true}
+           :language-options {:choose 1 :options {:any true}}}
+   :selections [(t/selection-cfg
+                 {:name "Tool Proficiency"
+                  :tags #{:profs}
+                  :options [(t/option-cfg
+                             {:name "Musical Instrument"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})
+                            (t/option-cfg
+                             {:name "Artisan's Tools"
+                              :selections [(opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]})]})]
+   :equipment {:hunting-trap 1
+               :clothes-traveler-s 1
+               :pouch 1}
+   :custom-equipment {"Totemic token or tattoos" 1}
+   :treasure {:gp 10}})
+
 (reg-sub
+ ::bg5e/backgrounds
+ :<- [::bg5e/plugin-backgrounds]
+ (fn [plugin-backgrounds]
+   (vec
+      (concat
+      (reverse plugin-backgrounds)
+      [acolyte-bg
+       archaeologist-bg
+       athlete-bg
+       charlatan-bg
+       city-watch-bg
+       (criminal-background "Criminal")
+       (criminal-background "Spy")
+       entertainer-bg
+       gladiator-bg
+       feylost-bg
+       faceless-bg
+       far-traveler-bg
+       folk-hero-bg
+       guild-artisan-bg
+       guild-merchant-bg
+       haunted-one-bg
+       hermit-bg
+       investigator-bg
+       noble-bg
+       knight-bg
+       mafia-member-bg
+       marine-bg
+       mercenary-veteran-bg
+       monastic-bg
+       outlander-bg
+       sage-bg
+       sailor-bg
+       pirate-bg
+       smuggler-bg
+       soldier-bg
+       urban-bounty-hunter-bg
+       urchin-bg
+       uthgardt-tribe-member-bg
+       ])
+   )))
+
+#_(reg-sub
  ::bg5e/backgrounds
  :<- [::bg5e/plugin-backgrounds]
  (fn [plugin-backgrounds]
@@ -476,6 +1084,8 @@
 (def languages
   [{:name "Common"
     :key :common}
+   {:name "Centaur"
+    :key :centaur}
    {:name "Dwarvish"
     :key :dwarvish}
    {:name "Elvish"
@@ -488,6 +1098,16 @@
     :key :goblin}
    {:name "Halfling"
     :key :halfling}
+   {:name "Harpian"
+    :key :harpian}
+   {:name "Lamia"
+    :key :lamia}
+   {:name "Lenuboon"
+    :key :lenuboon}
+   {:name "Lunar"
+    :key :lunar}
+   {:name "Mystic"
+    :key :mystic}
    {:name "Orc"
     :key :orc}
    {:name "Abyssal"
@@ -521,12 +1141,18 @@
  (fn [languages]
    (common/map-by-key languages)))
 
+(defn powerful-build [page]
+  {:name "Powerful Build"
+   :page page
+   :source :vgm
+   :summary "Count as one size larger for purposes of determining weight you can carry, push, drag, or lift."})
+
 (def elf-weapon-training-mods
   (opt5e/weapon-prof-modifiers [:longsword :shortsword :shortbow :longbow]))
 
 (defn sunlight-sensitivity [page & [source]]
   {:name "Sunlight Sensitivity"
-   :summary "Disadvantage on attack and perception rolls in direct sunlight"
+   :summary "Disadvantage on attack and perception rolls when there's direct sunlight"
    :source (or source :phb)
    :page 24})
 
@@ -556,7 +1182,8 @@
   {:name "Elf"
    :key :elf
    :help "Elves are graceful, magical creatures, with a slight build."
-   :abilities {::char5e/dex 2}
+   ;; :abilities {::char5e/dex 2}
+   :custom-ability-scores true
    :size :medium
    :speed 30
    :languages ["Elvish" "Common"]
@@ -566,17 +1193,17 @@
                (mod5e/skill-proficiency :perception)]
    :subraces
    [{:name "High Elf"
-     :abilities {::char5e/int 1}
+     ;; :abilities {::char5e/int 1}
      :selections [(high-elf-cantrip-selection spell-lists spells-map)
                   (opt5e/language-selection-aux (vals language-map) 1)]
      :modifiers [elf-weapon-training-mods]}
     #_{:name "Wood Elf"
-     :abilities {::char5e/wis 1}
+     ;; :abilities {::char5e/wis 1}
      :modifiers [(mod5e/speed 5)
                  mask-of-the-wild-mod
                  elf-weapon-training-mods]}
     #_{:name "Dark Elf (Drow)"
-     :abilities {::char5e/cha 1}
+     ;; :abilities {::char5e/cha 1}
      :traits [(sunlight-sensitivity 24)]
      :modifiers (conj drow-magic-mods
                       (mod5e/weapon-proficiency :rapier)
@@ -590,11 +1217,481 @@
              :page 23
              :summary "Trance 4 hrs. instead of sleep 8"}]})
 
+(defn high-elf-aoa-spell-selection [spell-lists spells-map spell-level prereq-level]
+  (opt5e/spell-selection
+   spell-lists
+   spells-map
+   {:class-key :wizard
+    :level spell-level
+    :exclude-ref? true
+    :spellcasting-ability ::char5e/int
+    :class-name "High Elf"
+    :num 1
+    :prereq-fn (opt5e/prereq-level-fn prereq-level)}))
+
+(defn wood-elf-aoa-cantrip-selection [spell-lists spells-map]
+  (opt5e/spell-selection
+   spell-lists
+   spells-map
+   {:class-key :druid
+    :level 0
+    :exclude-ref? true
+    :spellcasting-ability ::char5e/wis
+    :class-name "Wood Elf"
+    :num 1}))
+
+(defn elf-aoa-option-cfg [spell-lists spells-map language-map]
+  {:name "Elf (AoA)"
+   :key :elf-aoa
+   :help "Elves are graceful, magical creatures, with a slight build."
+   ;; :abilities {::char5e/dex 2}
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :languages ["Elvish" "Common"]
+   :darkvision 60
+   :modifiers [(mod5e/saving-throw-advantage [:charmed])
+               (mod5e/immunity :magical-sleep)
+               (mod5e/skill-proficiency :perception)]
+   :subraces [{:name "High Elf"
+               ;; :abilities {::char5e/int 1}
+               :selections [(opt5e/language-selection-aux (vals language-map) 1)
+                            (high-elf-aoa-spell-selection spell-lists spells-map 0 1)
+                            (high-elf-aoa-spell-selection spell-lists spells-map 1 3)
+                            (high-elf-aoa-spell-selection spell-lists spells-map 2 5)]
+               :modifiers [elf-weapon-training-mods
+                           ]}
+              {:name "Dark Elf"
+               ;; :abilities {::char5e/cha 1}
+               :darkvision 120
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Dark Magic"
+                             :summary (str "You know Dancing Lights and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Silent Image")
+                                                (>= lvl 5) (conj "Darkness"))))
+                                          " once per long rest. CHA is your spellcasting ability.")})
+                           (mod5e/spells-known 0 :dancing-lights ::char5e/cha "Dark Elf")
+                           (mod5e/spells-known 1 :silent-image ::char5e/cha "Dark Elf" 3)
+                           (mod5e/spells-known 2 :darkness ::char5e/cha "Dark Elf" 5)]
+               :weapon-proficiencies [:rapier :whip :shortsword :crossbow-hand]}
+              {:name "Wood Elf"
+               ;; :abilities {::char5e/wis 1}
+               :speed 35
+               :selections [(wood-elf-aoa-cantrip-selection spell-lists spells-map)]
+               :modifiers [(mod5e/skill-proficiency :nature)]
+               :weapon-proficiencies [:longsword :shortsword :shortbow :longbow]
+               :traits [{:name "Mask of the Wild"
+                         :summary "You can attempt to hide even when you are only lightly obscured by foliage, heavy rain, falling snow, mist, and other natural phenomena"}]}
+              {:name "Sea Elf"
+               ;; :abilities {::char5e/con 1}
+               :modifiers [(mod5e/damage-resistance :cold)
+                           (mod5e/swimming-speed-equal-to-walking)
+                           (mod5e/dependent-trait
+                            {:name "Sea Magic"
+                             :summary (str "You know Shape Water and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Destroy Water")
+                                                (>= lvl 5) (conj "Waterwalk"))))
+                                          " once per long rest, without material component. INT is your spellcasting ability.")})
+                           (mod5e/spells-known 0 :shape-water ::char5e/int "Sea Elf")
+                           (mod5e/spells-known 1 :destroy-water ::char5e/int "Sea Elf" 3)
+                           (mod5e/spells-known 2 :waterwalk ::char5e/int "Sea Elf" 5)]
+               :weapon-proficiencies [:trident :glaive :net :rapier]
+               :traits [{:name "Child of the Sea"
+                         :summary "Breathe air and water, resistance to cold damage"}
+                        {:name "Friend of the Sea"
+                         :summary "Communicate simple ideas to any Beast that has a swimming speed. It can understand your words, though you have no special ability to understand it in return. You have a swimspeed equal to your walking speed"}]}
+              {:name "Snow Elf"
+               ;; :abilities {::char5e/wis 1}
+               :modifiers [(mod5e/damage-resistance :cold)
+                           (mod5e/dependent-trait
+                            {:name "Snow Elf Magic"
+                             :summary (str "You know Ray of Frost and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Armor of Agathys")
+                                                (>= lvl 5) (conj "Warding Wind"))))
+                                          " once per long rest, without material component. INT is your spellcasting ability.")})
+                           (mod5e/spells-known 0 :ray-of-frost ::char5e/wis "Snow Elf")
+                           (mod5e/spells-known 1 :armor-of-agathys ::char5e/wis "Snow Elf" 3)
+                           (mod5e/spells-known 2 :warding-wind ::char5e/wis "Snow Elf" 5)
+                           (mod5e/reaction
+                            {:name "Freezing Breeze"
+                             :summary (str "Cause an enemy within 20 ft. using their reaction to make a DC " (?spell-save-dc ::char5e/wis) " CON save, losing their reaction on a fail")})]
+               :weapon-proficiencies [:longbow :morningstar :pike :whip]
+               }
+              ]
+   :traits [{:name "Fey Ancestry"
+             :page 23
+             :summary "advantage on charmed saves and immune to sleep magic"}
+            {:name "Trance"
+             :page 23
+             :summary "Trance 4 hrs. instead of sleep 8. After trance, gain proficiency with a weapon or tool"}]
+   })
+
+(def genasi-option-cfg
+  {:name "Genasi"
+   :key :genasi
+   :custom-ability-scores true
+   :sizes [:small :medium]
+   :darkvision 60
+   :languages ["Common" "Primordial"]
+  ;;  :selections [(t/selection-cfg
+  ;;                {:name "Size"
+  ;;                 :tags #{:race}
+  ;;                 :options [(t/option-cfg
+  ;;                            {:name "Small"
+  ;;                             :modifiers [(mod5e/size :small)]})
+  ;;                           (t/option-cfg
+  ;;                            {:name "Medium"
+  ;;                             :modifiers [(mod5e/size :medium)]})]})]
+   :subraces [{:name "Fire Genasi"
+               ;; :abilities {::char5e/con 2 ::char5e/int 1}
+               :speed 30
+               :modifiers [(mod5e/damage-resistance :fire)
+                           (mod5e/dependent-trait
+                            {:name "Reach to the Blaze"
+                             :summary (str "You know produce flame and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Burning Hands")
+                                                (>= lvl 5) (conj "Flame Blade"))))
+                                          " once per long rest, without requiring material components. You can also cast these spells using spell slots of the appropriate level. INT is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :produce-flame ::char5e/int "Genasi")
+                           (mod5e/spells-known 1 :burning-hands ::char5e/int "Genasi" 3)
+                           (mod5e/spells-known 2 :flame-blade ::char5e/int "Genasi" 5)]}
+              {:name "Air Genasi"
+               ;; :abilities {::char5e/con 2 ::char5e/dex 1}
+               :speed 35
+               :modifiers [(mod5e/damage-resistance :thunder)
+                           (mod5e/dependent-trait
+                            {:name "Mingle with the Wind"
+                             :summary (str "You know gust and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Feather Fall")
+                                                (>= lvl 5) (conj "Levitate"))))
+                                          " once per long rest, without requiring material components. You can also cast these spells using spell slots of the appropriate level. DEX is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :gust ::char5e/dex "Genasi")
+                           (mod5e/spells-known 1 :feather-fall ::char5e/dex "Genasi" 3)
+                           (mod5e/spells-known 2 :levitate ::char5e/dex "Genasi" 5)]
+               :traits [{:name "Unending Breath"
+                         :summary "you can hold your breath indefinitely while not incapacitated"}]}
+              {:name "Earth Genasi"
+               ;; :abilities {::char5e/con 2 ::char5e/str 1}
+               :speed 30
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Merge with Stone"
+                             :summary (str "You know blade ward and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Earth Tremor")
+                                                (>= lvl 5) (conj "Maximilian's Earthen Grasp"))))
+                                          " once per long rest, without requiring material components. You can also cast these spells using spell slots of the appropriate level. STR is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :blade-ward ::char5e/str "Genasi")
+                           (mod5e/spells-known 1 :earth-tremor ::char5e/str "Genasi" 3)
+                           (mod5e/spells-known 2 :maximilians-earthen-grasp ::char5e/str "Genasi" 5)
+                           (mod5e/bonus-action
+                            {:name "Cast Blade Ward"
+                             :frequency (units5e/long-rests ?prof-bonus)
+                             :summary "Cast Blade Ward using a bonus action"})]
+               :traits [{:name "Earth Walk"
+                         :summary "you can move across difficult terrain on the ground without expending extra movement if you"}]}
+              {:name "Lightning Genasi"
+               ;; :abilities {::char5e/con 2 ::char5e/cha 1}
+               :speed 30
+               :modifiers [(mod5e/damage-resistance :lightning)
+                           (mod5e/skill-proficiency :insight)
+                           (mod5e/dependent-trait
+                            {:name "Rightous Lightning"
+                             :summary (str "You know lightning grasp and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Thunderwave")
+                                                (>= lvl 5) (conj "Kinetic Jaunt"))))
+                                          " once per long rest, without requiring material components. You can also cast these spells using spell slots of the appropriate level. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :lightning-grasp ::char5e/cha "Genasi")
+                           (mod5e/spells-known 1 :thunderwave ::char5e/cha "Genasi" 3)
+                           (mod5e/spells-known 2 :kinetic-jaunt ::char5e/cha "Genasi" 5)]
+               :traits [{:name "Lightning Adapted Hearing"
+                         :summary "you can't be deafened by magical means"}]}
+              {:name "Water Genasi"
+               ;; :abilities {::char5e/con 2 ::char5e/wis 1}
+               :speed 30
+               :modifiers [(mod5e/damage-resistance :acid)
+                           (mod5e/dependent-trait
+                            {:name "Call to the Wave"
+                             :summary (str "You know shape water and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Create and Destroy Water")
+                                                (>= lvl 5) (conj "Water Walk"))))
+                                          " once per long rest, without requiring material components. You can also cast these spells using spell slots of the appropriate level. WIS is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :shape-water ::char5e/wis "Genasi")
+                           (mod5e/spells-known 1 :create-and-destroy-water ::char5e/wis "Genasi" 3)
+                           (mod5e/spells-known 2 :water-walk ::char5e/wis "Genasi" 5)]
+               :traits [{:name "Amphibious"
+                         :summary "you can breathe air and water"}]}
+               ]
+   }
+)
+
+(defn goblin-aoa-option-cfg [spell-lists spells-map]
+  {:name "Goblin (AoA)"
+   :key :goblin-aoa
+   ;; :abilities {::char5e/dex 1}
+   :custom-ability-scores true
+   :size :small
+   :speed 30
+   :darkvision 60
+   :languages ["Common" "Goblin"]
+   :modifiers [(mod5e/saving-throw-advantage [:charmed])
+               (mod5e/bonus-action
+                {:name "Nimble Escape"
+                 :frequency units5e/turns-1
+                 :summary "Take the Disengage or Hide action"})
+               (mod5e/dependent-trait
+                {:name "Fury of the Small"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "Once per turn, when you damage a larger creature with an attack or spell, deal " ?prof-bonus "extra damage")})]
+   :traits [{:name "Fey Ancestry"
+             :summary "advantage on charmed saves"}]
+   :subraces [{:name "Forest Goblin"
+               ;; :abilities {::char5e/dex 1 ::char5e/con 1}
+               :modifiers [(mod5e/tool-proficiency :leatherworkers-tools)]
+               :traits [{:name "Keen Hearing"
+                         :summary "Advantage on Perception checks that rely on hearing"}
+                        {:name "Resourceful Hunter"
+                         :summary "During a short rest, use the corpse of a small or larger beast with usable materials to create a dagger, spear, light shield, or 1d6 arrows, darts, or blowing needles"}]}
+              {:name "Desert Goblin"
+               ;; :abilities {::char5e/str 1 ::char5e/con 1}
+               :modifiers [(mod5e/damage-resistance :fire)]
+               :traits [{:name "Shield Expert"
+                         :summary "You can carry a shield with the bulky property without a movement speed penalty. You can use shields one level above your proficient armor level"}]}
+              {:name "Swamp Goblin"
+               ;; :abilities {::char5e/con 1}
+               :selections [
+                            ;; (opt5e/ability-increase-selection [::char5e/wis ::char5e/cha] 1 true)
+                            (t/selection-cfg
+                             {:name "Cantrip"
+                              :order 1
+                              :tags #{:spells}
+                              :options (concat (opt5e/spell-options spells-map (get-in spell-lists [:druid 0]) ::char5e/wis "Druid") (opt5e/spell-options spells-map (get-in spell-lists [:warlock 0]) ::char5e/cha "Warlock"))
+                              :min 1
+                              :max 1})]
+               :modifiers [(mod5e/tool-proficiency :poisoners-kit)]
+               :traits [{:name "Swamp Hunter"
+                         :summary "Advantage on Nature checks to extract poison from beasts"}]}
+              {:name "Frost Goblin"
+               ;; :abilities {::char5e/con 1 ::char5e/int 1}
+               :modifiers [(mod5e/damage-resistance :cold)
+                           (mod5e/weapon-proficiency :crossbow-hand)
+                           (mod5e/weapon-proficiency :crossbow-light)
+                           (mod5e/tool-proficiency :tinkers-tools)]}
+             ]
+  })
+
+(defn aasimar-option-cfg [language-map]
+  {:name "Aasimar"
+   :key :aasimar
+   :help ""
+   ;; :abilities {::char5e/cha 2}
+   :custom-ability-scores true
+   :sizes [:small :medium]
+   :speed 30
+   :darkvision 60
+   :languages ["Common"]
+   :selections [
+                ;; (opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/cha) 1 true)
+                (opt5e/language-selection-aux (vals language-map) 1)
+                ;; (t/selection-cfg
+                ;;  {:name "Size"
+                ;;   :tags #{:race}
+                ;;   :options [(t/option-cfg
+                ;;              {:name "Small"
+                ;;               :modifiers [(mod5e/size :small)]})
+                ;;             (t/option-cfg
+                ;;              {:name "Medium"
+                ;;               :modifiers [(mod5e/size :medium)]})]})
+                              ]
+   :subraces [{:name "Necrotic Shroud"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Necrotic Shroud"
+                             :level 3
+                             :page 7
+                             :source :mpmm
+                             :summary (str "Creatures other than allies within 10 ft. that you can see must succeed on a DC " (?spell-save-dc ::char5e/cha) " cha save or be frightened of you until the end of your next turn. For 1 minute, once per turn, deal an additional " ?prof-bonus " necrotic damage to one target you deal damage to with a spell or attack.")})]}
+              {:name "Radiant Consumption"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Radiant Consumption"
+                             :level 3
+                             :page 7
+                             :source :mpmm
+                             :summary (str "For 1 minute, shed 10 ft. bright light and 10 ft. dim light, deal " ?prof-bonus " radiant damage to each creature within 10 ft. at the end of your turn and once per turn, deal an additional " ?prof-bonus " radiant damage to one target you deal damage to with a spell or attack.")})]}
+              {:name "Radiant Soul"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Radiant Soul"
+                             :level 3
+                             :page 7
+                             :source :mpmm
+                             :summary (str "For 1 minute, sprout wings (flying speed equal to walking speed) and once per turn, deal an additional " ?prof-bonus " radiant damage to one target you deal damage to with a spell or attack.")})]}]
+   :modifiers [(mod5e/action
+                {:name "Healing Hands"
+                 :page 7
+                 :summary "Touch and heal a creature equal to your proficiency bonus d6 (use once/long rest)."})
+               (mod5e/damage-resistance :necrotic)
+               (mod5e/damage-resistance :radiant)
+               (mod5e/spells-known 0 :light ::char5e/cha "Aasimar")]})
+
+(def centaur-option-cfg
+  {:name "Centaur"
+   :key :centaur
+   :custom-ability-scores true
+   :help ""
+   :languages ["Common" "Centaur"]
+   :traits [{:name "Strong Build"
+             :summary "Count as one size larger for purposes of determining weight you can carry, push, drag, or lift.\nAny climb that requires hands and feet costs 4 more ft. instead of 1."}]
+   :modifiers [(mod5e/attack
+                {:name "Hoove/Horn"
+                 :attack-type :melee
+                 :damage-type :bludgeoning
+                 :damage-die 6
+                 :damage-die-count 1
+                 :damage-modifier (if (= (?class-level :monk) 0) (::char5e/str ?ability-bonuses) (max (::char5e/str ?ability-bonuses) (::char5e/dex ?ability-bonuses)))})]
+   :subraces [{:name "Equine"
+               ;; :abilities {::char5e/str 2 ::char5e/con 1}
+               :size :medium
+               :speed 40
+               :profs {:skill-options {:choose 1 :options {:animal-handling true :athletics true :perception true :nature true :survival true}}}
+               :weapon-proficiencies [:battleaxe :flail :glaive :greataxe :greatsword :halberd :lance :longsword :maul :morningstar :pike :rapier :scimitar :shortsword :trident :war-pick :warhammer :whip :longbow]
+               :modifiers [(mod5e/bonus-action
+                            {:name "Charge"
+                            :summary "If you move at least 30 feet in a straight line, you can make an attack with your hooves or Dash"})]}
+              {:name "Ovine"
+               ;; :abilities {::char5e/con 2 ::char5e/dex 1}
+               :size :medium
+               :speed 35
+               :weapon-proficiencies [:longbow]
+               :profs {:skill-options {:choose 1 :options {:animal-handling true :athletics true :perception true :nature true :survival true}}}
+               :modifiers [(mod5e/tool-proficiency :weavers-tools)]
+               :traits [{:name "Soft Pelt"
+                        :summary "Resistance to bludgeoning damage from melee weapon attacks while not wearing heavy armor"}]
+               :selections [(t/selection-cfg
+                             {:name "Tool Proficiencies"
+                              :tags #{:profs}
+                              :options [(t/option-cfg
+                                         {:name "Artisan's Tool"
+                                          :selections [(opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]})
+                                        (t/option-cfg
+                                         {:name "Musical Instrument"
+                                          :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})]})]}
+              {:name "Caprine"
+               ;; :abilities {::char5e/dex 2 ::char5e/con 1}
+               :size :small
+               :speed 30
+               :profs {:skill {:athletics true}
+                       :tool {:masons-tools true}
+                       :skill-options {:choose 1 :options {:acrobatics true :perception true :nature true :survival true}}}
+               :traits [{:name "Skilled Climber"
+                         :summary "Unlike other centaurs, climbing does not cost you the extra feet. Climbing speed equals walking speed if the climb is less than 90 degrees with minimal footing"}
+                        {:name "Evasive Bounce"
+                         :summary "If you move at least 10 feet towards an enemy in a straight line and make a melee weapon attack, you can bounce off the enemy and move yourself 5 feet away from them without provoking opportunity attacks.\nYou can only bounce away toward where you came from and only once off the same target."}]}
+              {:name "Cervine"
+               ;; :abilities {::char5e/dex 1 ::char5e/con 1 ::char5e/wis 1}
+               :size :medium
+               :speed 40
+               :profs {:skill {:nature true}
+                       :tool {:herbalism-kit true}
+                       :skill-options {:choose 1 :options {:acrobatics true :athletics true :perception true :stealth true :medicine true}}}
+               :modifiers [(mod5e/spells-known 2 :locate-animals-or-plants ::char5e/wis "Cervine Centaur")]
+               :traits [{:name "Connection to the Wilds"
+                        :summary "You can cast Locate Animals or Plants at will with a radius of 500 ft., 5 miles if cast as a Ritual"}
+                       {:name "Undergrowth Mobility"
+                        :summary "Treat difficult terrain created by plants as regular terrain, magical or not.\n   In terrain with plants of medium size or larger nearby, whether creature or part of the surroundings, you can Hide behind them with a bonus action"}]
+               :selections [(opt5e/cantrip-selection :druid "Cervine Centaur" ::char5e/wis 1)]
+              }
+              ]})
+
+(defn changeling-option-cfg [language-map]
+  {:name "Changeling"
+   :key :changeling
+   :help ""
+   ;; :abilities {::char5e/cha 2}
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :languages ["Common"]
+   :profs {:skill-options {:choose 2 :options {:deception true :insight true :intimidation true :performance true :persuasion true}}}
+   :selections [
+                ;; (opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/cha) 1 true)
+                (opt5e/language-selection-aux (vals language-map) 1)]
+   :modifiers [(mod5e/action
+                {:name "Shapechanger"
+                 :page 10
+                 :summary "you change your appearance and your voice. You determine the specifics of the changes, including your coloration, hair length, and sex. You can also adjust your height between Medium and Small. You can make yourself appear as a member of another race, though none of your game statistics change. You can't duplicate the appearance of an individual you've never seen, and you must adopt a form that has the same basic arrangement of limbs that you have. Your clothing and equipment aren't changed by this trait.
+                 You stay in the new form until you use an action to revert to your true form or until you die."})]})
+
+(defn duergar-magic-option [ability]
+  [(mod5e/spells-known 2 :enlarge-reduce ability "Duergar" 3)
+   (mod5e/spells-known 2 :invisibility ability "Duergar" 5)])
+
+(def duergar-option-cfg
+  {:name "Duergar"
+   :key :duergar
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :darkvision 120
+   :languages ["Dwarvish" "Common"]
+   :modifiers [(mod5e/damage-resistance :poison)
+               (mod5e/saving-throw-advantage [:poisoned])
+               (mod5e/saving-throw-advantage [:charmed])
+               (mod5e/saving-throw-advantage [:paralyzed])
+               (mod5e/spells-known 1 :enlarge-reduce nil "Duergar" 3)
+               (mod5e/spells-known 2 :invisibility nil "Duergar" 5)
+               (mod5e/action
+                {:name "Duergar Magic"
+                 :summary (str "You can cast "
+                              (common/list-print
+                                (let [lvl ?total-levels]
+                                  (cond-> []
+                                    (>= lvl 3) (conj "Enlarge/Reduce")
+                                    (>= lvl 5) (conj "Invisibility"))))
+                              " on yourself once per long rest, without needing material components. INT, WIS, or CHA is your spellcasting ability.")})]
+   :selections [(t/selection-cfg
+                 {:name "Duergar Spellcasting Ability"
+                  :tags #{:race}
+                  :options [(t/option-cfg
+                             {:name "Intelligence"
+                              :modifiers (duergar-magic-option ::char5e/int)})
+                            (t/option-cfg
+                             {:name "Wisdom"
+                              :modifiers (duergar-magic-option ::char5e/wis)})
+                            (t/option-cfg
+                             {:name "Charisma"
+                              :modifiers (duergar-magic-option ::char5e/cha)})]})]
+   :traits [{:name "Dwarven Resilience"
+             :summary "Advantage on poison saves, resistance to poison damage"}
+            {:name "Psionic Fortitude"
+             :summary "Advantage on saves against charmed or stunned"}]})
+
 (def dwarf-option-cfg
   {:name "Dwarf",
    :key :dwarf
    :help "Dwarves are short and stout and tend to be skilled warriors and craftmen in stone and metal."
-   :abilities {::char5e/con 2},
+   ;; :abilities {::char5e/con 2},
+   :custom-ability-scores true
    :size :medium
    :speed 25,
    :darkvision 60
@@ -608,42 +1705,121 @@
              :summary "2X prof bonus on stonework-related history checks"
              :page 20}]
    :subraces [{:name "Hill Dwarf",
-               :abilities {::char5e/wis 1}
+               ;; :abilities {::char5e/wis 1}
                :modifiers [(mod/modifier ?hit-point-level-bonus (+ 1 ?hit-point-level-bonus))]}
-              #_{:name "Mountain Dwarf"
-               :abilities {::char5e/str 2}
-               :armor-proficiencies [:light :medium]}]
+              {:name "Mountain Dwarf"
+               ;; :abilities {::char5e/str 2}
+               :armor-proficiencies [:light :medium]}
+              {:name "Duergar"
+               ;; :abilities {::char5e/str 1}
+               :darkvision 120
+               :modifiers [(mod5e/saving-throw-advantage [:charmed])
+                           (mod5e/saving-throw-advantage [:paralyzed])
+                           (mod5e/spells-known 1 :enlarge-reduce ::char5e/int "Duergar Dwarf" 3)
+                           (mod5e/spells-known 2 :invisibility ::char5e/int "Duergar Dwarf" 5)
+                           (mod5e/action
+                            {:name "Duergar Magic"
+                            :page 81
+                            :summary (str "You can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Enlarge/Reduce, using only Enlarge,")
+                                                (>= lvl 5) (conj "Invisibility"))))
+                                          " on yourself once per day while not in direct sunlight, without needing material components. INT is your spellcasting ability.")})]
+               :traits [{:name "Duergar Resilience"
+                         :summary "Advantage on saving throws against illusions, being charmed and paralyzed."}
+                        (sunlight-sensitivity 81)]}]
    :modifiers [(mod5e/damage-resistance :poison)
                (mod5e/saving-throw-advantage [:poisoned])]})
 
-(def halfling-option-cfg
+(defn goliath-option-cfg [language-map]
+  {:name "Goliath"
+   :key :goliath
+   ;; :abilities {::char5e/str 2 ::char5e/con 1}
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :languages ["Common" "Giant"]
+   :profs {:skill {:athletics true}}
+   :modifiers [(mod5e/damage-resistance :cold)
+               (mod5e/reaction
+                {:name "Stone's Endurance"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "When you take damage, reduce the damage taken by 1d12+" (?ability-bonuses ::char5e/con))})]
+   :traits [(powerful-build 21)
+            {:name "Mountain Born"
+             :summary "You have resistance to cold damage. You also naturally acclimate to high altitudes, including elevations above 20,000 feet."}]})
+
+(defn halfling-option-cfg [spell-lists spells-map]
   {:name "Halfling"
    :key :halfling
    :help "Halflings are small and nimble, half the height of a human, but fairly stout. They are cheerful and practical."
-   :abilities {::char5e/dex 2}
+   ;; :abilities {::char5e/dex 2}
+   :custom-ability-scores true
    :size :small
    :speed 25
    :languages ["Halfling" "Common"]
    :modifiers [(mod5e/saving-throw-advantage [:frightened])]
    :subraces
    [{:name "Lightfoot"
-     :abilities {::char5e/cha 1}
+     ;; :abilities {::char5e/cha 1}
      :traits [{:name "Naturally Stealthy"
                :page 28
-               :summary "Hide behind creatures larger than you"}]}
-    #_{:name "Stout"
-     :abilities {::char5e/con 1}
+               :summary "Can attempt to hide behind creatures larger than you"}]}
+    {:name "Stout"
+     ;; :abilities {::char5e/con 1}
      :modifiers [(mod5e/damage-resistance :poison)
-                 (mod5e/saving-throw-advantage [:poisoned])]}]
+                 (mod5e/saving-throw-advantage [:poisoned])]
+     :traits [{:name "Stout Resilience"
+               :summary "Advantage on poison saves, resistance to poison damage"}]}
+    {:name "Ghostwise"
+    ;;  :abilities {::char5e/wis 1}
+     :traits [{:name "Silent Speech"
+               :summary "Speak telepathically to any creature within 30 ft. which only understands you if you share a language. Only works on one creature at a time."}]}
+    {:name "Lotusden"
+     ;; :abilities {::char5e/wis 1}
+     :modifiers [(mod5e/spells-known 0 :druidcraft ::char5e/wis "Lotusden Halfling")
+                 (mod5e/spells-known 1 :entangle ::char5e/wis "Lotusden Halfling" 3)
+                 (mod5e/spells-known 2 :spike-growth ::char5e/wis "Lotusden Halfling" 5)
+                 (mod5e/dependent-trait
+                  {:name "Children of the Woods"
+                  :summary (str "You know druidcraft and can cast "
+                                (common/list-print
+                                  (let [lvl ?total-levels]
+                                    (cond-> []
+                                      (>= lvl 3) (conj "Entangle")
+                                      (>= lvl 5) (conj "Spike Growth"))))
+                                " once per long rest, without material components. WIS is your spellcasting ability.")})]
+     :traits [{:name "Timberwalk"
+               :summary "Ability checks made to track you are at disadvantage and you can move through difficult terrain made of non-magical plants and overgrowth without expending extra movement."}]}
+    {:name "Mark of Hospitality"
+     ;; :abilities {::char5e/cha 1}
+     :modifiers (into [] (concat
+                 [(mod5e/spells-known 0 :prestidigitation ::char5e/cha "Halfling")
+                 (mod5e/spells-known 1 :purify-food-and-drink ::char5e/cha "Halfling")
+                 (mod5e/spells-known 1 :unseen-servant ::char5e/cha "Halfling")]
+                 (opt5e/subrace-spells-known spell-lists spells-map "Mark of Hospitality" 1 5)))
+     :selections (opt5e/subrace-spell-selections spell-lists spells-map "Mark of Hospitality" 1 5)
+     :traits [{:name "Ever Hospitable"
+               :summary "Add 1d4 to any Persuasion check and ability checks involving Brewer's Tools or Cook's Utensils."}
+              {:name "Innkeeper's Magic"
+               :summary "You know prestidigitation and can cast Purify Foods and Drink and Unseen Servant once per long rest. Cha is your spellcasting ability."}]}]
    :traits [{:name "Lucky"
              :page 28
-             :summary "Reroll 1s on d20"}
-            {:name "Halfling Nimbleness"
+             :summary "Reroll 1s on d20 once"}
+            {:name "Nimble"
              :page 28
-             :summary "move through the space of larger creatures"}
+             :summary "Move through the space of creatures larger than you"}
             {:name "Brave"
              :page 28
              :summary "you have advantage on saves against being frightened"}]})
+
+;; (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 1]) 0)
+;;                  (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 2]) 0)
+;;                  (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 3]) 0)
+;;                  (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 4]) 0)
+;;                  (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 5]) 0)
 
 (defn human-option-cfg [spell-lists spells-map language-map]
   {:name "Human"
@@ -653,7 +1829,8 @@
    :speed 30
    :languages ["Common"]
    :subraces
-   [{:name "Calishite"}
+   [{:name "Calishite"
+     :help "test"}
     {:name "Chondathan"}
     {:name "Damaran"}
     {:name "Illuskan"}
@@ -673,12 +1850,97 @@
                                           (mod5e/race-ability ::char5e/dex 1)
                                           (mod5e/race-ability ::char5e/int 1)
                                           (mod5e/race-ability ::char5e/wis 1)
-                                          (mod5e/race-ability ::char5e/cha 1)]})
+                                          (mod5e/race-ability ::char5e/cha 1)]
+                              :selections [(t/selection-cfg
+                                            {:name "Proficiency"
+                                             :tags #{:profs}
+                                             :options [(t/option-cfg
+                                                        {:name "Skill"
+                                                         :selections [(t/selection-cfg
+                                                                       {:name "Skill Proficiency"
+                                                                        :tags #{:profs}
+                                                                        :options (opt5e/skill-options skill5e/skills)})]})
+                                                       (t/option-cfg
+                                                        {:name "Artisan's Tool"
+                                                         :selections [(opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]})
+                                                       (t/option-cfg
+                                                        {:name "Musical Instrument"
+                                                         :selections [(opt5e/tool-selection (map :key equipment5e/musical-instruments) 1)]})
+                                                       (t/option-cfg
+                                                        {:name "Language"
+                                                         :selections [(opt5e/language-selection-aux (vals language-map) 1)]})]})]})
                             (t/option-cfg
                              {:name "Variant Human"
                               :selections [(opt5e/feat-selection spell-lists spells-map 1)
                                            (opt5e/skill-selection 1)
                                            (opt5e/ability-increase-selection char5e/ability-keys 2 true)]})]})]})
+
+(defn kitsune-spellcasting-ability-option [name ability]
+  (t/option-cfg
+    {:name name
+     :modifiers [(mod5e/spells-known 1 :disguise-self ability "Kitsune")
+                 (mod5e/spells-known 2 :misty-step ability "Kitsune")
+                 (mod5e/spells-known 5 :modify-memory ability "Kitsune")]}))
+
+(def kitsune-option-cfg
+  {:name "Kitsune"
+   :key :kitsune
+   ;; :abilities {::char5e/cha 2}
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :languages ["Common" "Sylvan"]
+   :darkvision 60
+   :profs {:skill-options {:choose 1 :options {:persuasion true :deception true}}}
+   :traits [{:name "Type"
+             :summary "You are humanoid but count as Fey for the purpose of any effects, abilities, or features"}
+            {:name "Fey Resistance"
+             :summary "You have advantage on saves against being charmed"}]
+   :modifiers [(mod5e/saving-throw-advantage [:charmed])
+               (mod5e/bonus-action
+                {:name "Fox Spirit"
+                 :summary (str "Hide or reveal your vulpine features (ears, tails). Spells like detect magic can discern that you are hiding something. Your features are revealed if unconcious. While revealed, your spell save DC for any spells that cause the charmed condition is increased by +" (max 1 (int (/ ?total-levels 4))) ".\n  You can speak with foxes as if affected by the spell speak with animals")})
+               (mod5e/dependent-trait
+                {:name "Kitsune Magic"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "You have " ?prof-bonus " charges to cast disguise self, misty step, and a modified modify memory. Each casting costs one charge and you regain one charge after a long rest. This modify memory can only affect the target's memory of an event within the last 10 minutes that lasted max 1 minute. You choose INT, WIS, or CHA as your spellcasting ability for these spells")})
+               (mod5e/spells-known 1 :disguise-self nil "Kitsune")
+               (mod5e/spells-known 2 :misty-step nil "Kitsune")
+               (mod5e/spells-known 5 :modify-memory nil "Kitsune")]
+   :selections [
+                ;; (opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/cha) 1)
+                (t/selection-cfg
+                 {:name "Kitsune Spellcasting Ability"
+                  :tags #{:spells}
+                  :options [(kitsune-spellcasting-ability-option "Intelligence" ::char5e/int)
+                            (kitsune-spellcasting-ability-option "Wisdom" ::char5e/wis)
+                            (kitsune-spellcasting-ability-option "Charisma" ::char5e/cha)]})]})
+
+(def lamia-option-cfg
+  {:name "Lamia"
+   :key :lamia
+   ;; :abilities {::char5e/con 2}
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :languages ["Common" "Lamia"]
+   :profs {:armor {:light true}
+           :weapon {:scimitar true :glaive true :halberd true :lance true :pike true :whip true}}
+  ;;  :selections [(opt5e/ability-increase-selection [::char5e/str ::char5e/dex] 1 true)]
+   :modifiers [(mod5e/damage-resistance :poison)
+               (mod5e/saving-throw-advantage [:poisoned])
+               (mod5e/dependent-trait
+                {:name "Frightening Gaze"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "A target that can see you has to make a DC " (?spell-save-DC ::char5e/cha) " WIS Save or be frightened of you"
+                           (common/bonus-str 
+                            (condp <= ?total-levels 5 
+                             ", and have its movement speed reduced to 0 if it fails by 5 or more" ""))
+                 ". The target can repeat the save at the end of its turns. A target that has succeeded on the save is immune for 24 hours.")})]
+   :traits [{:name "Tremor Sense"
+             :summary "You have tremorsense of 15 ft. Advantage on perception checks for feeling things through the ground."}
+            {:name "Cold Blooded Anatomy"
+             :summary "Advantage on poison saves, resistance to poison damage. You can survive 3 times longer without good or drink. When in 0 degrees or lower or when hit by cold damage, your movement speed is halved until the end of your next turn."}]})
 
 (defn draconic-ancestry-option [{:keys [name breath-weapon]}]
   (t/option-cfg
@@ -686,11 +1948,12 @@
     :modifiers [(mod5e/damage-resistance (:damage-type breath-weapon))
                 (mod/modifier ?draconic-ancestry-breath-weapon breath-weapon)]}))
 
-(def dragonborn-option-cfg
-  {:name "Dragonborn"
-   :key :dragonborn
+(def dragonborn-standard-option-cfg
+  {:name "Dragonborn (Standard)"
+   :key :dragonborn-standard
    :help "Kin to dragons, dragonborn resemble humanoid dragons, without wings or tail and standing erect. They tend to make excellent warriors."
-   :abilities {::char5e/str 2 ::char5e/cha 1}
+   ;; :abilities {::char5e/str 2 ::char5e/cha 1}
+   :custom-ability-scores true
    :size :medium
    :speed 30
    :languages ["Draconic" "Common"]
@@ -718,12 +1981,61 @@
                             draconic-ancestry-option
                             opt5e/draconic-ancestries)})]})
 
+(def dragonborn-option-cfg
+  {:name "Dragonborn"
+   :key :dragonborn
+   :custom-ability-scores true
+   :help "Kin to dragons, dragonborn resemble humanoid dragons, without wings or tail and standing erect. They tend to make excellent warriors."
+   :size :medium
+   :speed 30
+   :languages ["Draconic" "Common"]
+   :subraces [{:name "Draconblood"
+               ;; :abilities {::char5e/int 2 ::char5e/cha 1}
+               :darkvision 60
+               :modifiers [(mod5e/trait-cfg
+                            {:name "Forceful Presence"
+                             :page 168
+                             :source :egw
+                             :summary (str "When you make a Intimidation or Persuasion check, you can do so with advantage once per long rest.")})]}
+              {:name "Ravenite"
+               ;; :abilities {::char5e/str 2 ::char5e/con 1}
+               :darkvision 60
+               :modifiers [(mod5e/reaction
+                            {:name "Vengeful Assault"
+                             :page 168
+                             :source :egw
+                             :frequency units5e/rests-1
+                             :summary (str "When you take damage from a creature in range of a weapon you are wielding, you can make an attack with the weapon against that creature.")})]}]
+   :modifiers [(mod5e/attack
+                (let [breath-weapon ?draconic-ancestry-breath-weapon
+                      damage-type (:damage-type breath-weapon)]
+                  (merge
+                   breath-weapon
+                   {:name "Breath Weapon"
+                    :summary (if damage-type
+                               (common/safe-capitalize-kw damage-type))
+                    :attack-type :area
+                    :damage-die 6
+                    :page 34
+                    :damage-die-count (condp <= ?total-levels
+                                        16 5
+                                        11 4
+                                        6 3
+                                        2)
+                    :save-dc (?spell-save-dc ::char5e/con)})))]
+   :selections [(t/selection-cfg
+                 {:name "Draconic Ancestry"
+                  :tags #{:subrace}
+                  :options (map
+                            draconic-ancestry-option
+                            opt5e/draconic-ancestries)})]})
 
 (def gnome-option-cfg
   {:name "Gnome"
    :key :gnome
    :help "Gnomes are small, intelligent humanoids who live life with the utmost of enthusiasm."
-   :abilities {::char5e/int 2}
+   ;; :abilities {::char5e/int 2}
+   :custom-ability-scores true
    :size :small
    :speed 25
    :darkvision 60
@@ -734,32 +2046,78 @@
              :summary "Advantage on INT, WIS, and CHA saves against magic"}]
    :subraces
    [{:name "Rock Gnome"
-     :abilities {::char5e/con 1}
+     ;; :abilities {::char5e/con 1}
      :modifiers [(mod5e/tool-proficiency :tinkers-tools)]
      :traits [{:name "Artificer's Lore"
                :page 37
                :summary "Add 2X prof bonus on magical, alchemical, or technological item-related history checks."}
               {:name "Tinker"
                :page 37
-               :summary "Construct tiny clockwork devices."}]}
-    #_{:name "Forest Gnome"
-     :abilities {::char5e/dex 1}
+               :summary "Using tinker's tools, you can spend 1 hour and 10 gp worth of materials to construct a Tiny clockwork device (AC 5, 1 hp). The device ceases to function after 24 hours (unless you spend 1 hour repairing it to keep the device functioning), or when you use your action to dismantle it; at that time, you can reclaim the materials used to create it. You can have up to three such devices active at a time. When you create a device, choose one of the following options:
+
+Clockwork Toy: This toy is a clockwork animal, monster, or person, such as a frog, mouse, bird, dragon, or soldier. When placed on the ground, the toy moves 5 feet across the ground on each of your turns in a random direction. It makes noises as appropriate to the creature it represents.
+
+Fire Starter: The device produces a miniature flame, which you can use to light a candle, torch, or campfire. Using the device requires your action.
+
+Music Box: When opened, this music box plays a single song at a moderate volume. The box stops playing when it reaches the song's end or when it is closed.
+
+May make other objects at the DM's discretion."}]}
+    {:name "Forest Gnome"
+     ;; :abilities {::char5e/dex 1}
      :modifiers [(mod5e/spells-known 0 :minor-illusion ::char5e/int "Forest Gnome")]
      :traits [{:name "Speak with Small Beasts"
                :page 37
-               :summary "Communicate with Small or smaller beasts."}]}]})
+               :summary "Through sound and gestures, you may communicate simple ideas with Small or smaller beasts."}]}
+    {:name "Svirfneblin (Deep Gnome)"
+     ;; :abilities {::char5e/dex 1}
+     :darkvision 120
+     :traits [{:name "Stone Camouflage"
+               :summary "Advantage on Stealth checks to hide in rocky terrain."}]}]})
+
+(defn deep-gnome-option-cfg [language-map]
+  {:name "Deep Gnome"
+   :key :deep-gnome
+   :help "Gnomes are small, intelligent humanoids who live life with the utmost of enthusiasm."
+   :custom-ability-scores true
+   ;; :abilities {::char5e/int 2 ::char5e/dex 1}
+   :size :small
+   :speed 30
+   :darkvision 120
+   :languages ["Common"]
+   :selection [(opt5e/language-selection-aux (vals language-map) 1)]
+   :modifiers [(mod5e/saving-throw-advantage [:magic] [::char5e/int ::char5e/wis ::char5e/cha])
+              (mod5e/spells-known 1 :disguise-self ::char5e/int "Deep Gnome" 3)
+              (mod5e/spells-known 2 :nondetection ::char5e/int "Deep Gnome" 5)
+              (mod5e/action
+              {:name "Gift of the Svirfneblin"
+              :page 11
+              :summary (str "You can cast "
+                            (common/list-print
+                              (let [lvl ?total-levels]
+                                (cond-> []
+                                  (>= lvl 3) (conj "Disguise Self")
+                                  (>= lvl 5) (conj "Nondetection"))))
+                            " on yourself once per long rest without needing material components. You can also cast these using spell slots of the appropriate level. INT, WIS, or CHA is your spellcasting ability.")})
+               (mod5e/action
+                {:name "Svirfneblin Camouflage"
+                 :page 11
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary "Make a Stealth check with advantage"})]
+   :traits [{:name "Gnome"
+             :page 11
+             :summary "You are considered a gnome for any prerequisite or effect that requires you to be a gnome."}]})
 
 (defn half-elf-option-cfg [language-map]
   {:name "Half-Elf"
    :key :half-elf
    :help "Half-elves are charismatic, and bear a resemblance to both their elvish and human parents and share many of the traits of each."
-   :abilities {::char5e/cha 2}
+   :custom-ability-scores-2 true
+  ;;  :abilities {::char5e/cha 2}
    :size :medium
    :speed 30
    :darkvision 60
    :languages ["Common" "Elvish"]
-   :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/cha) 2 true)
-                (assoc
+   :selections [(assoc
                  (opt5e/skill-selection 2)
                  ::t/ref
                  [:race :half-elf :skill-proficiency])
@@ -769,11 +2127,51 @@
              :page 39
              :summary "advantage on charmed saves and immune to sleep magic"}]})
 
+;; (opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/cha) 2 true)
+
+(defn half-elf-aoa-option-cfg [spell-lists spells-map]
+  {:name "Half-Elf (AoA)"
+   :key :half-elf-aoa
+   :help "Half-elves are charismatic, and bear a resemblance to both their elvish and human parents and share many of the traits of each."
+   :custom-ability-scores-2 true
+  ;;  :abilities {::char5e/cha 2}
+   :size :medium
+   :speed 30
+   :darkvision 60
+   :languages ["Common" "Elvish"]
+   :selections [(t/selection-cfg
+                 {:name "Half-Elf Heritage"
+                  :tags #{:race}
+                  :options [(t/option-cfg
+                             {:name "Human"
+                              :selections [(opt5e/skill-selection 2)]})
+                            (t/option-cfg
+                             {:name "High Elf"
+                              :selections [(high-elf-cantrip-selection spell-lists spells-map)]})
+                            (t/option-cfg
+                             {:name "Dark Elf"
+                              :modifiers [(mod5e/darkvision 120)]})
+                            (t/option-cfg
+                             {:name "Wood Elf"
+                              :modifiers [(mod5e/speed 5)]})
+                            (t/option-cfg
+                             {:name "Sea Elf"
+                              :modifiers [(mod5e/swimming-speed-equal-to-walking)]})
+                            (t/option-cfg
+                             {:name "Snow Elf"
+                              :modifiers [(mod5e/damage-resistance :cold)]})]})]
+   :modifiers [(mod5e/saving-throw-advantage [:charmed])
+               (mod5e/immunity :magical-sleep)]
+   :traits [{:name "Magical Ancestry"
+             :page 39
+             :summary "advantage on charmed saves and immune to sleep magic"}]})
+
 (def half-orc-option-cfg
   {:name "Half-Orc"
    :key :half-orc
    :help "Half-orcs are strong and bear an unmistakable resemblance to their orcish parent. They tend to make excellent warriors, especially Barbarians."
-   :abilities {::char5e/str 2 ::char5e/con 1}
+   ;; :abilities {::char5e/str 2 ::char5e/con 1}
+   :custom-ability-scores true
    :size :medium
    :speed 30
    :darkvision 60
@@ -781,16 +2179,295 @@
    :modifiers [(mod5e/skill-proficiency :intimidation)]
    :traits [{:name "Relentless Endurance"
              :page 41
+             :frequency units5e/long-rests-1
              :summary "Drop to 1 hp instead of being reduced to 0."}
             {:name "Savage Attacks"
              :page 41
-             :summary "On critical hit, add additional damage dice roll"}]})
+             :summary "On critical hit with melee weapon attack, add additional damage dice roll"}]})
+
+(def harpy-option-cfg
+  {:name "Harpy"
+   :key :harpy
+   ;; :abilities {::char5e/dex 2}
+   :custom-ability-scores true
+   :languages ["Common" "Harpian"]
+   :profs {:skill {:perception true}}
+   :subraces [{:name "Eagle Harpy"
+               :size :medium
+               :speed 30
+               ;; :abilities {::char5e/str 1}
+               :modifiers [(mod5e/flying-speed-override 45)
+                           (mod5e/attack
+                            {:name "Talons"
+                             :attack-type :melee
+                             :damage-type :slashing
+                             :damage-die 6
+                             :damage-die-count 1
+                             :damage-modifier (if (= (?class-level :monk) 0) (::char5e/str ?ability-bonuses) (max (::char5e/str ?ability-bonuses) (::char5e/dex ?ability-bonuses)))})]
+               :traits [{:name "Flight"
+                         :summary "Fly speed of 45 ft. You can't fly if you're wearing medium or heavy armor or have a weapon with the two-handed property equipped. You cannot cast spells that use somatic components or reload weapons with the reload property while flying."}
+                        {:name "Harpy Flyby"
+                         :summary "When you hit an an enemy within 5 ft. of you while flying, you don't provoke opportunity attacks from that enemy."}]}
+               {:name "Owl Harpy"
+                :sizes [:small :medium]
+                :darkvision 120
+                ;; :abilities {::char5e/wis 1}
+                :modifiers [(mod5e/flying-speed-override 30)
+                            (mod5e/skill-proficiency :stealth)
+                            (mod5e/attack
+                              {:name "Talons"
+                              :attack-type :melee
+                              :damage-type :slashing
+                              :damage-die 4
+                              :damage-die-count 1
+                              :damage-modifier (max (::char5e/str ?ability-bonuses) (::char5e/dex ?ability-bonuses))})]
+                ;; :selections [(t/selection-cfg
+                ;;               {:name "Size"
+                ;;                 :tags #{:race}
+                ;;                 :options [(t/option-cfg
+                ;;                           {:name "Small"
+                ;;                             :modifiers [(mod5e/size :small)]})
+                ;;                           (t/option-cfg
+                ;;                           {:name "Medium"
+                ;;                             :modifiers [(mod5e/size :medium)]})]})]
+                :traits [{:name "Flight"
+                          :summary "Fly speed of 30 ft. You can't fly if you're wearing medium or heavy armor or have a weapon with the two-handed property equipped. You cannot cast spells that use somatic components or reload weapons with the reload property while flying."}
+                         {:name "Dampening Feathers"
+                          :summary "Advantage on Stealth checks while gliding. While gliding, you descend 5 ft. for every 15 ft. flown horizontally."}]}]})
+
+(def hobgoblin-option-cfg
+  {:name "Hobgoblin"
+   :key :hobgoblin
+   ;; :abilities {::char5e/con 2 ::char5e/str 1}
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :modifiers [(mod5e/bonus-action
+                {:name "Commander's Gift"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "Take the help action." 
+                           (common/bonus-str 
+                            (condp <= ?total-levels 3 
+                             (str " Choose one of the following options when using this trait:"
+                                  "\n   Hospitality. You and the creature you help each gain 1d6+" ?prof-bonus " temp HP."
+                                  "\n   Passage. You and the creature you help each get +10 walking speed until the start of your next turn."
+                                  "\n   Spite. Until the start of your next turn, the first target the creature you help hits with an attack has disadvantage on on the next attack it makes within the next minute.") "")))})
+               (mod5e/dependent-trait
+                {:name "Army Advantage"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary "If you miss with an attack or fail an ability check or a saving throw, gain a bonus to the roll equal to the number of allies you can see within 30 ft. of you (max +3)."})]
+   :subraces [{:name "Forest Tribe"
+               :modifiers [(mod5e/trait-cfg
+                            {:name "Forest Tribe Bonus"
+                             :summary "You can cast animal friendship at will. WIS is the spellcasting ability. A creature targeted by this trait is then immune to it for the next 24 hours."})
+                           (mod5e/spells-known 1 :animal-friendship ::char5e/wis "Hobgoblin")]}
+              {:name "Rock Tribe"
+               :modifiers [(mod/vec-mod ?unarmored-defense :hobgoblin)
+                           (mod/cum-sum-mod ?unarmored-ac-bonus (- (+ 3 (?ability-bonuses ::char5e/con)) (?ability-bonuses ::char5e/dex))
+                                           nil
+                                           nil
+                                           [(= :hobgoblin (first ?unarmored-defense))])
+                           (mod/cum-sum-mod ?unarmored-with-shield-ac-bonus (- (+ 3 (?ability-bonuses ::char5e/con)) (?ability-bonuses ::char5e/dex))
+                                           nil
+                                           nil
+                                           [(= :hobgoblin (first ?unarmored-defense))])]}
+              {:name "Desert Tribe"
+               :modifiers [(mod5e/armor-proficiency :shields)
+                           (mod5e/damage-resistance :fire)]
+               :traits [{:name "Desert Tribe Bonus"
+                         :summary "You can ignore the bulky property of shields"}]}
+              {:name "Frost Tribe"
+               :modifiers [(mod5e/weapon-proficiency :crossbow-hand)
+                           (mod5e/weapon-proficiency :crossbow-light)
+                           (mod5e/weapon-proficiency :crossbow-heavy)
+                           (mod5e/damage-resistance :cold)]
+               :selections [(t/selection-cfg
+                             {:name "Tool Proficiency"
+                              :tags #{:profs}
+                              :options [(t/option-cfg
+                                         {:name "Tinker's Tools"
+                                          :modifiers [(mod5e/tool-proficiency :tinkers-tools)]})
+                                        (t/option-cfg 
+                                         {:name "Alchemist's Supplies"
+                                          :modifiers [(mod5e/tool-proficiency :alchemists-supplies)]})]})]}
+              ]})
+
+(defn kobold-option-cfg [language-map]
+  {:name "Kobold"
+   :custom-ability-scores true
+   :size :small
+   :speed 30
+   :darkvision 60
+   :languages ["Common"]
+   :modifiers [(mod5e/bonus-action
+                {:name "Draconic Cry"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary "As a bonus action, you let out a cry at your enemies within 10 feet of you. Until the start of your next turn, you and your allies have advantage on attack rolls against any of those enemies who could hear you"})]
+   :selections [(opt5e/language-selection-aux (vals language-map) 1)
+                (t/selection-cfg
+                 {:name "Kobold Legacy"
+                  :tags #{:race}
+                  :options [(t/option-cfg
+                             {:name "Craftiness"
+                              :selections [(opt5e/skill-selection [:arcana :investigation :medicine :sleight-of-hand :survival] 1)]})
+                            (t/option-cfg
+                             {:name "Defiance"
+                              :modifiers [(mod5e/saving-throw-advantage [:frightened])
+                                          (mod5e/trait-cfg
+                                           {:name "Defiance"
+                                            :summary "You have advantage on saving throws to avoid or end the frightened condition on yourself."})]})
+                            (t/option-cfg
+                             {:name "Draconic Sorcery"
+                              :selections [(t/selection-cfg
+                                            {:name "Kobold Spellcasting Ability"
+                                             :tags #{:spells}
+                                             :options [(t/option-cfg
+                                                        {:name "Intelligence"
+                                                         :selections [(opt5e/cantrip-selection :sorcerer "Kobold" ::char5e/int 1)]})
+                                                       (t/option-cfg
+                                                        {:name "Wisdom"
+                                                         :selections [(opt5e/cantrip-selection :sorcerer "Kobold" ::char5e/wis 1)]})
+                                                       (t/option-cfg
+                                                        {:name "Charisma"
+                                                         :selections [(opt5e/cantrip-selection :sorcerer "Kobold" ::char5e/cha 1)]})]})]})]})]})
+
+(def lenuboon-option-cfg
+  {:name "Lenuboon"
+   :key :lenuboon
+   :help "Monkey-like race that inhabit the jungles of Ngbutu, living in tribes in homes high in the trees."
+   ;; :abilities {::char5e/dex 2 ::char5e/wis 1}
+   :custom-ability-scores true
+   :size :medium
+   :speed 35
+   :languages ["Common" "Lenuboon"]
+   :modifiers [(mod5e/bonus-action
+                {:name "Dextrous Feet"
+                 :summary "Use your feet to manupulate an object, open or close a door or container, or pick up or set down a Tiny object"})
+               (mod5e/reaction
+                {:name "Lenuboon Dodge"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "Reduce damage taken by 1d6+" ?prof-bonus)})
+               (mod5e/climbing-speed-equal-to-walking)]
+   :traits [{:name "Glide"
+             :summary "When you fall and aren't incapacitated, subtract up to 100 ft. from fall damage, and move 3 ft. horizontally for every foot descended"}
+            {:name "Natural Climber"
+             :summary "You have a climbing speed equal to your walking speed"}]
+   })
+
+(defn lumini-spell-selection [spell-lists spells-map spellcasting-ability]
+  (opt5e/spell-selection spell-lists spells-map 
+   {:spell-keys (get-in sl5e/race-spell-lists ["Lumini" 1])
+    :spellcasting-ability spellcasting-ability
+    :class-name "Lumini"
+    :num 1
+    :title "Graviturgy Spell Known"
+    :exclude-ref? true}))
+
+(defn lumini-spellcasting-ability-selection [spell-lists spells-map]
+  (t/selection-cfg
+   {:name "Lumini Spellcasting Ability"
+    :tags #{:spells}
+    :order 1
+    :options [(t/option-cfg
+               {:name "Intelligence"
+                :selections [(lumini-spell-selection spell-lists spells-map ::char5e/int)]})
+              (t/option-cfg
+               {:name "Wisdom"
+                :selections [(lumini-spell-selection spell-lists spells-map ::char5e/wis)]})
+              (t/option-cfg
+               {:name "Charisma"
+                :selections [(lumini-spell-selection spell-lists spells-map ::char5e/cha)]})]}))
+
+(defn lumini-option-cfg [spell-lists spells-map]
+  {:name "Lumini"
+   :key :lumini
+   :help "Humanoid rabbit folk that inhabit the surface of Luminus."
+   ;; :abilities {::char5e/dex 2}
+   :custom-ability-scores true
+   :size :medium
+   :speed 35
+   :languages ["Common" "Lunar"]
+   :selections (into [] (concat
+                [
+                ;; (opt5e/ability-increase-selection [::char5e/wis ::char5e/int] 1 true)
+                (lumini-spellcasting-ability-selection spell-lists spells-map)]
+                (opt5e/race-spell-selections spell-lists spells-map "Lumini" 0 9)
+                (opt5e/race-cantrip-selections spell-lists spells-map "Lumini" 0 0)))
+   :modifiers (into [] (concat
+               [(mod5e/skill-proficiency :perception)
+               (mod/cum-sum-mod ?initiative ?prof-bonus)
+               (mod5e/dependent-trait
+                {:name "Nimble Rabbit"
+                 :summary (str "Advantage on skill checks and saves that would cause you to become grappled, prone, or restrained. Initiative increases by " (common/bonus-str ?prof-bonus))})]
+               (opt5e/race-spells-known spell-lists spells-map "Lumini" 1 9)))
+   :traits [{:name "Moon Jump"
+             :summary "High jump distance increases by 5 ft. and long jump by 10 ft."}
+            {:name "Luminusborn"
+             :summary "As a spellcaster, you gain access to the graviturgy spell list.\n  You learn one 1st level spell from the graviturgy spell list, and can cast it for free once per long rest. WIS, INT, or CHA is your spellcasting ability for it."}]})
+
+(defn orc-option-cfg [language-map]
+  {:name "Orc"
+   :key :orc
+   :help ""
+   ;; :abilities {::char5e/str 2 ::char5e/con 1}
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :darkvision 60
+   :languages ["Common"]
+   :selections [(opt5e/language-selection-aux (vals language-map) 1)]
+   :modifiers [(mod5e/bonus-action
+                {:name "Adrenaline Rush"
+                 :page 28
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary "Take the Dash action as a bonus action"})]
+   :traits [{:name "Relentless Endurance"
+             :page 28
+             :frequency units5e/long-rests-1
+             :summary "Drop to 1 hp instead of being reduced to 0"}
+            (powerful-build 28)]})
+
+(defn shifter-option-cfg [language-map]
+  {:name "Shifter"
+   :key :shifter
+   :help ""
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :darkvision 60
+   :languages ["Common"]
+   :profs {:skill-options {:choose 1 :options {:acrobatics true :athletics true :intimidation true :survival true}}}
+   :selections [(opt5e/language-selection-aux (vals language-map) 1)]
+   :subraces [{:name "Beasthide"
+               :traits [{:name "Beasthide"
+                         :page 32
+                         :summary "Gain 1d6 more temp HP when shifting. +1 AC while shifted"}]}
+              {:name "Longtooth"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Longtooth"
+                             :page 32
+                             :summary (str "When shifting and then while shifted, make an unarmed strike with your fangs, dealing 1d6 + " (::char5e/str ?ability-bonuses) " piercing damage")})]}
+              {:name "Swiftstride"
+               :modifiers [(mod5e/bonus-action
+                            {:name "Longtooth"
+                             :page 32
+                             :summary "While shifted, your walking speed increases by 10 ft. When a creature ends its turn within 5 ft., move up to 10 ft. without provoking opportunity attacks"})]}
+              {:name "Wildhunt"
+               :traits [{:name "Wildhunt"
+                         :page 32
+                         :summary "While shifted, advantage on WIS checks, and no creature within 30 ft. can attack with advantage against you unless incapacitated"}]}]
+   :modifiers [(mod5e/bonus-action
+                {:name "Shifting"
+                 :page 32
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "Transform for 1 minute, until you die, or revert back. While shifted, gain " (* 2 ?prof-bonus) " temp HP")})]})
 
 (def tiefling-option-cfg
   {:name "Tiefling"
    :key :tiefling
    :help "Tieflings bear the distinct marks of their infernal ancestry: horns, a tail, pointed teeth, and solid-colored eyes. They are smart and charismatic."
-   :abilities {::char5e/int 1 ::char5e/cha 2}
+   ;; :abilities {::char5e/cha 2}
+   :custom-ability-scores true
    :size :medium
    :speed 30
    :darkvision 60
@@ -799,20 +2476,243 @@
                 {:name "Hellish Resistance"
                  :page 43
                  :summary "Resistance to fire damage"})
-               (mod5e/dependent-trait
-                {:name "Infernal Legacy"
-                 :page 43
-                 :summary (str "You know thaumaturgy and can cast "
-                               (common/list-print
-                                (let [lvl ?total-levels]
-                                  (cond-> []
-                                    (>= lvl 3) (conj "Hellish Rebuke")
-                                    (>= lvl 5) (conj "Darkness"))))
-                               " once per day. CHA is the spellcasting ability.")})
-               (mod5e/damage-resistance :fire)
-               (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
-               (mod5e/spells-known 1 :hellish-rebuke ::char5e/cha "Tiefling" 3)
-               (mod5e/spells-known 2 :darkness ::char5e/cha "Tiefling" 5)]})
+               (mod5e/damage-resistance :fire)]
+   :subraces [{:name "Bloodline of Asmodeus"
+               ;; :abilities {::char5e/int 1}
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Infernal Legacy"
+                            :page 43
+                            :summary (str "You know Thaumaturgy and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Hellish Rebuke (2nd level)")
+                                                (>= lvl 5) (conj "Darkness"))))
+                                          " once per long rest. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :hellish-rebuke ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :darkness ::char5e/cha "Tiefling" 5)]}
+              {:name "Bloodline of Baalzebul"
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Legacy of Maladomini"
+                            :summary (str "You know Thaumaturgy and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Ray of Sickness (2nd level)")
+                                                (>= lvl 5) (conj "Crown of Madness"))))
+                                          " once per long rest. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :ray-of-sickness ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :crown-of-madness ::char5e/cha "Tiefling" 5)]}
+              {:name "Bloodline of Dispater"
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Legacy of Dis"
+                            :summary (str "You know Thaumaturgy and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Disguise Self")
+                                                (>= lvl 5) (conj "Detect Thoughts"))))
+                                          " once per long rest. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :disguise-self ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :detect-thoughts ::char5e/cha "Tiefling" 5)]}
+              {:name "Bloodline of Fierna"
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Legacy of Phlegethos"
+                            :summary (str "You know Friends and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Charm Person (2nd level)")
+                                                (>= lvl 5) (conj "Suggestion"))))
+                                          " once per long rest. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :friends ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :charm-person ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :suggestion ::char5e/cha "Tiefling" 5)]}
+              {:name "Bloodline of Glasya"
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Legacy of Malbolge"
+                            :summary (str "You know Minor Illusion and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Disguise Self")
+                                                (>= lvl 5) (conj "Invisibility"))))
+                                          " once per long rest. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :minor-illusion ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :disguise-self ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :invisibility ::char5e/cha "Tiefling" 5)]}
+              {:name "Bloodline of Levistus"
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Legacy of Stygia"
+                            :summary (str "You know Ray of Frost and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Armor of Agathys (2nd level)")
+                                                (>= lvl 5) (conj "Darkness"))))
+                                          " once per long rest. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :ray-of-frost ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :armor-of-agathys ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :darkness ::char5e/cha "Tiefling" 5)]}
+              {:name "Bloodline of Mammon"
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Legacy of Minauros"
+                            :summary (str "You know Mage Hand and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Tenser's Floating Disk")
+                                                (>= lvl 5) (conj "Arcane Lock (without M component)"))))
+                                          " once per long rest. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :mage-hand ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :tensers-floating-disk ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :arcane-lock ::char5e/cha "Tiefling" 5)]}
+              {:name "Bloodline of Mephistopheles"
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Legacy of Cania"
+                            :summary (str "You know Mage Hand and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Burning Hands (2nd level)")
+                                                (>= lvl 5) (conj "Flame Blade"))))
+                                          " once per long rest. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :mage-hand ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :burning-hands ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :flame-blade ::char5e/cha "Tiefling" 5)]}
+              {:name "Bloodline of Zariel"
+               :modifiers [(mod5e/dependent-trait
+                            {:name "Legacy of Avernus"
+                            :summary (str "You know Thaumaturgy and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Searing Smite (2nd level)")
+                                                (>= lvl 5) (conj "Branding Smite"))))
+                                          " once per long rest. CHA is the spellcasting ability.")})
+                           (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
+                           (mod5e/spells-known 1 :searing-smite ::char5e/cha "Tiefling" 3)
+                           (mod5e/spells-known 2 :branding-smite ::char5e/cha "Tiefling" 5)]}
+                ]})
+
+(defn tiefling-aoa-option-cfg [language-map]
+  {:name "Tiefling (AoA)"
+   :key :tiefling-aoa
+   :help "Tieflings bear the distinct marks of their infernal ancestry: horns, a tail, pointed teeth, and solid-colored eyes. They are smart and charismatic."
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :darkvision 60
+   :languages ["Common"]
+   :selections [(opt5e/language-selection-aux (vals language-map) 1)]
+   :subraces [{:name "Third Plane"
+               ;; :abilities {::char5e/str 2}
+               :profs {:skill-options {:choose 1 :options {:athletics true :intimidation true}}}
+              ;;  :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/str) 1)]
+               :modifiers [(mod5e/trait-cfg
+                            {:name "Devilish Resistance"
+                            :summary "Resistance to fire damage"})
+                           (mod5e/damage-resistance :fire)
+                           (mod5e/dependent-trait
+                            {:name "Devil's Wrath"
+                            :summary (str "You know produce flame and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Searing Smite")
+                                                (>= lvl 5) (conj "Enhance Ability"))))
+                                          " once per long rest or use spell slots. STR is your spellcasting ability.")})
+                           (mod5e/spells-known 0 :produce-flame ::char5e/str "Tiefling")
+                           (mod5e/spells-known 1 :searing-smite ::char5e/str "Tiefling" 3)
+                           (mod5e/spells-known 2 :enhance-ability ::char5e/str "Tiefling" 5)]}
+              {:name "Fourth Plane"
+               ;; :abilities {::char5e/int 2}
+               :profs {:skill-options {:choose 1 :options {:arcana true :history true}}}
+              ;;  :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/int) 1)]
+               :modifiers [(mod5e/trait-cfg
+                            {:name "Devilish Resistance"
+                            :summary "Resistance to cold damage"})
+                           (mod5e/damage-resistance :cold)
+                           (mod5e/dependent-trait
+                            {:name "Devil's Knowledge"
+                            :summary (str "You know Frostbite and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Detect Magic once or as a ritual")
+                                                (>= lvl 5) (conj "Borrowed Knowledge once"))))
+                                          ". You must finish a long rest to cast these again or use spell slots. INT is your spellcasting ability.")})
+                           (mod5e/spells-known 0 :frostbite ::char5e/int "Tiefling")
+                           (mod5e/spells-known 1 :detect-magic ::char5e/int "Tiefling" 3)
+                           (mod5e/spells-known 2 :borrowed-knowledge ::char5e/int "Tiefling" 5)]}
+              {:name "Sixth Plane"
+               ;; :abilities {::char5e/wis 2}
+               :profs {:skill-options {:choose 1 :options {:insight true :perception true}}}
+              ;;  :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/str) 1)]
+               :modifiers [(mod5e/trait-cfg
+                            {:name "Devilish Resistance"
+                            :summary "Resistance to acid damage and advantage on saves against spells."})
+                           (mod5e/damage-resistance :acid)
+                           (mod5e/saving-throw-advantage [:spells])
+                           (mod5e/dependent-trait
+                            {:name "Devil's Dissent"
+                            :summary (str "You know Primal Savagery and can cast "
+                                          (common/list-print
+                                            (let [lvl ?total-levels]
+                                              (cond-> []
+                                                (>= lvl 3) (conj "Cause Fear")
+                                                (>= lvl 5) (conj "Hold Person"))))
+                                          " once per long rest or use spell slots. WIS is your spellcasting ability.")})
+                           (mod5e/spells-known 0 :primal-savagery ::char5e/wis "Tiefling")
+                           (mod5e/spells-known 1 :cause-fear ::char5e/wis "Tiefling" 3)
+                           (mod5e/spells-known 2 :hold-person ::char5e/wis "Tiefling" 5)]}]})
+
+(defn tortle-option-cfg [language-map]
+  {:name "Tortle"
+   :key :tortle
+   :custom-ability-scores true
+   :sizes [:small :medium]
+   :speed 30
+   :languages ["Common"]
+   :profs {:skill-options {:choose 1 :options {:animal-handling true :medicine true :nature true :perception true :stealth true :survival true}}}
+   :modifiers [(mod5e/attack
+                {:name "Claws"
+                :attack-type :melee
+                :damage-type :slashing
+                :damage-die 6
+                :damage-die-count 1
+                :damage-modifier (if (= (?class-level :monk) 0) (::char5e/str ?ability-bonuses) (max (::char5e/str ?ability-bonuses) (::char5e/dex ?ability-bonuses)))})
+               (mod/vec-mod ?unarmored-defense :tortle)
+               (mod/cum-sum-mod ?unarmored-ac-bonus (- 7 (?ability-bonuses ::char5e/dex))
+                                 nil
+                                 nil
+                                 [(= :tortle (first ?unarmored-defense))])
+               (mod/cum-sum-mod ?unarmored-with-shield-ac-bonus (- 7 (?ability-bonuses ::char5e/dex))
+                                 nil
+                                 nil
+                                 [(= :tortle (first ?unarmored-defense))])
+               (mod5e/action
+                {:name "Shell Defense"
+                 :summary "Withdraw into your shell. Until you emerge, you gain a +4 to your AC, and you have advantage on STR and CON saves. While in your shell, you are prone, your speed is 0 and can't increase, you have disadvantage on DEX saves, you can't take reactions, and the only action you can take is a bonus action to emerge from your shell."})]
+  ;;  :selections [(opt5e/language-selection-aux (vals language-map) 1)
+  ;;               (t/selection-cfg
+  ;;                {:name "Size"
+  ;;                 :tags #{:race}
+  ;;                 :options [(t/option-cfg
+  ;;                            {:name "Small"
+  ;;                             :modifiers [(mod5e/size :small)]})
+  ;;                           (t/option-cfg
+  ;;                            {:name "Medium"
+  ;;                             :modifiers [(mod5e/size :medium)]})]})]
+   :traits [{:name "Hold Breath"
+             :summary "You can hold your breath for up to 1 hour."}
+            {:name "Natural Armor"
+             :summary "You have a base armor of 17 (your Dex modifier doesn't affect this number). You can't wear light, medium, or heavy armor, but if you are using a shield, you can apply the shield's bonus as normal."}]
+   }
+)
 
 (reg-sub
  ::races5e/plugin-subraces-map
@@ -847,16 +2747,36 @@
           race))
       (concat
        (reverse plugin-races)
-       [dwarf-option-cfg
+       [(aasimar-option-cfg language-map)
+        centaur-option-cfg
+        (changeling-option-cfg language-map)
+        duergar-option-cfg
+        dwarf-option-cfg
         (elf-option-cfg spell-lists spells-map language-map)
-        halfling-option-cfg
+        (elf-aoa-option-cfg spell-lists spells-map language-map)
+        genasi-option-cfg
+        (goblin-aoa-option-cfg spell-lists spells-map)
+        (goliath-option-cfg language-map)
+        (halfling-option-cfg spell-lists spells-map)
+        harpy-option-cfg
+        hobgoblin-option-cfg
         (human-option-cfg spell-lists spells-map language-map)
+        kitsune-option-cfg
+        dragonborn-standard-option-cfg
         dragonborn-option-cfg
         gnome-option-cfg
+        (deep-gnome-option-cfg language-map)
         (half-elf-option-cfg language-map)
+        (half-elf-aoa-option-cfg spell-lists spells-map)
         half-orc-option-cfg
-        tiefling-option-cfg]))))))
-
+        (kobold-option-cfg language-map)
+        lenuboon-option-cfg
+        (lumini-option-cfg spell-lists spells-map)
+        (orc-option-cfg language-map)
+        (shifter-option-cfg language-map)
+        tiefling-option-cfg
+        (tiefling-aoa-option-cfg language-map)
+        (tortle-option-cfg language-map)]))))))
 
 (defn base-class-options [spell-lists spells-map plugin-subclasses-map language-map weapons-map invocations boons]
   [(classes5e/barbarian-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
@@ -869,7 +2789,8 @@
    (classes5e/ranger-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
    (classes5e/rogue-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
    (classes5e/sorcerer-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
-   (classes5e/warlock-option spell-lists spells-map plugin-subclasses-map language-map  weapons-map invocations boons)
+   (classes5e/warlock-cha-option spell-lists spells-map plugin-subclasses-map language-map weapons-map invocations boons)
+   (classes5e/warlock-int-option spell-lists spells-map plugin-subclasses-map language-map weapons-map invocations boons)
    (classes5e/wizard-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)])
 
 (reg-sub
