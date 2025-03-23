@@ -1828,17 +1828,17 @@ You can call upon the hospitality of your people, and those allied with your tri
    :size :medium
    :speed 30
    :languages ["Common"]
-   :subraces
-   [{:name "Calishite"
-     :help "test"}
-    {:name "Chondathan"}
-    {:name "Damaran"}
-    {:name "Illuskan"}
-    {:name "Mulan"}
-    {:name "Rashemi"}
-    {:name "Shou"}
-    {:name "Tethyrian"}
-    {:name "Turami"}]
+  ;;  :subraces
+  ;;  [{:name "Calishite"
+  ;;    :help "test"}
+  ;;   {:name "Chondathan"}
+  ;;   {:name "Damaran"}
+  ;;   {:name "Illuskan"}
+  ;;   {:name "Mulan"}
+  ;;   {:name "Rashemi"}
+  ;;   {:name "Shou"}
+  ;;   {:name "Tethyrian"}
+  ;;   {:name "Turami"}]
    :selections [(opt5e/language-selection-aux (vals language-map) 1)
                 (t/selection-cfg
                  {:name "Variant"
