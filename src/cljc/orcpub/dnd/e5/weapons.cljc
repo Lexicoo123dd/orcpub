@@ -388,6 +388,12 @@
 (defn martial-weapons [weapons]
   (weapons-of-type weapons :martial))
 
+(defn ranged?-weapons [weapons ranged?]
+  (filter #(= ranged? (::ranged? %)) weapons))
+
+(defn martial-melee-weapons [weapons]
+  (ranged?-weapons (weapons-of-type weapons :martial) false))
+
 (defn simple-weapons [weapons]
   (weapons-of-type weapons :simple))
 

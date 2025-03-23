@@ -11,6 +11,7 @@
             [orcpub.dnd.e5.character.equipment :as char-equip]
             [orcpub.dnd.e5.modifiers :as modifiers]
             [orcpub.dnd.e5.weapons :as weapons]
+            [orcpub.dnd.e5.languages :as languages]
             [orcpub.dnd.e5.units :as units5e]
             [orcpub.dnd.e5.races :as races]
             [orcpub.dnd.e5.armor :as armor]
@@ -153,6 +154,11 @@
 (defn weapon-proficiency-option [{:keys [name key]}]
   (t/option-cfg
    {:name name
+    :prereqs [(t/option-prereq
+               "You already have this weapon proficiency"
+               (fn [c]
+                 (let [weapon-profs @(subscribe [::character/weapon-profs nil c])]
+                   (not (get weapon-profs key)))))]
     :modifiers [(modifiers/weapon-proficiency key)]}))
 
 (defn tool-option [tool]
@@ -220,12 +226,18 @@
 (defn get-raw-abilities [character]
   (get-in character [::entity/options :ability-scores ::entity/value]))
 
-(defn ability-increase-selection-2 [{:keys [ability-keys num-increases min max different? modifier-fn modifier-fns]}]
+(defn fey-touched-spell? [s]
+    (let [school (:school s)]
+      (or (= school "divination")
+          (= school "enchantment"))))
+
+(defn ability-increase-selection-2 [{:keys [ability-keys num-increases min max max-ability different? modifier-fn modifier-fns selection-fn]}]
   (t/selection-cfg
    {:name "Ability Score Improvement"
     :key :asi
     :min (or num-increases min)
     :max (or num-increases max)
+    :max-ability max-ability
     :tags #{:ability-scores}
     :different? different?
     :multiselect? true
@@ -234,6 +246,7 @@
                 (t/option-cfg
                  {:name (:name (abilities-map k))
                   :key k
+                  :selections [(if selection-fn (selection-fn k))]
                   :modifiers (concat
                               [(if modifier-fn
                                  (modifier-fn k)
@@ -268,6 +281,27 @@
   (t/option-prereq (str "Requires proficiency with " (name armor-kw) " armor")
                    (fn [c] (let [prof-keys @(subscribe [::character/armor-profs nil c])]
                              (boolean (and prof-keys (prof-keys armor-kw)))))))
+
+(defn race-prereq [race-nms & [hide-if-fail?]]
+  (let [name-set (if (string? race-nms)
+                   #{race-nms}
+                   (into #{} race-nms))]
+    (t/option-prereq
+     (str (common/list-print name-set "or") " Only")
+     (fn [c] (name-set @(subscribe [::character/race nil c])))
+     hide-if-fail?)))
+
+#_(defn race-prereq [race-kw]
+  (t/option-prereq (str "Requires being a " (s/upper-case (name race-kw)))
+                   (fn [c] (let [race-key @(subscribe [::character/race nil c])]
+                             (boolean (and race-key (= race-key race-kw)))))))
+
+(defn subrace-prereq [race-nm subrace-nm & [hide-if-fail?]]
+  (t/option-prereq
+   (str subrace-nm " Only")
+   (fn [c] (and (= race-nm @(subscribe [::character/race nil c]))
+                (= subrace-nm @(subscribe [::character/subrace nil c]))))
+   hide-if-fail?))
 
 (def elemental-disciplines
   [(t/option-cfg
@@ -433,14 +467,15 @@
       (= :phb source)
       (get option-sources source)))
 
-(defn spell-option [spells-map spellcasting-ability class-name key & [prepend-level? qualifier]]
+(defn spell-option [spells-map spellcasting-ability class-name key & [prepend-level? qualifier prereq-fn]]
   (let [{:keys [name level source edit-event] :as spell} (spells-map key)]
     (t/option-cfg
      {:name (if prepend-level? (str level " - " name) name)
       :key key
       :edit-event edit-event
       :help (spell-help spell)
-      :prereqs [(t/option-prereq
+      :prereqs [prereq-fn
+                (t/option-prereq
                  "You already know this spell"
                  (fn [c] (let [spells-known @(subscribe [::character/spells-known nil c])]
                            (or (not spells-known)
@@ -453,15 +488,19 @@
 
 (def memoized-spell-option (memoize spell-option))
 
-(defn spell-options [spells-map spells spellcasting-ability class-name & [prepend-level? qualifier]]
+(defn spell-options [spells-map spells spellcasting-ability class-name & [prepend-level? qualifier prereq-fn]]
   (map
-   #(memoized-spell-option spells-map spellcasting-ability class-name % prepend-level? qualifier)
+   #(memoized-spell-option spells-map spellcasting-ability class-name % prepend-level? qualifier prereq-fn)
    (sort spells)))
 
 (defn spell-level-title [class-name level]
   (str class-name (if (and level (zero? level)) " Cantrips Known" (str " Spells Known" (if level (str " " level))))))
 
-(defn spell-selection [spell-lists spells-map {:keys [title class-key level spellcasting-ability class-name num prepend-level? spell-keys options min max exclude-ref? ref]}]
+(defn prereq-level-fn [prereq-level]
+  (fn [c] (let [total-levels @(subscribe [::character/total-levels nil c])]
+                               (>= total-levels prereq-level))))
+
+(defn spell-selection [spell-lists spells-map {:keys [title class-key level spellcasting-ability class-name num prepend-level? spell-keys options min max exclude-ref? ref prereq-fn]}]
   (let [title (or title (spell-level-title class-name level))
         kw (common/name-to-kw title)
         ref (or ref (if (not exclude-ref?) [:class class-key kw]))]
@@ -471,16 +510,49 @@
        :ref ref
        :order (if (and level (zero? level)) 0 1)
        :multiselect? true
+       :prereq-fn prereq-fn
        :options (or options
                     (spell-options
-                     spells-map
-                     (or spell-keys (get-in spell-lists [class-key level]))
-                     spellcasting-ability
-                     class-name
-                     prepend-level?))
+                    spells-map
+                    (or spell-keys (get-in spell-lists [class-key level]))
+                    spellcasting-ability
+                    class-name
+                    prepend-level?
+                    nil))
        :min (or min num)
        :max (or max num)
        :tags #{:spells}})))
+
+      ;;  :options (flatten (concat (or options     
+      ;;                (spell-options
+      ;;                spells-map
+      ;;                (or spell-keys (get-in spell-lists [class-key level]))
+      ;;                spellcasting-ability
+      ;;                class-name
+      ;;                prepend-level?
+      ;;                nil)
+      ;;                )
+      ;;                (map (fn [[race-name]]
+      ;;                 (spell-options
+      ;;                 spells-map
+      ;;                 (get-in sl/race-spell-lists [race-name level])
+      ;;                 spellcasting-ability
+      ;;                 class-name
+      ;;                 prepend-level?
+      ;;                 nil
+      ;;                 (race-prereq race-name false))) sl/race-spell-lists)
+      ;;                (map (fn [[subrace-name race-name]]
+      ;;                 (spell-options
+      ;;                 spells-map
+      ;;                 (get-in sl/subrace-spell-lists [subrace-name 1 level])
+      ;;                 spellcasting-ability
+      ;;                 class-name
+      ;;                 prepend-level?
+      ;;                 nil
+      ;;                 (subrace-prereq race-name subrace-name false)))
+      ;;                   (into {} (map (fn [subrace-list] {(get subrace-list 0) (get-in subrace-list [1 0])}) sl/subrace-spell-lists)))
+      ;;                 )
+      ;;                 )
 
 (defn spell-slot-schedule [level-factor]
   (case level-factor
@@ -708,6 +780,47 @@
                   cantrip-selections
                   spell-selections)}))
 
+(defn cantrip-selection [class-key class-name spellcasting-ability num]
+  (t/selection-cfg
+    {:name "Cantrip"
+      :order 1
+      :tags #{:spells}
+      :options (spell-options spells/spell-map (get-in sl/spell-lists [class-key 0]) spellcasting-ability class-name)
+      :min num
+      :max num}))
+
+
+
+(defn fey-touched-spell-selection [spellcasting-ability]
+  (spell-selection sl/spell-lists
+                    spells/spell-map
+                    {:title "Fey Touched Divination or Enchantment Spell"
+                    :spellcasting-ability spellcasting-ability
+                    :class-name "Fey Touched"
+                    :num 1
+                    :prepend-level? false
+                    :spell-keys (map :key (filter #(and (= 1 (:level %)) (fey-touched-spell? %)) spells/spells))
+                    :exclude-ref? true
+                    }))
+
+(defn fey-touched-ability-increase-selection [ability-keys num-increases & [different?]]
+  (ability-increase-selection-2 {:ability-keys ability-keys
+                                 :num-increases num-increases
+                                 :different? different?
+                                 :selection-fn (fn [k] (fey-touched-spell-selection k))
+                                 :modifier-fns [(fn [k] (modifiers/spells-known 2 :misty-step k "Fey Touched"))
+                                                ]}))
+
+(defn gift-of-the-gem-dragon-ability-increase-selection [ability-keys num-increases & [different? modifier-fns]]
+  (ability-increase-selection-2 {:ability-keys ability-keys
+                                 :num-increases num-increases
+                                 :different? different?
+                                 :modifier-fns [(fn [k] (modifiers/reaction
+                                                         {:name "Gift of the Gem Dragon: Telekinetic Reprisal"
+                                                          :frequency (units5e/long-rests ?prof-bonus)
+                                                          :summary (str "When you take damage from a creature within 10 ft., the creature must make a DC " (?spell-save-dc k) " STR save or take 2d8 force damage and be pushed up to 10 ft. away, half damage and isn't pushed if successful")}))
+                                                ]}))
+
 (defn magic-initiate-option [spells-map class-key class-name spellcasting-ability spell-lists]
   (t/option-cfg
    {:name (name class-key)
@@ -819,19 +932,37 @@
 (defn any-language-selection [language-map & [num]]
   (language-selection-aux (vals language-map) num))
 
-#_(defn maneuver-option [name & [desc]]
+(defn maneuver-option [name & [desc]]
   (t/option-cfg
    {:name name
     :modifiers [(modifiers/trait (str name " Maneuver")
                       desc)]}))
 
-#_(defn mod-maneuver-option [name mods]
+(defn mod-maneuver-option [name mods]
   (t/option-cfg
    {:name name
     :modifiers mods}))
 
 (defn proficiency-help [num singular plural]
   (str "Select additional " (if (> num 1) plural singular) " for which you are proficient."))
+
+(defn size-selection [sizes]
+  (t/selection-cfg
+   {:name "Size"
+    :tags #{:race}
+    :options (map
+              (fn [size]
+               (t/option-cfg
+                {:name (common/kw-to-name size true)
+                 :modifiers [(modifiers/size size)]}))
+              sizes)
+    ;; :options [(t/option-cfg
+    ;;             {:name "Small"
+    ;;             :modifiers [(mod5e/size :small)]})
+    ;;           (t/option-cfg
+    ;;             {:name "Medium"
+    ;;             :modifiers [(mod5e/size :medium)]})]
+                }))
 
 (defn skill-selection-2 [{:keys [options num min max order key prereq-fn]}]
   (t/selection-cfg
@@ -939,7 +1070,7 @@
    (t/selection-cfg
     {:name "Weapon Proficiency"
      :help (proficiency-help num "a weapon" "weapons")
-     :options (weapon-proficiency-options custom-and-standard-weapons)
+     :options [(weapon-proficiency-options custom-and-standard-weapons)]
      :min num
      :max num
      :tags #{:weapon-profs :profs}}))
@@ -966,9 +1097,43 @@
               {:name "Tool"
                :selections [(tool-selection 1)]})]}))
 
-#_(def maneuver-options
-  [(maneuver-option "Commander's Strike"
+(defn expertise-selection [num & [key]]
+  (t/selection-cfg
+   {:name "Skill Expertise"
+    :key (or key :skill-expertise)
+    :order 2
+    :options (map
+              (fn [{:keys [name key icon]}]
+                (t/option-cfg
+                 {:name name
+                  :key key
+                  :icon icon
+                  :modifiers [(modifiers/skill-expertise key)]
+                  :prereqs [(t/option-prereq (str "Requires proficiency in " name)
+                                             (fn [built-char]
+                                               (let [skill-profs @(subscribe [::character/skill-profs nil built-char])]
+                                                 (and skill-profs (skill-profs key)))))]}))
+              skills/skills)
+    :min num
+    :max num
+    :multiselect? true
+    :ref [:skill-expertise]
+    :tags #{:profs :expertise}}))
+
+(def maneuver-options
+  [(maneuver-option "Ambush"
+                    "Add superiority die to a Stealth check or initiative roll, if not incapacitated")
+   (maneuver-option "Bait and Switch"
+                    "When within 5 ft. of a creature on your turn, expend a superiority die and switch places with them without provoking opportunity attacks, provided you spend 5 ft. of movement, the creature is willing, and isn't incapacitated. Add superiority die to your or the creature's AC until your next turn")
+   (mod-maneuver-option
+    "Brace"
+    [(modifiers/reaction
+      {:name "Brace Maneuver"
+       :summary "When a creature you can see moves into your reach with a melee weapon, expend a superiority die and make one attack against them using the weapon, adding the superiority die to the damage"})])
+   (maneuver-option "Commander's Strike"
                     "When you take Attack action, forgo one attack, expend a superiority die, give a creature an immediate reaction attack, adding superiority die to damage")
+   (maneuver-option "Commanding Presense"
+                    "Add superiority die to an Intimidation, Performance, or Persuasion check")
    (maneuver-option "Disarming Attack"
                     "When you hit with a weapon attack, expend a superiority die and force the target to drop an item of your choice on failed STR save")
    (maneuver-option "Distracting Strike"
@@ -987,6 +1152,11 @@
       {:name "Goading Attack Maneuver"
        :page 74
        :summary (str "add superiority die to a successful attack's damage, if target fails DC " ?maneuver-save-dc " WIS save, the next attack it makes must be against you or have disadvantage")})])
+   (mod-maneuver-option
+    "Grappling Strike"
+    [(modifiers/bonus-action
+      {:name "Grappling Strike Maneuver"
+       :summary "After you hit a creature with a melee attack on your turn, try to grapple the target, adding the superiority die to your Athletics check"})])
    (maneuver-option "Lunging Attack"
                     "increase melee attack reach by 5 ft., add superiority die to damage")
    (maneuver-option "Manuevering Attack"
@@ -1012,6 +1182,11 @@
        :page 74
        :summary (str "add superiority die to a successful attack's damage, if target is Large or smaller and fails a DC " ?maneuver-save-dc " STR save, it is pushed 15 ft. away")})])
    (mod-maneuver-option
+    "Quick Toss"
+    [(modifiers/bonus-action
+      {:name "Quick Toss Maneuver"
+       :summary "Expend a superiority die and make a ranged attack with a thrown weapon, adding the superiority die to the damage. You can draw the weapon as part of the attack"})])
+   (mod-maneuver-option
     "Rally"
     [(modifiers/bonus-action
       {:name "Rally Maneuver"
@@ -1027,12 +1202,92 @@
        :summary "if a creature misses you with a melee attack, attack as a reaction and add superiority die to damage"})])
    (maneuver-option "Sweeping Attack"
                     "if you hit a creature with an attack roll, choose another creature within 5 ft., if the roll would hit the creature, it takes superiority die worth of damage")
+   (maneuver-option "Tactical Assessment"
+                    "Add superiority die to an Investigation, History, or Insight check")
    (mod-maneuver-option
     "Trip Attack"
     [(modifiers/dependent-trait
       {:name "Trip Attack Maneuver"
        :page 74
        :summary (str "add superiority die to successful attack's damage, if target fails a DC " ?maneuver-save-dc " STR save, it is knocked prone")})])])
+
+(defn rune-selection [num order prereq]
+  (t/selection-cfg
+   {:name "Rune Carver"
+    :ref [:class :fighter :levels :level-3 :martial-archetype :rune-knight :rune-carver]
+    :tags #{:class}
+    :min num
+    :max num
+    :options [(t/option-cfg
+               {:name "Cloud Rune"
+                :help "Sleight of Hand and Deception advantage; use reaction to change target of attack"
+                :modifiers [(modifiers/trait-cfg
+                              {:name "Cloud Rune"
+                              :summary "Advantage on Sleight of Hand and Deception checks"})
+                            (modifiers/reaction
+                              {:name "Cloud Rune"
+                              :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
+                              :summary "When you or a creature you can see within 30 feet of you is hit by an attack roll, choose a different creature within 30 feet of you, other than the attacker. The chosen creature becomes the target of the attack, using the same roll."})]})
+              (t/option-cfg
+               {:name "Fire Rune"
+                :help "Expertise on proficient tools; restrain enemy hit by weapon attack with fiery shackles"
+                :modifiers [(modifiers/trait-cfg
+                              {:name "Fire Rune"
+                              :summary "2X proficiency for any proficient tool"})
+                            (modifiers/dependent-trait
+                              {:name "Fire Rune"
+                              :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
+                              :summary (str "When you hit a creature with an attack using a weapon, summon fiery shackles: the target takes an extra 2d6 fire damage, and it must succeed on a DC " (?spell-save-dc ::character/con) " STR save or be restrained for 1 minute. While restrained by the shackles, the target takes 2d6 fire damage at the start of each of its turns. The target can repeat the saving throw at the end of each of its turns")})]})
+              (t/option-cfg
+               {:name "Frost Rune"
+                :help "Animal Handling and Charisma advantage; +2 to STR and CON ability checks for 10 min"
+                :modifiers [(modifiers/trait-cfg
+                              {:name "Frost Rune"
+                              :summary "Advantage on Animal Handling and Charisma checks"})
+                            (modifiers/bonus-action
+                              {:name "Frost Rune"
+                              :duration units5e/minutes-10
+                              :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
+                              :summary "+2 to all ability checks using Strength or Constitution"})]})
+              (t/option-cfg
+               {:name "Stone Rune"
+                :help "Insight advantage; 120 ft. darkvision; use reaction to charm creature that ends turn within 30 ft."
+                :modifiers [(modifiers/darkvision 120 1)
+                            (modifiers/trait-cfg
+                              {:name "Stone Rune"
+                              :summary "Advantage on Insight checks and 120 ft. darkvision"})
+                            (modifiers/reaction
+                              {:name "Stone Rune"
+                              :duration units5e/minutes-1
+                              :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
+                              :summary (str "When a creature you can see ends its turn within 30 feet of you, force the creature to make a DC " (?spell-save-dc ::character/con) " WIS Save, charming the creature for 1 minute. While charmed in this way, the creature has a speed of 0 and is incapacitated. The creature repeats the saving throw at the end of each of its turns")})]})
+              (t/option-cfg
+               {:name "Hill Rune"
+                :help "Poison save advantage; resistance to poison; gain resistance to bludgeoning, piercing, and slashing for 1 min"
+                :prereqs [prereq]
+                :modifiers [(modifiers/damage-resistance :poison)
+                             (modifiers/saving-throw-advantage [:poisoned])
+                             (modifiers/trait-cfg
+                              {:name "Hill Rune"
+                               :summary "Advantage on poison saves, resistance to poison damage"})
+                             (modifiers/bonus-action
+                              {:name "Hill Rune"
+                               :duration units5e/minutes-1
+                               :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
+                               :summary "Gain resistance to bludgeoning, piercing, and slashing damage"})]})
+              (t/option-cfg
+               {:name "Storm Rune"
+                :help "Arcana advantage; surprise immunity; for 1 min., use reaction to give advantage to rolls"
+                :prereqs [prereq]
+                :modifiers [(modifiers/trait-cfg
+                              {:name "Storm Rune"
+                              :summary "Advantage on Arcana checks, and can't be surprised while you aren't incapacitated"})
+                            (modifiers/bonus-action
+                              {:name "Storm Rune"
+                              :duration units5e/minutes-1
+                              :frequency (units5e/rests (if (>= (?class-level :fighter) 15) 2 1))
+                              :summary "Enter a prophetic state for 1 minute or until you're incapacitated. Until the state ends, when you or another creature you can see within 60 feet of you makes an attack roll, a saving throw, or an ability check, you can use your reaction to cause the roll to have advantage or disadvantage"})]})
+              ]}))
 
 (def can-cast-spell-prereq
   (t/option-prereq "Requires the ability to cast at least one spell."
@@ -1064,6 +1319,8 @@
 (def charge-summary "when you Dash, you can make 1 melee attack or shove as a bonus action; if you move 10 ft. before taking this bonus action you gain +5 damage to attack or shove 10 ft.")
 
 (def defensive-duelist-summary "when you are hit with a melee attack, you can add your prof bonus to AC for the attack if you are wielding a finesse weapon you are proficient with")
+
+(def elven-accuracy-summary "Reroll one die on attacks with advantage using dex, int, wis, or cha")
 
 #_(defn homebrew-spell-selection [spell-lists spells-map]
   (spell-selection
@@ -1179,43 +1436,74 @@
     {:class-name "input"}]])
 
 (defn feat-options [spell-lists spells-map]
-  [#_(feat-option
+  [(feat-option
       {:name "Alert"
        :icon "look-at"
        :page 165
-       :summary "+5 initiative; can't be surprised; creatures don't gain advantage on attacks against you for being hidden"
+       :summary "+5 initiative; can't be surprised; creatures don't gain advantage on attacks against you for being unseen"
        :modifiers [(modifiers/initiative 5)]})
-   #_(feat-option
+   (feat-option
       {:name "Athlete"
        :icon "weight-lifting-up"
        :page 165
        :summary "increase STR or DEX by 1; standing up only uses 5 ft movement; climbing doesn't cost extra movement; make running long or high jump after moving only 5 ft."
        :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]})
-   #_(feat-option
+   (feat-option
       {:name "Actor"
        :icon "drama-masks"
        :page 165
-       :summary "increase CHA by 1; advantage on Deception and Performance when trying to pass as someone else; mimic the speech of a person you have heard"
+       :summary "increase CHA by 1; advantage on Deception and Performance when trying to pass as someone else; mimic the speech of a person or sounds of a creature you have heard for 1 at least 1 minute. Determined fake by Insight vs Deception"
        :modifiers [(modifiers/ability ::character/cha 1)]})
-   #_(feat-option
+   (feat-option
+      {:name "Cartomancer"
+       :exclude-trait? true
+       :summary "learn prestidigitation and hide its components using conversation and card handling; imbue a card with a spell to cast it as a bonus action once"
+       :modifiers [(modifiers/spells-known 0 :prestidigitation nil "Cartomancer")
+                   (modifiers/trait-cfg
+                    {:name "Cartomancer: Card Tricks"
+                     :summary "Prestidigitation can be used to create illusions that duplicate the effects of stage magic. When used this way, the components can be concealed as ordinary conversation and card handling"})
+                   (modifiers/bonus-action
+                    {:name "Cartomancer: Hidden Ace"
+                     :summary "After a long rest, imbue a spell from your class's spell list into a card, which must have a casting time of 1 action and be of a level for which you have spell slots. Lasts for 8 hours. Use a bonus action to cast the spell within, and the card loses its magic"})]})
+   (feat-option
       {:name "Charger"
        :icon "charging-bull"
        :page 165
+       :exclude-trait? true
        :summary charge-summary
        :modifiers [(modifiers/bonus-action
                     {:name "Charge"
                      :page 165
                      :summary charge-summary})]})
-   #_(feat-option
+   (feat-option
+      {:name "Chef"
+       :exclude-trait? true
+       :summary "increase CON or WIS by 1; gain proficiency with cook's utensils; you and allies regain extra HP during a short rest; make treats that give temp HP when eaten"
+       :modifiers [(modifiers/dependent-trait
+                    {:name "Chef"
+                     :summary (str "• As part of a short rest, cook special food for up to " (+ 4 ?prof-bonus) " creatures, provided you have ingredients and cook's utensils on hand. At the end of the short rest, any creature who eats the food and spends a Hit Dice to regain HP regains an extra 1d8 HP."
+                                   "\n• With one hour of work after a long rest, cook " ?prof-bonus " treats that last 8 hours. A creature can spend a bonus action to eat one and gain " ?prof-bonus " temp HP")})
+                   (modifiers/tool-proficiency :cooks-utensils)]
+       :selections [(ability-increase-selection [::character/con ::character/wis] 1)]})
+   (feat-option
       {:name "Crossbow Expert"
        :icon "crossbow"
        :page 165
-       :summary "ignore loading property of crossbows you are proficient with; don't have disadvantage from being within 5 ft of hostile creature; when you Attack with 1 hand weapon, you can attack with a hand crossbow as bonus action"
+       :exclude-trait? true
+       :summary "ignore loading property of crossbows you are proficient with; don't have disadvantage from being within 5 ft. of hostile creature; attack with a hand crossbow as bonus action"
        :modifiers [(modifiers/bonus-action
                     {:name "Crossbow Expert"
                      :page 165
-                     :summary "when you Attack with 1 hand weapon, you can attack with a hand crossbow"})]})
-   #_(feat-option
+                     :summary "when you Attack with 1 hand weapon, you can attack with a hand crossbow"})
+                   (modifiers/trait-cfg
+                    {:name "Crossbow Expert"
+                     :page 165
+                     :summary "ignore loading property of crossbows you are proficient with. You don't have ranged weapon disadvantage from being within 5 ft. of hostile creature"})]})
+   (feat-option
+      {:name "Crusher"
+       :summary "increase STR or DEX by 1; when dealing bludgeoning damage, move target 5 ft. to an unoccupied space, provided it's no more than one size larger than you (once/turn); on critical dealing bludgeoning damage, attack rolls are made with advantage against the target until your next turn"
+       :selections [(ability-increase-selection [::character/str ::character/dex] 1)]})
+   (feat-option
       {:name "Defensive Duelist"
        :icon "spinning-sword"
        :page 165
@@ -1226,21 +1514,21 @@
                      :page 165
                      :summary defensive-duelist-summary})]
        :prereqs [(ability-prereq ::character/dex 13)]})
-   #_(feat-option
+   (feat-option
       {:name "Dual Wielder"
        :icon "rogue"
        :page 165
-       :summary "+1 AC bonus when wielding two melee weapons; two-weapon fighting with any one-handed melee weapon"
+       :summary "+1 AC bonus when wielding two melee weapons; two-weapon fighting with any one-handed melee weapon; draw or stow two one-handed weapons"
        :modifiers [dual-wield-weapon-mod
                    dual-wield-ac-mod]})
-   #_(feat-option
+   (feat-option
       {:name "Dungeon Delver"
        :icon "dungeon-gate"
        :page 166
-       :summary "advantage to detect secret doors; advantage on saves against and resistance to trap damage; search for traps at normal pace"
+       :summary "advantage to detect secret doors; advantage on saves against and resistance to trap damage; fast pace doesn't impose passive Perception penalty"
        :modifiers [(modifiers/damage-resistance :trap)
                    (modifiers/saving-throw-advantage [:traps])]})
-   #_(feat-option
+   (feat-option
       {:name "Durable"
        :icon "hospital-cross"
        :page 166
@@ -1251,13 +1539,71 @@
                     {:name "Durable"
                      :page 166
                      :summary (str "when you roll Hit Die to regain HPs, the min points regained is " (* 2 (?ability-bonuses ::character/con)))})]})
-   #_(feat-option
+   (feat-option
+      {:name "Durable (AoA)"
+       :icon "defensive-wall"
+       :page 170
+       :summary "increase CON by 1; when you roll Hit Die to regain HPs, the min points regained is 2X your CON modifier; CON mod extra HPs per level"
+       :modifiers [(modifiers/ability ::character/con 1)
+                   (mods/modifier ?hit-point-level-bonus (* 2 ?hit-point-level-bonus))]})
+   (feat-option
       {:name "Elemental Adept"
        :icon "wind-hole"
        :page 166
-       :summary "select a damage type, your spells ignore resistance to that type and min damage die roll is 2"
+       :summary "select a damage type (acid, cold, fire, lightning, or thunder), your spells ignore resistance to that type and min damage die roll is 2"
        :prereqs [can-cast-spell-prereq]}
       true)
+   (feat-option
+    {:name "Elven Accuracy"
+     :page 74
+     :exclude-trait? true
+     :summary (str "increase DEX, INT, WIS, or DEX by 1; " elven-accuracy-summary)
+     :modifiers [(modifiers/trait-cfg
+                  {:name "Elven Accuracy"
+                   :summary elven-accuracy-summary})]
+     :selections [(ability-increase-selection [::character/dex ::character/int ::character/wis ::character/cha] 1 false)]
+     :prereqs [(race-prereq ["Elf" "Half-Elf"])]})
+   (feat-option
+    {:name "Fey Touched"
+     :summary "increase INT, WIS, or CHA by 1; learn misty step; learn 1 divination or enchantment 1st-level spell that can be casted without expending a spell slot once per long rest"
+     :modifiers [(modifiers/spells-known 2 :misty-step nil "Fey Touched")]
+     :selections [ ;;(fey-touched-spell-selection)
+                  (fey-touched-ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false)]})
+   (feat-option
+    {:name "Gift of the Gem Dragon"
+     :exclude-trait? true
+     :summary "When you take damage from a creature within 10 ft., use reaction to force the creature to make a STR save or take 2d8 force damage and be pushed up to 10 ft. away, half damage and isn't pushed if successful"
+     :selections [(gift-of-the-gem-dragon-ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false)]})
+   (feat-option
+    {:name "Gift of the Metallic Dragon"
+     :exclude-trait? true
+     :summary "cast cure wounds once/long rest; use reaction to grant bonus to AC"
+     :selections [(t/selection-cfg
+                   {:name "Gift of the Metallic Dragon: Spellcasting ability"
+                    :tags #{:spells}
+                    :options [(t/option-cfg
+                               {:name "Intelligence"
+                                :modifiers [(modifiers/spells-known 1 :cure-wounds ::character/int "Gift of the Metallic Dragon")
+                                            (modifiers/trait-cfg
+                                             {:name "Gift of the Metallic Dragon: Draconic Healing"
+                                              :summary "You can cast cure wounds once/long rest or using a spell slot. INT is your spellcasting ability"})]})
+                              (t/option-cfg
+                               {:name "Wisdom"
+                                :modifiers [(modifiers/spells-known 1 :cure-wounds ::character/wis "Gift of the Metallic Dragon")
+                                            (modifiers/trait-cfg
+                                             {:name "Gift of the Metallic Dragon: Draconic Healing"
+                                              :summary "You can cast cure wounds once/long rest or using a spell slot. WIS is your spellcasting ability"})]})
+                              (t/option-cfg
+                               {:name "Charisma"
+                                :modifiers [(modifiers/spells-known 1 :cure-wounds ::character/cha "Gift of the Metallic Dragon")
+                                            (modifiers/trait-cfg
+                                             {:name "Gift of the Metallic Dragon: Draconic Healing"
+                                              :summary "You can cast cure wounds once/long rest or using a spell slot. CHA is your spellcasting ability"})]})]})]
+     :modifiers [(modifiers/spells-known 1 :cure-wounds nil "Gift of the Metallic Dragon")
+                 (modifiers/reaction
+                  {:name "Gift of the Metallic Dragon: Protective Wings"
+                   :frequency (units5e/long-rests ?prof-bonus)
+                   :summary (str "When you or another creature within 5 ft. is hit, grant a +" ?prof-bonus " to the AC")})]})
    (feat-option
     {:name "Grappler"
      :icon "muscle-up"
@@ -1268,7 +1614,7 @@
                    :page 167
                    :summary "restrain a creature you are grappling"})]
      :prereqs [(ability-prereq ::character/str 13)]})
-   #_(feat-option
+   (feat-option
       {:name "Great Weapon Master"
        :icon "broadsword"
        :page 167
@@ -1277,16 +1623,16 @@
                     {:name "Great Weapon Master"
                      :page 167
                      :summary "When you critical or reduce a creature to 0 HPs with melee weapon, make one melee weapon attack"})]})
-   #_(feat-option
+   (feat-option
       {:name "Healer"
        :icon "medical-pack-alt"
        :page 167
-       :summary "When you stabilize with healer's kit, the creature regains 1 HP; use a healer's kit to restore 1d6 + 4 + creature's max hit dice HPs"
+       :summary "When you stabilize with healer's kit, the creature regains 1 HP; use a healer's kit to restore 1d6 + 4 + creature's max hit dice HPs (use once/rest/person)"
        :modifiers [(modifiers/action
                     {:name "Healer Feat"
                      :page 167
-                     :summary "use a healer's kit to restore 1d6 + 4 + creature's max hit dice HPs"})]})
-   #_(feat-option
+                     :summary "use a healer's kit to restore 1d6 + 4 + creature's max hit dice HPs (use once/rest/person)"})]})
+   (feat-option
       {:name "Heavily Armored"
        :icon "lamellar"
        :summary "increase STR by 1; proficiency in heavy armor"
@@ -1294,70 +1640,91 @@
        :modifiers [(modifiers/heavy-armor-proficiency)
                    (modifiers/ability ::character/str 1)]
        :prereqs [(armor-prereq :medium)]})
-   #_(feat-option
+   (feat-option
       {:name "Heavy Armor Master"
        :icon "gauntlet"
        :page 167
-       :summary "increase STR by 1; when wearing heavy armor, slashing, piercing, and bludgeoning damage from non-magical weapons is 3 less"
+       :summary "increase STR by 1; when wearing heavy armor, slashing, piercing, and bludgeoning damage from non-magical attacks is 3 less"
        :modifiers [(modifiers/ability ::character/str 1)]
        :prereqs [(armor-prereq :heavy)]})
-   #_(feat-option
+   (feat-option
+    {:name "Infernal Constitution"
+     :page 75
+     :exclude-trait? true
+     :summary (str "increase CON by 1; resistance to cold and poison damage; advantage on saves against being poisoned")
+     :modifiers [(modifiers/ability ::character/con 1)
+                 (modifiers/trait-cfg
+                  {:name "Infernal Constitution"
+                   :summary (str "• You have resistance to cold and poison damage.\n"
+                                 "• You have advantage on saving throws against being poisoned.")})]
+     :prereqs [(race-prereq ["Tiefling" "Tiefling (AoA)"])]})
+   (feat-option
       {:name "Inspiring Leader"
        :icon "public-speaker"
        :page 167
-       :summary "give 6 friendly creatures within 30 ft. temp HPs equal to you CHA mod + your level"
+       :exclude-trait? true
+       :summary "spend 10 min to give 6 friendly creatures within 30 ft. temp HPs equal to you CHA mod + your level"
+       :modifiers [(modifiers/dependent-trait
+                    {:name "Inspiring Leader Feat"
+                     :page 167
+                     :summary (str "spend 10 min to give 6 friendly creatures within 30 ft. (who can see, hear, and understand you) " (+ (?ability-bonuses ::character/cha) ?total-levels) " temp HP (use once/rest/person)")})]
        :prereqs [(ability-prereq ::character/cha 13)]})
-   #_(feat-option
+   (feat-option
       {:name "Keen Mind"
        :icon "brain"
        :page 167
        :summary "increase INT by 1; always know which direction is north; know hours before sunset or sunrise; recall anything heard or seen within a month"
        :modifiers [(modifiers/ability ::character/int 1)]})
-   #_(feat-option
+   (feat-option
       {:name "Lightly Armored"
        :icon "scale-mail"
        :page 167
        :summary "increase STR or DEX by 1; proficiency in light armor"
        :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]
        :modifiers [(modifiers/light-armor-proficiency)]})
-   #_(feat-option
+   (feat-option
       {:name "Linguist"
        :icon "lips"
        :page 167
+       :exclude-trait? true
        :summary "increase INT by 1; learn 3 languages; create written ciphers"
-       :selections [(language-selection languages 3)]
-       :modifiers [(modifiers/ability ::character/int 1)]})
-   #_(feat-option
+       :selections []
+       :modifiers [(modifiers/ability ::character/int 1)
+                   (modifiers/dependent-trait
+                    {:name "Linguist Feat"
+                     :page 167
+                     :summary (str "Create written ciphers. Others can't decipher your codes unless you teach them, they succeed on a DC " (+ (?abilities ::character/int) ?prof-bonus) " INT check, or they use magic")})]})
+   (feat-option
       {:name "Lucky"
        :icon "clover"
        :page 167
-       :summary "3 luck points, which you can use to roll an additional d20 when rolling an attack, save, or ability check, and choose which one to use"})
-   #_(feat-option
+       :summary "3 luck points per long rest, which you can use to roll an additional d20 when rolling an attack, save, or ability check, or when an attack is made against you, and choose which one to use"})
+   (feat-option
       {:name "Mage Slayer"
        :icon "zeus-sword"
        :page 168
-       :summary "use reaction to attack a caster within 5 ft.; impose disadvantage to a caster's concentration check when you attack; advantage on saves against spells cast within 5ft."
+       :summary "use reaction to attack a caster within 5 ft.; impose disadvantage to a caster's concentration check when you attack; advantage on saves against spells cast within 5 ft."
        :modifiers [(modifiers/reaction
                     {:name "Mage Slayer"
                      :range units5e/ft-5
                      :page 168
-                     :summary "attack a creature that casts a spell"})]})
-   #_(feat-option
+                     :summary "make a melee weapon attack against a creature that casts a spell within 5 ft."})]})
+   (feat-option
       {:name "Magic Initiate"
        :icon "magic-palm"
        :page 168
-       :summary "gain 2 cantrips and 1 1st level spell from a chosen class"
+       :summary "gain 2 cantrips and 1 1st level spell from a chosen class, that can also be cast free once/long rest"
        :selections [(t/selection-cfg
                      {:name "Spell Class"
                       :order 0
                       :tags #{:spells}
-                      :options [(magic-initiate-option :bard "Bard" ::character/cha sl/spell-lists)
-                                (magic-initiate-option :cleric "Cleric" ::character/wis sl/spell-lists)
-                                (magic-initiate-option :druid "Druid" ::character/wis sl/spell-lists)
-                                (magic-initiate-option :sorcerer "Sorcerer" ::character/cha sl/spell-lists)
-                                (magic-initiate-option :warlock "Warlock" ::character/cha sl/spell-lists)
-                                (magic-initiate-option :wizard "Wizard" ::character/int sl/spell-lists)]})]})
-   #_(feat-option
+                      :options [(magic-initiate-option spells-map :bard "Bard" ::character/cha spell-lists)
+                                (magic-initiate-option spells-map :cleric "Cleric" ::character/wis spell-lists)
+                                (magic-initiate-option spells-map :druid "Druid" ::character/wis spell-lists)
+                                (magic-initiate-option spells-map :sorcerer "Sorcerer" ::character/cha spell-lists)
+                                (magic-initiate-option spells-map :warlock "Warlock" ::character/cha spell-lists)
+                                (magic-initiate-option spells-map :wizard "Wizard" ::character/int spell-lists)]})]})
+   (feat-option
       {:name "Martial Adept"
        :icon "visored-helm"
        :page 168
@@ -1368,7 +1735,7 @@
                       :options maneuver-options
                       :min 2
                       :max 2})]})
-   #_(feat-option
+   (feat-option
       {:name "Medium Armor Master"
        :icon "bracers"
        :page 168
@@ -1376,13 +1743,13 @@
        :modifiers [medium-armor-master-max-bonus
                    medium-armor-master-stealth]
        :prereqs [(armor-prereq :medium)]})
-   #_(feat-option
+   (feat-option
       {:name "Mobile"
        :icon "move"
        :page 168
        :summary "speed increases by 10 ft.; Dash through difficult terrain doesn't cost extra movement; don't provoke opportunity attacks from a creature you made a melee attack against"
        :modifiers [(modifiers/speed 10)]})
-   #_(feat-option
+   (feat-option
       {:name "Moderately Armored"
        :icon "shoulder-armor"
        :page 168
@@ -1391,12 +1758,12 @@
        :modifiers [(modifiers/medium-armor-proficiency)
                    (modifiers/shield-armor-proficiency)]
        :prereqs [(armor-prereq :light)]})
-   #_(feat-option
+   (feat-option
       {:name "Mounted Combatant"
        :icon "cavalry"
        :page 168
-       :summary "while mounted: advantage on attacks against unmounted creatures smaller than mount, force attack on mount to target you; mount takes no damage on sucessful DEX saves and half on failed"})
-   #_(feat-option
+       :summary "while mounted and not incapacitated: advantage on attacks against unmounted creatures smaller than mount, force attack on mount to target you; mount takes no damage on sucessful DEX saves and half on fail"})
+   (feat-option
       {:name "Observant"
        :icon "surrounded-eye"
        :page 168
@@ -1404,7 +1771,12 @@
        :selections [(ability-increase-selection [::character/int ::character/wis] 1 false)]
        :modifiers [(modifiers/passive-perception 5)
                    (modifiers/passive-investigation 5)]})
-   #_(feat-option
+   (feat-option
+      {:name "Piercer"
+       :page 80
+       :summary "increase STR or DEX by 1; reroll one damage die when dealing piercing damage; roll one additional damage die on critical hit with piercing damage"
+       :selections [(ability-increase-selection [::character/str ::character/dex] 1)]})
+   (feat-option
       {:name "Polearm Master"
        :icon "halberd"
        :page 168
@@ -1413,8 +1785,12 @@
        :modifiers [(modifiers/bonus-action
                     {:name "Polearm Master"
                      :page 168
-                     :summary "when you make an Attack with a glaive, quarterstaff, or halberd, make an additionaal melee attack with the other end of the weapon, dealing d4 bludgeoning damage"})]})
-   #_(feat-option
+                     :summary "when you make an Attack with a glaive, quarterstaff, or halberd, make an additionaal melee attack with the other end of the weapon, dealing d4 bludgeoning damage"})
+                   (modifiers/reaction
+                    {:name "Polearm Master"
+                     :page 168
+                     :summary "while wielding a glaive, halberd, pike, quarterstaff, or spear, creatures provoke opportunity attacks when they enter your reach with that weapon"})]})
+   (feat-option
       {:name "Resilient"
        :icon "dodging"
        :page 168
@@ -1424,50 +1800,66 @@
                      1
                      false
                      [(fn [k] (modifiers/saving-throws nil k))])]})
-   #_(feat-option
+   (feat-option
       {:name "Ritual Caster"
        :icon "gift-of-knowledge"
        :page 169
-       :summary "choose a spellcaster class and learn 2 rituals from that class"
+       :exclude-trait? true
+       :summary "choose a spellcaster class and learn 2 rituals from that class; add found ritual spells to your book"
+       :modifiers [(modifiers/dependent-trait
+                    {:name "Ritual Caster Feat"
+                     :page 169
+                     :summary (str "choose a spellcaster class and learn 2 rituals from that class; add found ritual spells of the class to your book (max level " (common/round-up (/ ?total-levels 2)) "spending 2 hours and 50 gp per level")})]
        :selections [(t/selection-cfg
                      {:name "Ritual Caster: Spell Class"
                       :tags #{:spells}
-                      :options [(ritual-caster-option :bard "Bard" ::character/cha sl/spell-lists)
-                                (ritual-caster-option :cleric "Cleric" ::character/wis sl/spell-lists)
-                                (ritual-caster-option :druid "Druid" ::character/wis sl/spell-lists)
-                                (ritual-caster-option :sorcerer "Sorcerer" ::character/cha sl/spell-lists)
-                                (ritual-caster-option :warlock "Warlock" ::character/cha sl/spell-lists)
-                                (ritual-caster-option :wizard "Wizard" ::character/int sl/spell-lists)]})]
+                      :options [(ritual-caster-option spells-map :bard "Bard" ::character/cha spell-lists)
+                                (ritual-caster-option spells-map :cleric "Cleric" ::character/wis spell-lists)
+                                (ritual-caster-option spells-map :druid "Druid" ::character/wis spell-lists)
+                                (ritual-caster-option spells-map :sorcerer "Sorcerer" ::character/cha spell-lists)
+                                (ritual-caster-option spells-map :warlock "Warlock" ::character/cha spell-lists)
+                                (ritual-caster-option spells-map :wizard "Wizard" ::character/int spell-lists)]})]
        :prereqs [(t/option-prereq "Requires Intelligence or Wisdom 13 or higher"
                                   (fn [c]
                                     (let [{:keys [::character/wis ::character/int] :as abilities} @(subscribe [::character/abilities nil c])]
                                       (or (and wis (>= wis 13))
                                           (and int (>= int 13))))))]})
-   #_(feat-option
+   (feat-option
       {:name "Savage Attacker"
        :icon "saber-slash"
        :page 169
-       :summary "reroll melee weapon attack damage and use either total"})
-   #_(feat-option
-      {:name "Sentinal"
+       :summary "reroll melee weapon attack damage and use either total (use once/turn)"})
+   (feat-option
+      {:name "Sentinel"
        :icon "guards"
        :page 169
        :summary "reduce target's speed to 0 when you hit with opportunity attack; opportunity attacks even when target Disengages; use reaction to make a weapon attack against a creature within 5 ft. that attacks another target"})
-   #_(feat-option
+   (feat-option
       {:name "Sharpshooter"
        :icon "bullseye"
        :page 170
-       :summary "no disadvantage for long range; ignore half and 3/4 cover; take -5 to ranged attack to gain +10 on damage"})
-   #_(feat-option
+       :summary "no disadvantage for long range for ranged weapon attacks; ranged weapons ignore half and 3/4 cover; take -5 to ranged attack to gain +10 on damage"})
+   (feat-option
       {:name "Shield Master"
        :icon "attached-shield"
        :page 170
-       :summary "when Attacking use bonus action to shove; add shield's AC bonus to saves that target just you; take no damage on a sucessful save"
+       :summary "when Attacking use bonus action to shove; add shield's AC bonus to saves that target just you and not incapacitated; use reaction to take no damage on a sucessful DEX save"
        :modifiers [(modifiers/bonus-action
                     {:name "Shield Master: Shove"
                      :page 170
-                     :summary "make a shove with shield when taking the Attack action"})]})
-   #_(feat-option
+                     :summary "make a shove with shield when taking the Attack action"})
+                   (modifiers/reaction
+                    {:name "Shield Master: DEX Save"
+                     :page 170
+                     :summary "take no damage on successful DEX save for half damage"})]})
+   (feat-option
+      {:name "Skill Expert"
+       :summary "increase ability by one; proficiency in one skill; expertise in one proficient skill"
+       :selections [(ability-increase-selection character/ability-keys 1)
+                    (skill-selection 1)
+                    (expertise-selection 1)
+                    ]})
+   (feat-option
       {:name "Skilled"
        :icon "juggler"
        :page 170
@@ -1475,28 +1867,33 @@
        :selections [(skilled-selection "Skill/Tool 1")
                     (skilled-selection "Skill/Tool 2")
                     (skilled-selection "Skill/tool 3")]})
-   #_(feat-option
+   (feat-option
       {:name "Skulker"
        :icon "ghost-ally"
        :page 170
-       :summary "hide when lightly obscured; when hiding, missing an attack doesn't reveal you; no disadvantage on Perception checks in dim light"
+       :summary "try to hide when lightly obscured; when hiding, missing a ranged weapon attack doesn't reveal you; no disadvantage on Perception checks in dim light for sight"
        :prereqs [(ability-prereq ::character/dex 13)]})
-   #_(feat-option
+   (feat-option
+    {:name "Slasher"
+     :page 81
+     :summary "increase STR or DEX by 1; when dealing slashing damage, reduce speed of target by 10 ft. until your next turn (once/turn); on critical dealing slashing damage, target has disadvantage on attacks until your next turn"
+     :selections [(ability-increase-selection [::character/str ::character/dex] 1)]})
+   (feat-option
       {:name "Spell Sniper"
        :icon "laser-precision"
        :page 170
-       :summary "attack spells have double range; ignore half and 3/4 cover; learn a cantrip that requires an attack roll"
+       :summary "attack spells have double range; ranged spells ignore half and 3/4 cover; learn a cantrip that requires an attack roll"
        :prereqs [can-cast-spell-prereq]
        :selections [(t/selection-cfg
                      {:name "Spell Sniper: Spell Class"
                       :tags #{:spells}
-                      :options [(spell-sniper-option :bard "Bard" ::character/cha sl/spell-lists)
-                                (spell-sniper-option :cleric "Cleric" ::character/wis sl/spell-lists)
-                                (spell-sniper-option :druid "Druid" ::character/wis sl/spell-lists)
-                                (spell-sniper-option :sorcerer "Sorcerer" ::character/cha sl/spell-lists)
-                                (spell-sniper-option :warlock "Warlock" ::character/cha sl/spell-lists)
-                                (spell-sniper-option :wizard "Wizard" ::character/int sl/spell-lists)]})]})
-   #_(feat-option
+                      :options [(spell-sniper-option spells-map :bard "Bard" ::character/cha spell-lists)
+                                (spell-sniper-option spells-map :cleric "Cleric" ::character/wis spell-lists)
+                                (spell-sniper-option spells-map :druid "Druid" ::character/wis spell-lists)
+                                (spell-sniper-option spells-map :sorcerer "Sorcerer" ::character/cha spell-lists)
+                                (spell-sniper-option spells-map :warlock "Warlock" ::character/cha spell-lists)
+                                (spell-sniper-option spells-map :wizard "Wizard" ::character/int spell-lists)]})]})
+   (feat-option
       {:name "Tavern Brawler"
        :icon "broken-bottle"
        :page 170
@@ -1507,25 +1904,37 @@
                     {:name "Tavern Brawler: Grapple"
                      :page 170
                      :summary "attempt grapple when you hit with improvised weapon or unarmed strike"})]})
-   #_(feat-option
+   (feat-option
+      {:name "Telekinetic"
+       :exclude-trait? true
+       :summary "increase INT, WIS, or CHA by 1; cast invisible mage hand without components; shove as bonus action"
+       :selections [(ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false [(fn [k] (mods/modifier ?telekinetic-ability k)) (fn [k] (modifiers/spells-known 0 :mage-hand k "Telekinetic"))])]
+       :modifiers [(modifiers/spells-known 0 :mage-hand nil "Telekinetic")
+                   (modifiers/trait-cfg
+                    {:name "Telekinetic: Mage Hand"
+                     :summary "You learn the mage hand cantrip. You can cast it without somatic or verbal components and can make it invisible. If you already know the spell, its range increases by 30 ft."})
+                   (modifiers/bonus-action
+                    {:name "Telekinetic: Shove"
+                     :summary (str "Telekinetically shove one creature you can see within 30 ft. 5 ft. away or toward you if it fails a DC " (?spell-save-dc ?telekinetic-ability) " STR save")})]})
+   (feat-option
       {:name "Tough"
        :icon "defensive-wall"
        :page 170
        :summary "2 extra HPs per level"
        :modifiers [(mods/modifier ?hit-point-level-bonus (+ 2 ?hit-point-level-bonus))]})
-   #_(feat-option
+   (feat-option
       {:name "War Caster"
        :icon "deadly-strike"
        :page 170
-       :summary "adv. on CON saves for spell concentration; somatic components with weapons or shield in hand; cast spell as opporunity attack"
+       :summary "adv. on CON saves for spell concentration; somatic components with weapons or shield in hand; cast 1 action single target spell as opportunity attack"
        :prereqs [can-cast-spell-prereq]})
-   #_(feat-option
+   (feat-option
       {:name "Weapon Master"
        :icon "sword-slice"
        :page 170
        :summary "increase STR or DEX by 1; proficiency with 4 weapons"
        :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)
-                    (weapon-proficiency-selection 4)]})]
+                    (weapon-proficiency-selection-2 weapons/weapons-map {:choose 4 :options {:any true}})]})]
   #_(map
    (fn [i]
      (t/option-cfg
@@ -1694,12 +2103,23 @@
         :page 72
         :description "You gain a +2 bonus to attack rolls you make with ranged weapons."})]})
    (t/option-cfg
+    {:name "Blind Fighting"
+     :modifiers [(modifiers/trait-cfg
+       {:name "Blind Fighting Style"
+        :description "You have blindsight with a range of 10 feet. Within that range, you can effectively see anything that isn't behind total cover, even if you're blinded or in darkness. Moreover, you can see an invisible creature within that range, unless the creature successfully hides from you."})]})
+   (t/option-cfg
     {:name "Defense"
      :modifiers [(modifiers/armored-ac-bonus 1)
       (modifiers/trait-cfg
        {:name "Defense Fighting Style"
         :page 72
         :description "While you are wearing armor, you gain a +1 bonus to AC."})]})
+   (t/option-cfg
+    {:name "Druidic Warrior"
+     :selections [(cantrip-selection :druid "Druidic Warrior" ::character/wis 2)]
+     :modifiers [(modifiers/trait-cfg
+       {:name "Druidic Warrior Fighting Style"
+        :description "You learn two cantrips of your choice from the Druid spell list. They count as ranger spells for you, and Wisdom is your spellcasting ability for them. Whenever you gain a level in this class, you can replace one of these cantrips with another cantrip from the Druid spell list."})]})
    (t/option-cfg
     {:name "Dueling"
      :modifiers [(modifiers/trait-cfg
@@ -1733,19 +2153,55 @@
         :page 72
         :description "When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die and must use the new roll, even if the new roll is a 1 or a 2. The weapon must have the two-handed or versatile property for you to gain this benefit."})]})
    (t/option-cfg
+    {:name "Interception"
+     :modifiers [(modifiers/trait-cfg
+       {:name "Interception Fighting Style"
+        :description "When a creature you can see hits a target, other than you, within 5 feet of you with an attack, you can use your reaction to reduce the damage the target takes by 1d10 + your proficiency bonus (to a minimum of 0 damage). You must be wielding a shield or a simple or martial weapon to use this reaction."})]})
+   (t/option-cfg
     {:name "Protection"
      :modifiers [(modifiers/reaction
        {:name "Protection Fighting Style"
         :page 72
         :description "When a creature you can see attacks a target other than you that is within 5 feet of you, you can use your reaction to impose disadvantage on the attack roll. You must be wielding a shield."})]})
    (t/option-cfg
-    {:name"Two Weapon Fighting"
+    {:name "Superior Technique"
+     :selections [(t/selection-cfg
+               {:name "Martial Maneuvers"
+               :tags #{:class}
+               :options maneuver-options})]
+     :modifiers [(modifiers/trait-cfg
+       {:name "Superior Technique Fighting Style"
+        :description "Learn one Battle Master martial maneuvers using 1 d6 superiority die (regain on rest). Save DC is DEX or STR."})]})
+   (t/option-cfg
+    {:name "Thrown Weapon Fighting"
+     :modifiers [(modifiers/trait-cfg
+       {:name "Thrown Weapon Fighting Style"
+        :description "You can draw a weapon that has the thrown property as part of the attack you make with the weapon.\n\nWhen you hit with a ranged attack using a thrown weapon, you gain a +2 bonus to the damage roll."})]})
+   (t/option-cfg
+    {:name "Two Weapon Fighting"
      :modifiers [(modifiers/trait-cfg
                   {:name "Two Weapon Fighting"
                    :description "When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack."})
                  (mods/modifier ?weapon-ability-damage-modifier
                                 (fn [weapon finesse? _]
-                                  (?weapon-ability-modifier weapon finesse?)))]})])
+                                  (?weapon-ability-modifier weapon finesse?)))]})
+   (t/option-cfg
+    {:name "Unarmed Fighting"
+     :modifiers [(modifiers/dependent-trait
+       {:name "Unarmed Fighting Style"
+        :description (str "Your unarmed strikes deal 1d6+" (?ability-bonuses ::character/str) " bludgeoning damage, 1d8 if you aren't wielding any weapons or a shield")})
+                 (modifiers/attack
+                  {:name "Unarmed Fighting"
+                   :damage-die 6
+                   :damage-die-count 1
+                   :damage-modifier (?ability-bonuses ::character/str)
+                   :summary "Unarmed strike"})
+                 (modifiers/attack
+                  {:name "Unarmed Fighting"
+                   :damage-die 8
+                   :damage-die-count 1
+                   :damage-modifier (?ability-bonuses ::character/str)
+                   :summary "Unarmed strike (unarmed)"})]})])
 
 (defn fighting-style-selection-2 [class-kw num options]
   (t/selection-cfg
@@ -1774,6 +2230,7 @@
     :options (feat-options spell-lists spells-map)
     :multiselect? true
     :tags #{:feats}
+    :order 2
     :ref [:feats]
     :show-if-zero? true
     :min num
@@ -1788,29 +2245,6 @@
               (t/option-cfg
                {:name "Feat"
                 :selections [(feat-selection spell-lists spells-map 1)]})]}))
-
-(defn expertise-selection [num & [key]]
-  (t/selection-cfg
-   {:name "Skill Expertise"
-    :key (or key :skill-expertise)
-    :order 2
-    :options (map
-              (fn [{:keys [name key icon]}]
-                (t/option-cfg
-                 {:name name
-                  :key key
-                  :icon icon
-                  :modifiers [(modifiers/skill-expertise key)]
-                  :prereqs [(t/option-prereq (str "Requires proficiency in " name)
-                                             (fn [built-char]
-                                               (let [skill-profs @(subscribe [::character/skill-profs nil built-char])]
-                                                 (and skill-profs (skill-profs key)))))]}))
-              skills/skills)
-    :min num
-    :max num
-    :multiselect? true
-    :ref [:skill-expertise]
-    :tags #{:profs :expertise}}))
 
 (def rogue-expertise-selection
   (t/selection-cfg
@@ -1846,7 +2280,7 @@
     :source source
     :summary (str "Add "
                   (common/bonus-str (?ability-bonuses ::character/wis))
-                  " to damage from cantrips you cast")
+                  " to the damage you deal with any cleric cantrip")
     :name "Potent Spellcasting"}))
 
 (def monk-base-cfg
@@ -1910,8 +2344,149 @@
     :spell-keys spells
     :num num}))
 
-(defn warlock-subclass-spell-selection [spell-lists spells-map spells]
-  (subclass-spell-selection spell-lists spells-map :warlock "Warlock" ::character/cha spells 0))
+(defn warlock-subclass-spell-selection [spell-lists spells-map class-kw spellcasting-ability spells]
+  (subclass-spell-selection spell-lists spells-map class-kw (if (= class-kw :warlock-int) "Warlock (Int)" "Warlock") spellcasting-ability spells 0))
+
+(def classes
+  {:bard "Bard"
+   :cleric "Cleric"
+   :druid "Druid"
+   :paladin "Paladin"
+   :ranger "Ranger"
+   :sorcerer "Sorcerer"
+   :warlock-int "Warlock (Int)"
+   :warlock-cha "Warlock"
+   :wizard "Wizard"})
+
+(def prepared-cantrip-classes
+  {:cleric "Cleric"
+   :druid "Druid"})
+
+(def unprepared-classes
+  {:bard "Bard"
+   :sorcerer "Sorcerer"
+   :warlock-int "Warlock (Int)"
+   :warlock-cha "Warlock"
+   :wizard "Wizard"})
+
+(def prepared-classes
+  {:cleric "Cleric"
+   :druid "Druid"
+   :paladin "Paladin"
+   :ranger "Ranger"})
+
+(def class-prepares-spells?
+  {:bard false
+   :cleric true
+   :druid true
+   :paladin true
+   :ranger true
+   :sorcerer false
+   :warlock-int false
+   :warlock-cha false
+   :wizard false})
+
+(def class-spellcasting-ability
+  {:bard ::character/cha
+   :cleric ::character/wis
+   :druid ::character/wis
+   :paladin ::character/cha
+   :ranger ::character/wis
+   :sorcerer ::character/cha
+   :warlock-int ::character/cha
+   :warlock-cha ::character/cha
+   :wizard ::character/int})
+
+(def class-level-factors
+  {:bard 1
+   :cleric 1
+   :druid 1
+   :paladin 2
+   :ranger 2
+   :sorcerer 1
+   :warlock-int 5
+   :warlock-cha 5
+   :wizard 1})
+
+(def max-spell-slot-levels
+  {1 [1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 9 9]
+   2 [0 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5]
+   3 [0 0 1 1 1 1 2 2 2 2 2 2 3 3 3 3 3 3 4 4]
+   5 [1 1 2 2 3 3 4 4 5 5 5 5 5 5 5 5 5 5 5 5]})
+
+(defn spell-level-prereq [spell-level class-key]
+  (fn [c] (let [level-factor (get class-level-factors class-key)
+                class-level (@(subscribe [::character/class-level-fn nil c]) class-key)
+                max-spell-slot-level (get (get max-spell-slot-levels level-factor) (- class-level 1))]
+               (>= max-spell-slot-level spell-level))))
+
+(defn min-level-prereq [spell-level class-key]
+  (let [level-factor (get class-level-factors class-key)
+        level-prereq (+ 1 (.indexOf (max-spell-slot-levels level-factor) spell-level))]
+        (if (= 0 level-prereq) 21 level-prereq)))
+
+(defn race-spell-selection [spell-lists spells-map spells num]
+  (into []
+    (map
+      (fn [[class-key class-name]]
+        (let [spell-level (get-in spells-map [(get spells 0) :level])]
+        (spell-selection
+          spell-lists
+          spells-map
+          {:class-key class-key
+            :level (if (zero? spell-level) 0 nil)
+            :spell-keys spells
+            :spellcasting-ability (get class-spellcasting-ability class-key)
+            :class-name class-name
+            ;; :ref [:class class-key :bard-cantrips-known]
+            :num 0
+            :prepend-level? (if (zero? spell-level) false true)
+            :prereq-fn (spell-level-prereq spell-level class-key)})))
+      unprepared-classes
+      )))
+
+(defn race-cantrip-selection [spell-lists spells-map spells num]
+  (into []
+    (map
+      (fn [[class-key class-name]]
+        (spell-selection
+          spell-lists
+          spells-map
+          {:class-key class-key
+            :level 0
+            :spell-keys spells
+            :spellcasting-ability (get class-spellcasting-ability class-key)
+            :class-name class-name
+            ;; :ref [:class class-key :bard-cantrips-known]
+            :num 0
+            :prepend-level? false
+            :prereq-fn (spell-level-prereq 0 class-key)}))
+      prepared-cantrip-classes
+      )))
+
+(defn race-spell-prepared-class [spell-lists spells-map spells num]
+  (into []
+    (map
+      (fn [[class-key class-name]]
+        (let [spell-level (get-in spells-map [(get spells 0) :level])]
+        (map (fn [spell] (modifiers/spells-known 1 spell (get class-spellcasting-ability class-key) class-name (min-level-prereq spell-level class-key) nil class-key)) spells)))
+      prepared-classes
+      )))
+
+(defn subrace-spell-selections [spell-lists spells-map subrace-nm min-lvl max-lvl]
+  (mapcat (fn [spell-level] (race-spell-selection spell-lists spells-map (get-in sl/subrace-spell-lists [subrace-nm 1 spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
+
+(defn race-spell-selections [spell-lists spells-map race-nm min-lvl max-lvl]
+  (mapcat (fn [spell-level] (race-spell-selection spell-lists spells-map (get-in sl/race-spell-lists [race-nm spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
+
+(defn race-cantrip-selections [spell-lists spells-map race-nm min-lvl max-lvl]
+  (race-cantrip-selection spell-lists spells-map (get-in sl/race-spell-lists [race-nm 0]) 0))
+
+(defn subrace-spells-known [spell-lists spells-map subrace-nm min-lvl max-lvl]
+  (mapcat (fn [spell-level] (race-spell-prepared-class spell-lists spells-map (get-in sl/subrace-spell-lists [subrace-nm 1 spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
+
+(defn race-spells-known [spell-lists spells-map race-nm min-lvl max-lvl]
+  (mapcat (fn [spell-level] (race-spell-prepared-class spell-lists spells-map (get-in sl/race-spell-lists [race-nm spell-level]) 0)) (range min-lvl (+ max-lvl 1))))
 
 (defn traits-modifiers [traits & [class-key source]]
   (map
@@ -1954,6 +2529,7 @@
                               abilities
                               profs
                               size
+                              sizes
                               speed
                               darkvision
                               subrace-options
@@ -1975,6 +2551,8 @@
      {:name name
       :edit-event edit-event
       :selections (concat
+                   (if (seq sizes)
+                    [(size-selection sizes)])
                    (if (seq skill-kws)
                      [(skill-selection skill-kws (or skill-num 1))])
                    selections)
@@ -2104,6 +2682,7 @@
      {:name "Subrace"
       :tags #{:subrace}
       :min (if subraces 1 0)
+      :order 1
       :options (cond->
                 (if (seq subraces)
                   (map
@@ -2166,6 +2745,32 @@
                               {:name "Two Languages"
                                :selections [(homebrew-language-selection language-map 2 2)]})]})]}))
 
+(defn hollow-selection []
+  (t/selection-cfg
+    {:name "Additional Options"
+    :tags #{:race}
+    :order 10
+    :min 0
+    :max 1
+    :options [(t/option-cfg
+               {:name "<none>"
+                :key :none})
+              (t/option-cfg
+                {:name "Hollow"
+                :modifiers [(modifiers/trait-cfg
+                              {:name "Ageless"
+                              :summary "You don't age and you're unaffected by any effects that would cause you to."})
+                            (modifiers/trait-cfg
+                              {:name "Cling to Life"
+                              :summary "When you make a death save and roll 16 or higher, regain 1 hp."})
+                            (modifiers/trait-cfg
+                              {:name "Revenance"
+                              :summary "You retain your creature type, but register as undead for any spells and other effects that require you to."})
+                            (modifiers/action
+                              {:name "Unsettling Presence"
+                              :frequency units5e/long-rests-1
+                              :summary "Unsettle a target within 15 ft. The target has disadvantage on the next saving throw it makes within the next minute. Constructs, undead, and creatures that can't be frightened are immune"})]})]}))
+
 (defn race-option [spell-lists
                    spells-map
                    language-map
@@ -2176,6 +2781,7 @@
                            help
                            abilities
                            size
+                           sizes
                            speed
                            darkvision
                            subraces
@@ -2187,6 +2793,8 @@
                            language-options
                            armor-proficiencies
                            weapon-proficiencies
+                           custom-ability-scores
+                           custom-ability-scores-2
                            profs
                            source
                            plugin?
@@ -2207,6 +2815,8 @@
       :help help
       :edit-event edit-event
       :selections (concat
+                   (if (seq sizes)
+                    [(size-selection sizes)])
                    (if (seq skill-kws)
                      [(skill-selection skill-kws (or skill-num 1))])
                    (if (seq subraces)
@@ -2214,6 +2824,17 @@
                    (if (seq language-options) [(language-selection language-map language-options)])
                    (if (seq weapon-proficiency-options)
                      [(weapon-proficiency-selection-2 weapon-map weapon-proficiency-options)])
+                   (if custom-ability-scores
+                     [(ability-increase-selection-2
+                      {:ability-keys character/ability-keys
+                        :num-increases 3
+                        :max-ability 2})])
+                   (if custom-ability-scores-2
+                     [(ability-increase-selection-2
+                      {:ability-keys character/ability-keys
+                        :num-increases 4
+                        :max-ability 2})])
+                   [(hollow-selection)]
                    selections)
       :modifiers (concat
                   (if (not plugin?)
@@ -2247,6 +2868,10 @@
 (def artisans-tools-choice-cfg
   {:name "Artisan's Tool"
    :options (zipmap (map :key equipment/artisans-tools) (repeat 1))})
+
+(def gaming-set-choice-cfg
+  {:name "Gaming Set"
+   :options (zipmap (map :key equipment/gaming-sets) (repeat 1))})
 
 (defn starting-equipment-option [equipment num]
   (t/option-cfg
@@ -2468,7 +3093,10 @@
 
 (defn total-levels-prereq [level & [class-key]]
   (fn [c] (>= (if class-key
-                (@(subscribe [::character/class-level-fn nil c]) class-key)
+                (if (= class-key :warlock)
+                  (max (@(subscribe [::character/class-level-fn nil c]) :warlock-cha)
+                       (@(subscribe [::character/class-level-fn nil c]) :warlock-int))
+                  (@(subscribe [::character/class-level-fn nil c]) class-key))
                 @(subscribe [::character/total-levels nil c]))
               level)))
 
@@ -2482,7 +3110,6 @@
                    (character/total-levels c))
                  0)
              (or level 0)))))
-
 
 (defn total-levels-option-prereq [level & [class-key]]
   (t/option-prereq
@@ -2990,11 +3617,42 @@
     :page page
     :source source
     :frequency units5e/turns-1
-    :summary (str "Add "
+    :summary (str "Once on each of your turns, add "
                   (if (>= (?class-level :cleric) 14) 2 1)
                   "d8 "
                   damage-desc
                   " damage to a successful weapon attack's damage")}))
+
+(defn blessed-strikes []
+  (modifiers/dependent-trait
+   {:level 8
+    :name "Blessed Strikes"
+    :frequency units5e/rounds-1
+    :summary "When a creature takes damage from one of your cantrips or weapon attacks, deal an additional d8 radiant damage to it"}))
+
+(defn divine-strike-selection [damage-desc page & [source]]
+  (t/selection-cfg
+   {:level 8
+    :name "Cleric Level 8 Feature"
+    :tags #{:class}
+    :options [(t/option-cfg
+               {:name "Divine Strike"
+                :modifiers [(divine-strike damage-desc page source)]})
+              (t/option-cfg
+               {:name "Blessed Strikes"
+                :modifiers [(blessed-strikes)]})]}))
+
+(defn potent-spellcasting-selection [page & [source]]
+  (t/selection-cfg
+   {:level 8
+    :name "Cleric Level 8 Feature"
+    :tags #{:class}
+    :options [(t/option-cfg
+               {:name "Potent Spellcasting"
+                :modifiers [(potent-spellcasting page source)]})
+              (t/option-cfg
+               {:name "Blessed Strikes"
+                :modifiers [(blessed-strikes)]})]}))
 
 (defn favored-enemy-types [language-map]
   {:aberration [:deep-speech :undercommon :grell :slaad]
@@ -3020,6 +3678,7 @@
    :goblin [:goblin]
    :grimlock [:undercommon]
    :hobgoblin [:goblin]
+   :human [:common]
    :kobold [:draconic]
    :koa-toa [:undercommon]
    :lizardfolk [:draconic :abyssal]
@@ -3036,18 +3695,19 @@
     :tags #{:spells}
     :options (spell-options spells-map (get-in spell-lists [:druid 0]) ::character/wis class-nm)}))
 
-(defn eldritch-invocation-selection [cfg]
+(defn eldritch-invocation-selection [cfg class-kw]
   (t/selection-cfg
    (merge
     {:name "Eldritch Invocations"
      :multiselect? true
-     :ref [:class :warlock :eldritch-invocations]
+     :ref [:class class-kw :eldritch-invocations]
      :tags #{:spells}}
     cfg)))
 
 (def pact-of-the-tome-name "Pact Boon: Pact of the Tome")
 (def pact-of-the-chain-name "Pact Boon: Pact of the Chain")
 (def pact-of-the-blade-name "Pact Boon: Pact of the Blade")
+(def pact-of-the-talisman-name "Pact Boon: Pact of the Talisman")
 
 (defn has-trait-with-name-prereq [name]
   (t/option-prereq
@@ -3063,12 +3723,17 @@
 (def pact-of-the-chain-prereq
   (has-trait-with-name-prereq pact-of-the-chain-name))
 
+(def pact-of-the-talisman-prereq
+  (has-trait-with-name-prereq pact-of-the-talisman-name))
+
 (def has-eldritch-blast-prereq
   (t/option-prereq
    "You must know the edritch blast cantrip"
    (fn [c]
-     (get-in @(subscribe [::character/spells-known nil c])
-             [0 ["Warlock" :eldritch-blast]]))))
+     (or (get-in @(subscribe [::character/spells-known nil c])
+             [0 ["Warlock (Int)" :eldritch-blast]])
+         (get-in @(subscribe [::character/spells-known nil c])
+             [0 ["Warlock" :eldritch-blast]])))))
 
 (defn deep-gnome-option-cfg [key source page]
   {:name "Gnome"
@@ -3102,20 +3767,6 @@
                    :summary ~summary
                    :frequency ~frequency
                    :range ~range}))}))
-
-(defn race-prereq [race-nms]
-  (let [name-set (if (string? race-nms)
-                   #{race-nms}
-                   (into #{} race-nms))]
-    (t/option-prereq
-     (str (common/list-print name-set "or") " Only")
-     (fn [c] (name-set @(subscribe [::character/race nil c]))))))
-
-(defn subrace-prereq [race-nm subrace-nm]
-  (t/option-prereq
-   (str subrace-nm " Only")
-   (fn [c] (and (= race-nm @(subscribe [::character/race nil c]))
-                (= subrace-nm @(subscribe [::character/subrace nil c]))))))
 
 #_(def deep-gnome-prereq
   (t/option-prereq

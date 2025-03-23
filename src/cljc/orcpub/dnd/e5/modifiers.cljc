@@ -99,6 +99,12 @@
    "Darkvision"
    (common/bonus-str value)))
 
+
+
+;; (defn prereq-speed [value prereq-level class]
+;;   (mods/cum-sum-mod ?speed value "speed" (mods/bonus-str value) (fn [c] (let [class-level @(subscribe [::char5e/class-level-fn nil c])]
+;;                                                                   (>= (class-level class) prereq-level)))))
+
 (defn speed [value]
   (mods/cum-sum-mod ?speed value "speed" (mods/bonus-str value)))
 

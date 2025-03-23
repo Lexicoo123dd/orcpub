@@ -7,6 +7,7 @@
             [orcpub.dnd.e5.options :as opt5e]
             [orcpub.dnd.e5.modifiers :as mod5e]
             [orcpub.dnd.e5.weapons :as weapon5e]
+            [orcpub.dnd.e5.skills :as skill5e]
             [orcpub.dnd.e5.equipment :as equipment5e]
             [orcpub.dnd.e5.character :as char5e]
             [orcpub.dnd.e5.units :as units5e]
@@ -80,13 +81,14 @@
                                               6 4
                                               3 3
                                               2))
-                  :summary (str "Advantage on Strength checks and saves; melee damage bonus "
+                  :summary (str (if (>= (?class-level :barbarian) 7) "As part of the bonus action, move up to half your speed. ") "Advantage on Strength checks and saves; melee damage using strength bonus +"
                                 (common/bonus-str (condp <= (?class-level :barbarian)
                                                     16 4
                                                     9 3
                                                     2))
-                                "; resistance to bludgeoning, piercing, and slashing damage")})]
-    :levels {5 {:modifiers [(extra-attack-trait 49)
+                                "; resistance to bludgeoning, piercing, and slashing damage; can't cast or concentrate on spells; ends early if knocked unconcious or if you haven't attacked a hostile creature or taken damage since your last turn")})]
+    :levels {3 {:selections [(opt5e/skill-selection [:animal-handling :athletics :intimidation :nature :perception :survival] 1)]}
+             5 {:modifiers [(extra-attack-trait 49)
                             (mod5e/num-attacks 2)
                             (mod/modifier ?speed-with-armor (fn [armor] (if (not= :heavy (:type armor))
                                                                           (+ 10 ?speed)
@@ -108,6 +110,7 @@
                                                 "die"
                                                 "dice")
                                               " for melee criticals"))})]}
+             10 {:selections [(opt5e/skill-selection [:animal-handling :athletics :intimidation :nature :perception :survival] 1)]}
              18 {:modifiers [(mod5e/dependent-trait
                               {:name "Indomitable Might"
                                :level 18
@@ -139,12 +142,30 @@
     :subclass-level 3
     :subclass-title "Primal Path"
     :subclass-help "Your primal path shapes the nature of your barbarian rage and gives you additional features."
-    :subclasses [{:name "Path of the Berserker"
+    :subclasses [{:name "Path of the Ancestral Guardian"
+                  :levels {6 {:modifiers [(mod5e/reaction
+                                           {:name "Spirit Shield"
+                                            :summary (str "If raging, reduce the damage taken for a creature you can see within 30 ft. by " (condp <= (?class-level :barbarian)
+                                                         14 "4d6"
+                                                         10 "3d6"
+                                                         "2d6"))})]}
+                           10 {:modifiers [(mod5e/spells-known 2 :augury ::char5e/wis "Barbarian" 1)
+                                           (mod5e/spells-known 3 :clairvoyance ::char5e/wis "Barbarian" 1)]}}
+                  :traits [{:name "Ancestral Protectors"
+                            :level 3
+                            :summary "While raging, the first creature you hit with an attack on your turn has disadvantage on any attack roll that isn't against you, and when the target hits a creature other than you with an attack, that creature has resistance to the damage dealt by the attack. The effect on the target ends early if your rage ends"}
+                           {:name "Consult the Spirits"
+                            :level 10
+                            :summary "You can cast either Augury or Clairvoyance once per rest, without using material components"}
+                           {:name "Vengeful Ancestors"
+                            :level 14
+                            :summary "When you use Spirit Shield to reduce damage, the attacker takes force damage equal to the damage prevented"}]}
+                 {:name "Path of the Berserker"
                   :levels {10 {:modifiers [(mod5e/action
                                             {:name "Intimidating Presence"
                                              :level 10
                                              :page 49
-                                             :summary (str "Frighten (Wisdom save DC " (?spell-save-dc ::char5e/cha) ") a creature with 30 ft.")})]}
+                                             :summary (str "Frighten (Wisdom save DC " (?spell-save-dc ::char5e/cha) ") a creature with 30 ft. until the end of your next turn. On subsequent turns, you can use your action to extend the duration until the end of your next turn. Effect ends if the creature ends its turn out of line of sight or more than 60 ft away from you. If the creature succeeds on its saving throw, you can't use this feature on that creature again for 24 hours")})]}
                            14 {:modifiers [(mod5e/reaction
                                             {:name "Retaliation"
                                              :page 49
@@ -153,12 +174,12 @@
                   :traits [{:name "Frenzy"
                             :level 3
                             :page 49
-                            :summary "You can frenzy when you rage, affording you a single melee weapon attack as a bonus action on each turn until the rage ends. When the rage ends, you suffer 1 level of exhaustrion"}
+                            :summary "You can frenzy when you rage, affording you a single melee weapon attack as a bonus action on each turn until the rage ends. When the rage ends, you suffer 1 level of exhaustion"}
                            {:name "Mindless Rage"
                             :level 6
                             :page 49
-                            :summary "Can't be charmed or frightened while raging."}]}
-                 #_{:name "Path of the Totem Warrior"
+                            :summary "Can't be charmed or frightened while raging. If you are charmed or frightened when you enter your rage, the effect is suspended for the duration of the rage"}]}
+                 {:name "Path of the Totem Warrior"
                     :levels {3 {:modifiers [(mod5e/spells-known 2 :beast-sense nil "Barbarian" 1 "ritual only")
                                             (mod5e/spells-known 1 :speak-with-animals nil "Barbarian" 1 "ritual only")]
                                 :selections [(t/selection-cfg
@@ -178,11 +199,23 @@
                                                                          :page 50
                                                                          :summary "While raging and not wearing heavy armor, opportunity attacks against you have disadvantage, and you can Dash as a bonus action."})]})
                                                          (t/option-cfg
+                                                          {:name "Elk"
+                                                           :modifiers [(mod5e/trait-cfg
+                                                                        {:name "Totem Spirit: Elk"
+                                                                         :page 50
+                                                                         :summary "While raging and not wearing heavy armor, your walking speed increases by 15 ft"})]})
+                                                         (t/option-cfg
+                                                          {:name "Tiger"
+                                                           :modifiers [(mod5e/trait-cfg
+                                                                        {:name "Totem Spirit: Tiger"
+                                                                         :page 50
+                                                                         :summary "While raging, you can add 10 ft. to your long jumps and 3 ft. to your high jumps"})]})
+                                                         (t/option-cfg
                                                           {:name "Wolf"
                                                            :modifiers [(mod5e/trait-cfg
                                                                         {:name "Totem Spirit: Wolf"
                                                                          :page 50
-                                                                         :summary "While raging, allies have advantage against enemies within 5 ft."})]})]})]}
+                                                                         :summary "While raging, allies have advantage against enemies within 5 ft. that are hostile"})]})]})]}
                              6 {:selections [(t/selection-cfg
                                               {:name "Aspect of the Beast"
                                                :tags #{:class}
@@ -200,6 +233,15 @@
                                                                          :page 50
                                                                          :summary "See clearly up to a mile as if no more than 100 ft., no disadvantage on perception checks in dim light."})]})
                                                          (t/option-cfg
+                                                          {:name "Elk"
+                                                           :modifiers [(mod5e/trait-cfg
+                                                                        {:name "Aspect of the Beast: Elk"
+                                                                         :page 50
+                                                                         :summary "Your travel pace is doubled, as well as up to ten companions while within 60 ft if you're not incapacitated"})]})
+                                                         (t/option-cfg
+                                                          {:name "Tiger"
+                                                           :selections [(opt5e/skill-selection [:athletics :acrobatics :stealth :survival] 2)]})
+                                                         (t/option-cfg
                                                           {:name "Wolf"
                                                            :modifiers [(mod5e/trait-cfg
                                                                         {:name "Aspect of the Beast: Wolf"
@@ -215,7 +257,7 @@
                                                             :modifiers [(mod5e/trait-cfg
                                                                          {:name "Totemic Attunement: Bear"
                                                                           :page 50
-                                                                          :summary "While raging, hostile creatures within 5 ft. have disadvantage on attack rolls against anyone but you."})]})
+                                                                          :summary "While raging, hostile creatures within 5 ft. have disadvantage on attack rolls against anyone but you. Enemies who can't see or hear you or can't be frightened are immune"})]})
                                                           (t/option-cfg
                                                            {:name "Eagle"
                                                             :modifiers [(mod5e/trait-cfg
@@ -223,11 +265,40 @@
                                                                           :page 50
                                                                           :summary "While raging, you gain flying speed equal to your walking speed, falling if you end your turn in the air."})]})
                                                           (t/option-cfg
+                                                           {:name "Elk"
+                                                            :modifiers [(mod5e/bonus-action
+                                                                         {:name "Totemic Attunement: Elk"
+                                                                          :page 50
+                                                                          :summary (str "While raging, move through a Large or smaller creature. The creature has to succeed on a DC " (?spell-save-dc ::char5e/str) " STR save or be knocked prone and take 1d12+" (?ability-bonuses ::char5e/str) " bludgeoning damage.")})]})
+                                                          (t/option-cfg
+                                                           {:name "Tiger"
+                                                            :modifiers [(mod5e/bonus-action
+                                                                         {:name "Totemic Attunement: Tiger"
+                                                                          :page 50
+                                                                          :summary "While raging, if you move at least 20 ft. in a straight line toward a Large or smaller target and make a melee weapon attack against it, make an additional melee weapon attack against it."})]})
+                                                          (t/option-cfg
                                                            {:name "Wolf"
-                                                            :modifiers [(mod5e/trait-cfg
+                                                            :modifiers [(mod5e/bonus-action
                                                                          {:name "Totemic Attunement: Wolf"
                                                                           :page 50
-                                                                          :summary "While raging, if you hit a Large or smaller creature, you can use a bonus action to knock it prone."})]})]})]}}}]}))
+                                                                          :summary "While raging, if you hit a Large or smaller creature, you can knock it prone."})]})]})]}}}
+                 {:name "Path of the Zealot"
+                  :levels {3 {:modifiers [(mod5e/dependent-trait
+                                           {:name "Divine Fury"
+                                            :summary (str "While raging, the first creature you hit on each of your turns with a weapon attack takes 1d6+" (int (/ (?class-level :barbarian) 2)) "extra necrotic or radiant damage.")})
+                                          (mod5e/trait-cfg
+                                           {:name "Warrior of the Gods"
+                                            :summary "A spell with the sole effect of restoring you to life (but not undeath) doesn't require material components to be cast on you."})]}
+                           6 {:modifiers [(mod5e/trait-cfg
+                                           {:name "Fanatical Focus"
+                                            :summary "If you fail a saving throw while raging, you can reroll it, and you must use the new roll (use once/rage)."})]}
+                           10 {:modifiers [(mod5e/bonus-action
+                                            {:name "Zealous Presence"
+                                             :frequency units5e/long-rests-1
+                                             :summary "Up to ten other creatures of your choice within 60 ft. of you that can hear you gain advantage on attack rolls and saving throws until the start of your next turn."})]}
+                           14 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Rage Beyond Death"
+                                             :summary "While raging, having 0 HP doesn't knock you unconcious. You still must make death saving throws, and you suffer the normal effects of taking damage while at 0 hit points. However, if you would die due to failing death saving throws, you don’t die until your rage ends, and you die then only if you still have 0 hit points."})]}}}]}))
 
 (defn bardic-inspiration-die [levels]
   (condp <= (class-level levels :bard)
@@ -290,11 +361,12 @@
     :modifiers [(mod5e/bonus-action
                  {:name "Bardic Inspiration"
                   :page 53
+                  :range units5e/ft-60
                   :frequency (units5e/long-rests
                               (max 1 (?ability-bonuses ::char5e/cha)))
                   :summary (str "Inspire another creature with a 1d"
                                 (bardic-inspiration-die ?levels)
-                                " that it can, within the next 10 min., add to a d20 roll")})]
+                                " that it can, within the next 10 min., add to one ability check, attack roll, or saving throw")})]
     :levels {2 {:modifiers [(mod/vec-mod ?default-skill-bonus-fns
                                          (fn [_]
                                            (int (/ ?prof-bonus 2))))
@@ -307,20 +379,27 @@
                              {:name "Song of Rest"
                               :page 54
                               :level 2
-                              :summary (str "With a song, you and friendly creatures gain 1d"
+                              :summary (str "With a song, you and friendly creatures who have regained HP using Hit Dice on a short rest, gain 1d"
                                             (mod5e/level-val
                                              (?class-level :bard)
                                              {9 8
                                               13 10
                                               17 12
                                               :default 6})
-                                            " additional healing at the end of a short rest")})]}
+                                            " additional healing at the end of the short rest")})
+                            (mod5e/trait-cfg
+                             {:name "Magical Inspiration"
+                              :level 2
+                              :summary "If a creature has a Bardic Inspiration die from you and casts a spell that restores hit points or deals damage, the creature can roll that die and choose a target affected by the spell. Add the number rolled as a bonus to the hit points regained or the damage dealt."})]}
              3 {:selections [(opt5e/expertise-selection 2)]}
+             4 {:modifiers [(mod5e/trait-cfg
+                             {:name "Bardic Versatility"
+                              :summary "When you reach level 4, 8, 12, 16, and 19 in bard, you can replace one expertise and one cantrip from the class."})]}
              6 {:modifiers [(mod5e/action
                              {:name "Countercharm"
                               :level 6
                               :page 54
-                              :summary "performance during your turn that gives you and friendly creatures within 30 ft. advantage on frightened or charmed saves."})]}
+                              :summary "Start a performance that lasts until the end of your next turn, during which you and friendly creatures within 30 ft. have advantage on frightened or charmed saves. Must be able to hear you to gain this benefit. Ends early if incapacitated, silenced or you end it (no action)"})]}
              10 {:selections (conj [(opt5e/bard-magical-secrets spells-map 10)]
                                    (opt5e/expertise-selection 2))}
              14 {:selections [(opt5e/bard-magical-secrets spells-map 14)]}
@@ -338,7 +417,33 @@
     :subclass-level 3
     :subclass-title "Bard College"
     :subclass-help "Your bard college is a loose association that preserves bardic traditions and affords additional features"
-    :subclasses [{:name "College of Lore"
+    :subclasses [{:name "College of Eloquence"
+                  :modifiers [(mod5e/trait-cfg
+                               {:name "Silver Tongue"
+                                :level 3
+                                :summary "Treat a d20 roll of 9 or lower as a 10 on Persuasion and Deception checks"})
+                              (mod5e/bonus-action
+                               {:name "Unsettling Words"
+                                :level 3
+                                :summary (str "expend a use of Bardic Inspiration to make a creature you can see within 60 ft. subtract 1d"
+                                              (bardic-inspiration-die ?levels)
+                                              " from its next saving throw it makes before the start of your next turn")})]
+                  :levels {6 {:modifiers [(mod5e/trait-cfg
+                                           {:name "Unfailing Inspiration"
+                                            :level 6
+                                            :summary "When a creature adds one of your Bardic Inspiration dice to its ability check, attack roll, or saving throw and the roll fails, the creature can keep the die"})
+                                          (mod5e/action
+                                           {:name "Universal Speech"
+                                            :level 6
+                                            :duration units5e/hours-1
+                                            :frequency units5e/long-rests-1
+                                            :summary (str "Choose up to " (max 1 (?ability-bonuses ::char5e/cha)) " creatures within 60 ft. They can magically understand you, regardless of the language you speak. Can use again by spending a spell slot")})]}
+                           14 {:modifiers [(mod5e/reaction
+                                            {:name "Infectious Inspiration"
+                                             :level 14
+                                             :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/cha)))
+                                             :summary "When a creature within 60 ft. adds one of your Bardic Inspiration to a roll and succeeds, you can use your reaction to give a different creature (other than yourself) that can hear you within 60 ft. a Bardic Inspiration die without expending a use"})]}}}
+                 {:name "College of Lore"
                   :profs {:skill-options {:choose 3 :options {:any true}}}
                   :modifiers [(mod5e/reaction
                                {:name "Cutting Words"
@@ -346,8 +451,7 @@
                                 :page 54
                                 :summary (str "expend a use of Bardic Inspiration to subtract 1d"
                                               (bardic-inspiration-die ?levels)
-                                              " from an attack, ability, or damage roll made by a creature within 60 ft.")})]
-                  
+                                              " from an attack, ability, or damage roll made by a creature within 60 ft. Immune if it can't hear you or if immune to being charmed")})]
                   :levels {6 {:selections [(opt5e/bard-magical-secrets spells-map 6)]}
                            14 {:modifiers [(mod5e/dependent-trait
                                             {:name "Peerless Skill"
@@ -356,20 +460,35 @@
                                              :summary (str "expend one use of Bardic Inspiration to add 1d"
                                                            (bardic-inspiration-die ?levels)
                                                            " to an ability check")})]}}}
-                 #_{:name "College of Valor"
+                 {:name "College of Valor"
                     :profs {:armor {:medium true
                                     :shields true}
                             :weapon {:martial true}}
                     :levels {3 {:modifiers [(mod5e/trait-cfg
                                              {:name "Combat Inspiration"
                                               :page 55
-                                              :summary "a creature can add your bardic inspiration to a damage roll or to it's AC against an attack"})]}
+                                              :summary "A creature that has a Bardic Inspiration die from you can roll that die and add the number rolled to a weapon damage roll it just made. Alternatively, when an attack roll is made against the creature, it can use its reaction to roll the Bardic Inspiration die and add the number rolled to its AC against that attack, after seeing the roll but before knowing whether it hits or misses."})]}
                              6 {:modifiers [(extra-attack-trait 55)
                                             (mod5e/num-attacks 2)]}
                              14 {:modifiers [(mod5e/bonus-action
                                               {:name "Battle Magic"
                                                :page 55
-                                               :summary "make a weapon attack when you use your action to cast a bard spell"})]}}}]}))
+                                               :summary "When you use your action to cast a bard spell, you can make one weapon attack as a bonus action."})]}}}
+                 {:name "College of Swords"
+                    :profs {:armor {:medium true}
+                            :weapon {:scimitar true}}
+                    :levels {3 {:selections [(opt5e/fighting-style-selection :bard #{:dueling :two-weapon-fighting})]
+                                :modifiers [(mod5e/trait-cfg
+                                             {:name "Blade Flourish"
+                                              :summary (str "Whenever you take the Attack action on your turn, your walking speed increases by 10 feet until the end of the turn, and if a weapon attack that you make as part of this action hits a creature, you can use one of the following Blade Flourish options of your choice. You can use only one Blade Flourish option per turn."
+                                                            "\n\nDefensive Flourish. You can expend one use of your Bardic Inspiration to cause the weapon to deal extra damage to the target you hit. The damage equals the number you roll on the Bardic Inspiration die. You also add the number rolled to your AC until the start of your next turn."
+                                                            "\n\nSlashing Flourish. You can expend one use of your Bardic Inspiration to cause the weapon to deal extra damage to the target you hit and to any other creature of your choice that you can see within 5 feet of you. The damage equals the number you roll on the Bardic Inspiration die."
+                                                            "\n\nMobile Flourish. You can expend one use of your Bardic Inspiration to cause the weapon to deal extra damage to the target you hit. The damage equals the number you roll on the Bardic Inspiration die. You can also push the target up to 5 feet away from you, plus a number of feet equal to the number you roll on that die. You can then immediately use your reaction to move up to your walking speed to an unoccupied space within 5 feet of the target.")})]}
+                             6 {:modifiers [(extra-attack-trait)
+                                            (mod5e/num-attacks 2)]}
+                             14 {:modifiers [(mod5e/bonus-action
+                                              {:name "Battle Magic"
+                                               :summary "Whenever you use a Blade Flourish option, you can roll a d6 and use it instead of expending a Bardic Inspiration die."})]}}}]}))
 
 (defn blessings-of-knowledge-skill [skill-name]
   (let [skill-kw (common/name-to-kw skill-name)]
@@ -454,7 +573,20 @@
                               :name "Channel Divinity: Turn Undead"
                               :summary (str "undead within 30 feet must make a DC "
                                             (?spell-save-dc ::char5e/wis)
-                                            " Wisdom save or be turned for 1 min. or until damaged")})]}
+                                            " Wisdom save or be turned for 1 min. or until damaged")})
+                            (mod5e/bonus-action
+                             {:name "Harness Divine Power"
+                              :frequency (units5e/long-rests (mod5e/level-val
+                                             (?class-level :cleric)
+                                             {6 2
+                                              18 3
+                                              :default 1}))
+                              :summary (str "Expend a use of your Channel Divinity to regain one spell slot of level "
+                                            (common/round-up (/ ?prof-bonus 2))
+                                            " or lower")})]}
+             4 {:modifiers [(mod5e/trait-cfg
+                             {:name "Cantrip Versatility"
+                              :summary "When you reach level 4, 8, 12, 16, and 19 in cleric, you can replace one cantrip from the class."})]}
              5 {:modifiers [(mod5e/dependent-trait
                              {:level 5
                               :name "Destroy Undead"
@@ -480,7 +612,37 @@
                                            "if you make a percentile roll less than or equal to your cleric level"))})]}}
     :subclass-level 1
     :subclass-title "Divine Domain"
-    :subclasses [{:name "Life Domain"
+    :subclasses [{:name "Forge Domain"
+                    :profs {:armor {:heavy true}
+                            :weapon {:martial true}}
+                    :modifiers [(opt5e/cleric-spell 1 :identify 1)
+                                (opt5e/cleric-spell 1 :searing-smite 1)
+                                (opt5e/cleric-spell 2 :heat-metal 3)
+                                (opt5e/cleric-spell 2 :magic-weapon 3)
+                                (opt5e/cleric-spell 3 :elemental-weapon 5)
+                                (opt5e/cleric-spell 3 :protection-from-energy 5)
+                                (opt5e/cleric-spell 4 :fabricate 7)
+                                (opt5e/cleric-spell 4 :wall-of-fire 7)
+                                (opt5e/cleric-spell 5 :animate-objects 9)
+                                (opt5e/cleric-spell 5 :creation 9)
+                                (mod5e/bonus-action
+                                 {:name "Blessing of the Forge"
+                                  :level 1
+                                  :frequency units5e/long-rests-1
+                                  :summary "make a nonmagical armor or weapon magical, granting +1 AC or +1 to attack and damage rolls respectively"})]
+                    :levels {6 {:modifiers [(mod5e/damage-resistance :fire)]}
+                             8 {:selections [(opt5e/divine-strike-selection "fire" 63)]}}
+                    :traits [{:name "Channel Divinity: Artisan's Blessing"
+                              :level 2
+                              :summary "Conduct a hour-long ritual to craft a nonmagical item that must include some metal: a weapon, armor, ten pieces of ammunition, set of tools, or another metal object. Can be worth no more than 100 gp, with the metal having an equal value to the creation"}
+                             {:name "Soul of the Forge"
+                              :level 6
+                              :summary "You gain resistance to fire damage. +1 AC while wearing heavy armor"}
+                             {:name "Saint of Forge and Fire"
+                              :level 17
+                              :summary "resistance to slashing, bludgeoning, and piercing damage from nonmagical attacks"}]}
+
+                 {:name "Life Domain"
                   :profs {:armor {:heavy true}}
                   :modifiers [(opt5e/cleric-spell 1 :bless 1)
                               (opt5e/cleric-spell 1 :cure-wounds 1)
@@ -497,7 +659,7 @@
                                             :summary (str "Distribute "
                                                           (* 5 (?class-level :cleric))
                                                           " HPs healing among any creatures within 30 ft., each can be restored to at most 1/2 their HP max")})]}
-                           8 {:modifiers [(opt5e/divine-strike "radiant" 60)]}}
+                           8 {:selections [(opt5e/divine-strike-selection "radiant" 60)]}}
                   :traits [{:level 1
                             :name "Disciple of Life"
                             :page 60
@@ -509,6 +671,30 @@
                            {:level 17
                             :name "Supreme Healing"
                             :summary "Instead of rolling healing, use max possible roll value." }]}
+                 {:name "Peace Domain"
+                  :profs {:skill-options {:choose 1 :options {:insight true :performance true :persuasion true}}}
+                  :modifiers [(opt5e/cleric-spell 1 :heroism 1)
+                              (opt5e/cleric-spell 1 :sanctuary 1)
+                              (opt5e/cleric-spell 2 :aid 3)
+                              (opt5e/cleric-spell 2 :warding-bond 3)
+                              (opt5e/cleric-spell 3 :beacon-of-hope 5)
+                              (opt5e/cleric-spell 3 :sending 5)
+                              (opt5e/cleric-spell 4 :aura-of-purity 7)
+                              (opt5e/cleric-spell 4 :otilukes-resilient-sphere 7)
+                              (opt5e/cleric-spell 5 :greater-restoration 9)
+                              (opt5e/cleric-spell 5 :rarys-telepathic-bond 9)]
+                  :levels {1 {:modifiers [(mod5e/action
+                                           {:name "Emboldening Bond"
+                                            :frequency (units5e/long-rests ?prof-bonus)
+                                            :duration units5e/minutes-10
+                                            :summary (str "Create a bond between up to " ?prof-bonus " willing creatures within 30 ft. While any bonded creature is within " (if (>= (?class-level :cleric) 17) "60" "30") " ft. of another, they can add a 1d4 to an attack roll, ability check, or saving throw it makes once per turn.")})]}
+                           2 {:modifiers [(mod5e/action
+                                           {:name "Channel Divinity: Balm of Peace"
+                                            :summary (str "Move up to your speed without provoking opportunity attacks, and when you move within 5 ft. of any other creature during this action, you can restore 2d6 + " (max 1 (?ability-bonuses ::char5e/wis)) " HP to them once.")})]}
+                           6 {:modifiers [(mod5e/reaction
+                                           {:name "Protective Bond"
+                                            :summary (str "When a bonded creature is about to take damage, a second bonded creature within " (if (>= (?class-level :cleric) 17) "60" "30") " ft. of the first can use its reaction to teleport to an unoccupied space within 5 ft. of the first, taking all the damage instead " (if (>= (?class-level :cleric) 17) "with resistance"))})]}
+                           8 {:selections [(opt5e/potent-spellcasting-selection 32)]}}}
                  #_{:name "Knowledge Domain"
                     :modifiers [(opt5e/cleric-spell 1 :command 1)
                                 (opt5e/cleric-spell 1 :identify 1)
@@ -539,7 +725,7 @@
                                               :summary (str "a creature within 60 ft. must make a DC "
                                                             (?spell-save-dc ::char5e/wis)
                                                             " Wisdom save or you can read it's thoughts for 1 min, use an action to end the effect and cast 'suggestion' without using a slot and with no save")})]}
-                             8 {:modifiers [(opt5e/potent-spellcasting 60)]}}
+                             8 {:selections [(opt5e/potent-spellcasting-selection 60)]}}
                     :traits [
                              {:level 17
                               :page 60
@@ -580,7 +766,7 @@
                                               :name "Improved Flare"
                                               :page 61
                                               :summary "use warding flare when another creature within 30 ft. is attacked"})]}
-                             8 {:modifiers [(opt5e/potent-spellcasting 61)]}
+                             8 {:selections [(opt5e/potent-spellcasting-selection 61)]}
                              17 {:modifiers [(mod5e/action
                                               {:level 17
                                                :page 61
@@ -615,14 +801,14 @@
                                               :range {:plural :feet
                                                       :amount 30}
                                               :summary "to a creature that takes fire, cold, acid, lighting, or thunder damage, grant resistance to that damage"})]}
-                             8 {:modifiers [(opt5e/divine-strike "cold, fire, or lighting" 62)]}
+                             8 {:selections [(opt5e/divine-strike-selection "cold, fire, or lighting" 62)]}
                              17 {:modifiers [(mod5e/bonus-action
                                               {:name "Master of Nature"
                                                :level 17
                                                :page 62
                                                :summary "command creatures charmed with your Charm Animals and Plants"})]}}
                     :selections [(opt5e/druid-cantrip-selection "Cleric")]}
-                 #_{:name "Tempest Domain"
+                 {:name "Tempest Domain"
                     :profs {:armor {:heavy true}
                             :weapon {:martial true}}
                     :modifiers [(opt5e/cleric-spell 1 :fog-cloud 1)
@@ -640,7 +826,7 @@
                                   :page 62
                                   :frequency (units5e/long-rests
                                               (max 1 (?ability-bonuses ::char5e/wis)))
-                                  :summary (str "When a creature within 5 ft. hits you, you deal 2d8 lightning or thunder damage to them (half that on successful DC "
+                                  :summary (str "When a creature you can see within 5 ft. hits you with an attack, you can deal 2d8 lightning or thunder damage to them (half that on successful DC "
                                                 (?spell-save-dc ::char5e/wis)
                                                 " Dexterity save).")})]
                     :levels {2 {:modifiers [(mod5e/trait-cfg
@@ -648,7 +834,7 @@
                                               :page 62
                                               :level 2
                                               :summary "Rather than roll lighting or thunder damage, deal max damage"})]}
-                             8 {:modifiers [(opt5e/divine-strike "thunder" 62)]}
+                             8 {:selections [(opt5e/divine-strike-selection "thunder" 62)]}
                              17 {:modifiers [(mod5e/flying-speed-equal-to-walking)]}}
                     :traits [{:name "Thunderbolt Strike"
                               :page 62
@@ -657,7 +843,7 @@
                              {:name "Stormborn"
                               :page 62
                               :level 17
-                              :summary "Flying speed equal to your walking speed"}]}
+                              :summary "Flying speed equal to your walking speed when not underground or indoors"}]}
                  #_{:name "Trickery Domain"
                     :modifiers [(opt5e/cleric-spell 1 :charm-person 1)
                                 (opt5e/cleric-spell 1 :disguise-self 1)
@@ -684,13 +870,13 @@
                                               :level 6
                                               :page 63
                                               :summary "become invisible until end of your next turn"})]}
-                             8 {:modifiers [(opt5e/divine-strike "poison" 63)]}
+                             8 {:selections [(opt5e/divine-strike-selection "poison" 63)]}
                              17 {:modifiers [(mod5e/action
                                               {:name "Improved Duplicity"
                                                :level 17
                                                :page 63
                                                :summary "when you use Invoke Duplicity, create up to 4 duplicates"})]}}}
-                 #_{:name "War Domain"
+                 {:name "War Domain"
                     :profs {:armor {:heavy true}
                             :weapon {:martial true}}
                     :modifiers [(opt5e/cleric-spell 1 :divine-favor 1)
@@ -715,7 +901,7 @@
                                               :level 6
                                               :page 63
                                               :summary "+10 to an attack roll made by a creature within 30 ft."})]}
-                             8 {:modifiers [(opt5e/divine-strike nil 63)]}}
+                             8 {:selections [(opt5e/divine-strike-selection nil 63)]}}
                     :traits [{:name "Channel Divinity: Guided Strike"
                               :page 63
                               :level 2
@@ -723,7 +909,7 @@
                              {:name "Avatar of Battle"
                               :page 63
                               :level 17
-                              :summary "from non-magical weapons, resistance to slashing, bludgeoning, and piercing damage"}]}]}))
+                              :summary "resistance to slashing, bludgeoning, and piercing damage from nonmagical attacks"}]}]}))
 
 (defn druid-spell [spell-level spell-key min-level]
   (mod5e/spells-known-cfg spell-level
@@ -739,7 +925,8 @@
   {:name "Land's Stride"
    :level level
    :page 69
-   :summary "moving through nonmagical difficult terrain costs no extra movement, pass through nonmagical plants without being slowed by them and without taking damage from them"})
+   :summary (str "moving through nonmagical difficult terrain costs you no extra movement. You can also pass through nonmagical plants without being slowed by them and without taking damage from them if they have thorns, spines, or a similar hazard."
+                 "\n\nIn addition, you have advantage on saving throws against plants that are magically created or manipulated to impede movement, such as those created by the Entangle spell.")})
 
 (defn druid-option [spell-lists
                     spells-map
@@ -797,7 +984,11 @@
                               :duration (units5e/hours (int (/ (?class-level :druid) 2)))
                               :summary (str "You can transform into a beast you have seen with CR "
                                             ?wild-shape-cr
-                                            (if ?wild-shape-limitation (str " and " ?wild-shape-limitation)))})]}}
+                                            (if ?wild-shape-limitation (str " and " ?wild-shape-limitation)))})
+                            (mod5e/action
+                             {:name "Wild Companion"
+                              :duration (units5e/hours (int (/ (?class-level :druid) 2)))
+                              :summary "Expend a use of Wild Shape to cast the Find Familiar spell, without material components. The familiar is a spirit in animal form, and is a fey instead of beast"})]}}
     :selections [(opt5e/new-starting-equipment-selection
                   :druid
                   {:name "Druidic Focus"
@@ -832,11 +1023,13 @@
                                               :options (opt5e/simple-melee-weapon-options 1 (vals weapon-map))})]})]})]
     :traits [{:name "Druidic"
               :page 66
-              :summary "You can speak Druidic and use it to leave hidden message and automatically spot messages left by others"}
+              :summary "You can speak Druidic and use it to leave hidden message and automatically spot messages left by others. Others can spot the message with a DC 15 Perception check but can't decipher it without magic."}
+             {:name "Cantrip Versatility"
+              :summary "When you reach level 4, 8, 12, 16, and 19 in druid, you can replace one cantrip from the class."}
              {:name "Timeless Body"
               :level 18
               :page 67
-              :summary "age slowly"}
+              :summary "Your body ages 1 year for every 10 years that pass"}
              {:name "Beast Spells"
               :level 18
               :page 67
@@ -939,7 +1132,6 @@
                                                          (druid-spell 4 :stone-shape 7)
                                                          (druid-spell 5 :cloudkill 9)
                                                          (druid-spell 5 :insect-plague 9)]})]})]
-                  :modifiers []
                   :levels {2 {:modifiers [(mod5e/dependent-trait
                                            {:name "Natural Recovery"
                                             :level 2
@@ -965,6 +1157,99 @@
                                                            (?spell-save-dc ::char5e/wis)
                                                            " Wisdom save or they cannot attack you.")})]}}
                   :traits [(lands-stride 6)]}
+                 {:name "Circle of the Shepherd"
+                  :levels {2 {:modifiers [(mod5e/language :sylvan)
+                                          (mod5e/bonus-action
+                                           {:name "Spirit Totem"
+                                            :duration units5e/minutes-1
+                                            :frequency units5e/rests-1
+                                            :summary (str "Summon an incorporeal spirit to a point you can see within 60 ft. The spirit creates an aura in a 30-foot radius that point. It does not count as a creature nor an object, but has an appearence. As a bonus action, you can move the spirit up to 60 ft. to a point you can see."
+                                                      "\nThe effect of the aura depends on the spirit summoned:"
+                                                      "\nBear Spirit. Each creature of your choice in the aura when the spirit appears gains " (+ 5 (?class-level :druid)) " temp HP. In addition, you and your allies gain advantage on Strength checks and saves while in the aura."
+                                                      "\nHawk Spirit. Use your reaction to give a creature advantage when it makes an attack roll against a target in the aura. You and your allies have advantage on Perception checks while in the aura."
+                                                      "\nUnicorn Spirit. You and your allies gain advantage on all ability checks made to detect creatures in the aura. If you cast a spell using a spell slot that respores HP to any creature, each creature of your choice in the aura also regain " (?class-level :druid) " HP.")})]}
+                           10 {:modifiers [(mod5e/dependent-trait
+                                           {:name "Guardian Spirit"
+                                            :summary (str "When a beast or fey that you summoned or created with a spell ends its turn in your Spirit Totem aura, it regains " (/ (?class-level :druid) 2) " HP")})]}
+                           14 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Faithful Summons"
+                                             :frequency units5e/long-rests-1
+                                             :duration units5e/hours-1
+                                             :summary "If reduced to 0 hit points or incapacitated against your will, you can immediately gain the benefits of Conjure Animals as a 9th-level spell slot. Summons 4 beasts of your choice that are CR 2 or lower, appearing within 20 ft. If they recieve no commands from you, they protect you from harm and attack your foes. Lasts 1 hour without concentration or until dismissed."})]}}
+                  :traits [{:name "Speech of the Woods"
+                            :level 2
+                            :summary "You learn to speak, read, and write Sylvan. Beasts can understand your speech and you can decipher their noises and motions. Most beasts lack the intelligence to convey or understand sophisticated concepts, but a friendly beast could relay what it has seen or heard in the recent past"}
+                           {:name "Mighty Summoner"
+                            :level 6
+                            :summary "Beasts and fey summoned or created by a spell that you cast gain 2 extra HP per Hit Die it has, and damage from its natural weapons is magical."}]}
+                 {:name "Circle of Spores"
+                  :levels {2 {:modifiers [(druid-spell 0 :chill-touch 2)
+                                          (druid-spell 2 :blindness-deafness 3)
+                                          (druid-spell 2 :gentle-repose 3)
+                                          (druid-spell 3 :animate-dead 5)
+                                          (druid-spell 3 :gaseous-form 5)
+                                          (druid-spell 4 :blight 7)
+                                          (druid-spell 4 :confusion 7)
+                                          (druid-spell 5 :cloudkill 9)
+                                          (druid-spell 5 :contagion 9)
+                                          (mod5e/reaction
+                                           {:name "Halo of Spores"
+                                            :summary (str "When a creature you can see moves within 10 ft. of you or starts it turn there, deal 1d"
+                                                          (condp <= (?class-level :druid)
+                                                          14 10
+                                                          10 8
+                                                          6 6
+                                                          4)
+                                                          " necrotic damage to it unless it succeeds on a DC " (?spell-save-dc ::char5e/wis) "CON save.")})
+                                          (mod5e/action
+                                           {:name "Symbiotic Entity"
+                                            :duration units5e/minutes-10
+                                            :summary (str "Expend a use of your Wild Shape feature to gain the following benefits:"
+                                                      "\n• Gain " (* 4 (?class-level :druid)) " temp HP."
+                                                      "\n• Double the damage die for Halo of Spores."
+                                                      "\n• Melee weapon attacks deal an extra 1d6 necrotic damage."
+                                                      "\nEnds if you lose all these temporary HP or until you use your Wild Shape again.")})]}
+                           6 {:modifiers [(mod5e/reaction
+                                           {:name "Fungal Infestation"
+                                            :frequency (units5e/long-rests ?prof-bonus)
+                                            :duration units5e/hours-1
+                                            :summary (str "When a beast or humanoid that is Small or Medium dies within 10 ft., animate it, causing it to stand up with 1 HP. Uses the Zombie stat block.\n"
+                                                      "Its turn comes immediately after yours, it obeys your mental commands, and can only take the Attack action, making one melee attack.")})]}
+                           10 {:modifiers [(mod5e/bonus-action
+                                            {:name "Spreading Spores"
+                                             :duration units5e/minutes-1
+                                             :summary (str "While your Symbiotic Entity feature is active, hurl spores in a 10-foot cube up to 30 ft. away. They disappear early if you use this again, dismiss them as a bonus action, or if your Symbotic Entity feature is no longer active.\n"
+                                                       "Whenever a creature moves into the cube of starts its turn there, it must make a DC " (?spell-save-dc ::char5e/wis) " CON save or take your Halo of Spores damage. A creature can take this damage only once per turn. Can't use your Halo of Spores reaction while the cube persists.")})]}}
+                  :traits [{:name "Fungal Body"
+                            :level 14
+                            :summary "Can't be blinded, deafened, frightened, or poisoned, and any critical hit against you counts as a normal hit, unless incapacitated."}]}
+                 {:name "Circle of Stars"
+                  :levels {2 {:modifiers [(druid-spell 0 :guidance 2)
+                                          (druid-spell 1 :guiding-bolt 2)
+                                          (mod5e/dependent-trait
+                                           {:name "Star Map"
+                                            :summary (str "You have a star chart that can serve as a spellcasting focus for your druid spells. While holding it, you know the Guidance cantrip, gain Guiding Bolt, and can cast it " ?prof-bonus " times/long rest. Spend 1 hour to replace it.")})
+                                          (mod5e/bonus-action
+                                           {:name "Starry Form"
+                                            :duration units5e/minutes-10
+                                            :summary (str "Expend a use of your Wild Shape feature to shed bright and dim light 10 ft. each and gain one of the following benefits:"
+                                                      "\nArcher. When activated and as a bonus action on subsequent turns, make a ranged spell attack against one creature within 60 ft, dealing 1d8 + " (?ability-bonuses ::char5e/wis) " radiant damage."
+                                                      "\nChalice. Whenever you cast a spell using a spell slot that restores HP, you or another creature within 30 ft. of you can regain 1d8 + " (?ability-bonuses ::char5e/wis) " HP."
+                                                      "\nDragon. When making an INT or WIS check or a CON Save to maintain concentration on a spell, treat a roll of 9 or lower on the d20 as a 10."
+                                                      "\nEnds early if dismissed, you become incapacitated, die, or use the feature again")})]}
+                           6 {:modifiers [(mod5e/reaction
+                                           {:name "Cosmic Omen"
+                                            :frequency (units5e/long-rests ?prof-bonus)
+                                            :summary (str "When finishing a long rest, roll a die to gain a reaction."
+                                                          "\nWeal (even). Whenever a creature you can see within 30 ft. is about to make an attack roll, a save, or an ability check, add a d6 to the total."
+                                                          "\nWoe (odd). Whenever a creature you can see within 30 ft. is about to make an attack roll, a save, or an ability check, subtract a d6 from the total.")})]}
+                           10 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Twinkling Constellations"
+                                             :summary (str "Starry Form improves. 1d8 of Archer and CHalice becomes 2d8. While Dragon is active, gain a flying speed of 20 ft. and can hover."
+                                                           "\nAt the start of each turn, can change active constellation.")})]}}
+                  :traits [{:name "Full of Stars"
+                            :level 14
+                            :summary "While in Starry Form, gain resistance to bludgeoning, piercing, and slashing damage."}]}
                  #_{:name "Circle of the Moon"
                     :levels {2 {:modifiers [(mod5e/bonus-action
                                              {:name "Combat Wild Shape"
@@ -987,9 +1272,70 @@
                               :summary "cast alter self at will"
                               :level 14}]}]}))
 
+(defn subclass-wizard-spell-selection [spell-lists spells-map title ref class-key class-name num spell-levels & [filter-fn]]
+  (opt5e/spell-selection spell-lists
+                         spells-map
+                         {:title title
+                          :class-key class-key
+                          :ref ref
+                          :spellcasting-ability ::char5e/int
+                          :class-name class-name
+                          :num num
+                          :prepend-level? true
+                          :spell-keys (let [spell-keys
+                                            (mapcat
+                                             (fn [lvl] (get-in spell-lists [:wizard lvl]))
+                                             spell-levels)]
+                                        (if filter-fn
+                                          (filter
+                                           (fn [spell-key]
+                                             (filter-fn (spells-map spell-key)))
+                                           spell-keys)
+                                          spell-keys))}))
 
+(defn eldritch-knight-spell? [s]
+    (let [school (:school s)]
+      (or (= school "evocation")
+          (= school "abjuration"))))
 
-#_(def eldritch-knight-cfg
+(defn eldritch-knight-ref [subclass-key subpath]
+    (concat
+     [:class :fighter :levels :level-3 :martial-archetype subclass-key]
+     subpath))
+
+(defn eldritch-knight-cantrip [num]
+  (opt5e/spell-selection sl5e/spell-lists
+                         spells5e/spell-map
+                         {:class-key :fighter
+                          :level 0
+                          :ref (eldritch-knight-ref :eldritch-knight [:cantrips-known])
+                          :spellcasting-ability ::char5e/int
+                          :class-name "Fighter"
+                          :num num
+                          :spell-keys (get-in sl5e/spell-lists [:wizard 0])}))
+
+(defn eldritch-knight-spell-selection [num spell-levels]
+  (subclass-wizard-spell-selection sl5e/spell-lists
+                                   spells5e/spell-map
+                                   "Fighter Abjuration or Evocation Spells"
+                                   (eldritch-knight-ref :eldritch-knight [:abjuration-or-evocation-spells-known])
+                                   :fighter
+                                   "Fighter"
+                                   num
+                                   spell-levels
+                                   eldritch-knight-spell?))
+
+(defn eldritch-knight-any-spell-selection [num spell-levels]
+  (subclass-wizard-spell-selection sl5e/spell-lists
+                                   spells5e/spell-map
+                                   "Fighter Spells: Any School"
+                                     (eldritch-knight-ref :eldritch-knight [:spells-known-any-school])
+                                     :fighter
+                                     "Fighter"
+                                     num
+                                     spell-levels))
+
+(def eldritch-knight-cfg
     {:name "Eldritch Knight"
      :spellcasting {:level-factor 3}
      :modifiers [(mod5e/bonus-action
@@ -1021,7 +1367,7 @@
      :traits [{:name "Weapon Bond"
                :level 3
                :page 75
-               :summary "Bond with up to two weapons (see Summon Bonded Weapon)"}
+               :summary "Perform a 1 hour ritual to bond with a weapon, up to two. You can't be disarmed of them unless incapacitated"}
               {:name "Eldritch Strike"
                :page 75
                :level 10
@@ -1029,9 +1375,9 @@
               {:name "Arcane Charge"
                :level 15
                :page 75
-               :summary "teleport up to 30 ft. when you use Action Surge"}]})
+               :summary "teleport up to 30 ft. when you use Action Surge. Can be before or after the additional action"}]})
 
-#_(defn martial-maneuvers-selection [num]
+(defn martial-maneuvers-selection [num]
     (t/selection-cfg
      {:name "Martial Maneuvers"
       :options opt5e/maneuver-options
@@ -1079,6 +1425,10 @@
                                                           2
                                                           1))
                               :summary "take an extra action"})]}
+             3 {:modifiers [(mod5e/critical 19)]}
+             4 {:modifiers [(mod5e/trait-cfg
+                             {:name "Martial Versatility"
+                              :summary "When you reach level 4, 8, 12, 16, and 19 in fighter, you can replace one fighting style and one maneuver from the class."})]}
              5 {:modifiers [(mod5e/num-attacks 2)]}
              9 {:modifiers [(mod5e/dependent-trait
                              {:level 9
@@ -1092,10 +1442,11 @@
                                             :default 1}))
                               :summary "reroll a save if you fail"})]}
              11 {:modifiers [(mod5e/num-attacks 3)]}
+             13 {:modifiers [(mod5e/critical 18)]}
              20 {:modifiers [(mod5e/num-attacks 4)]}}
     :subclass-level 3
     :subclass-title "Martial Archetype"
-    :selections [(opt5e/fighting-style-selection :fighter)
+    :selections [(opt5e/fighting-style-selection :fighter #{:archery :blind-fighting :defense :dueling :great-weapon-fighting :interception :protection :superior-technique :thrown-weapon-fighting :two-weapon-fighting :unarmed-fighting})
                  (opt5e/new-starting-equipment-selection
                   :fighter
                   {:name "Armor"
@@ -1141,7 +1492,7 @@
                              (t/option-cfg
                               {:name "Two Handaxes"
                                :modifiers [(mod5e/weapon :handaxe 2)]})]})]
-    :subclasses [{:name "Champion"
+    :subclasses [#_{:name "Champion"
                   :levels {3 {:modifiers [(mod5e/critical 19)]}
                            7 {:modifiers [(mod/vec-mod ?default-skill-bonus-fns
                                                        (fn [ability-kw]
@@ -1170,7 +1521,7 @@
                                                            #_(int (/ ?max-hit-points 2))
                                                            " HPs left, regain "
                                                            (+ 5 (?ability-bonuses ::char5e/con)) " HPs")})]}}}
-                 #_{:name "Battle Master"
+                 {:name "Battle Master"
                     :selections [(martial-maneuvers-selection 3)
                                  (opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]
                     :modifiers [(mod/modifier ?maneuver-save-dc (max (?spell-save-dc ::char5e/dex)
@@ -1208,7 +1559,125 @@
                               :page 74
                               :class-key :fighter
                               :summary "you regain 1 superiority die when you roll iniative and have no remaining superiority dice"}]}
-                 #_eldritch-knight-cfg]}))
+                 {:name "Cavalier"
+                  :selections [(t/selection-cfg
+                                {:name "Proficiency"
+                                 :tags #{:profs}
+                                 :order 0
+                                 :options [(t/option-cfg
+                                            {:name "Skill Proficiency"
+                                             :selections [(opt5e/skill-selection [:animal-handling :history :insight :performance :persuasion] 1)]})
+                                           (t/option-cfg
+                                            {:name "Language"
+                                             :selections [(opt5e/language-selection-aux (vals language-map) 1)]})]})]
+                  :modifiers [(mod5e/dependent-trait
+                               {:name "Unwavering Mark"
+                                :class-key :fighter
+                                :frequency (units5e/long-rests (if (< (?ability-bonuses ::char5e/str) 1) 1 (?ability-bonuses ::char5e/str)))
+                                :summary (str "Mark a creature you hit until the end of your next turn. Ends early if you are incapacitated, die, or if someone else marks the creature.\n"
+                                              "\nThe marked creature: has disadvantage on any attack roll that doesn't target you while within 5 ft.\n"
+                                              "                       If it deals damage to any creature other than you, you can make a melee weapon attack against it as a bonus action on your next turn with advantage, dealing " (int (/ (?class-level :fighter) 2)) " extra damage.")})]
+                  :traits [{:name "Born to the Saddle"
+                            :class-key :fighter
+                            :summary "Advantage on saving throws made to avoid falling off your mount. If you fall off and fall 10 ft. or less, you can land on your feet if not incapacitated"}
+                           ]
+                  :levels {7 {:modifiers [(mod5e/reaction
+                                           {:name "Warding Maneuver"
+                                            :frequency (units5e/long-rests (if (< (?ability-bonuses ::char5e/con) 1) 1 (?ability-bonuses ::char5e/con)))
+                                            :summary "If you or a creature you can see within 5 ft. of you is hit by an attack, you can roll 1d8 if you're wielding a melee weapon or a shield. Add the number rolled to the target's AC against that attack. If the attack still hits, the target has resistance against the attack's damage."})]}
+                           10 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Hold the Line"
+                                            :summary "Creatures provoke an opportunity attack from you when they move 5 feet or more while within your reach, and if you hit a creature with an opportunity attack, the target's speed is reduced to 0 until the end of the current turn."})]}
+                           15 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Ferocious Charger"
+                                             :frequency units5e/rounds-1
+                                             :summary (str "If you move at least 10 ft. in a straight line right before attacking a creature and you hit it with the attack, that target must succeed on a DC " (?spell-save-dc ::char5e/con) " STR save or be knocked prone.")})]}
+                           18 {:modifiers [(mod5e/reaction
+                                            {:name "Vigilant Defender"
+                                             :summary "You can take a special reaction once on every creature's turn, except your own. Can only be used to make an opportunity attack, and can't be used on the same turn as your normal reaction."})]}}}
+                 {:name "Echo Knight"
+                  :levels {3 {:modifiers [(mod5e/bonus-action
+                                           {:name "Manifest Echo"
+                                            :summary (str "Magically manifest an echo of yourself in an unoccupied space you can see within 15 feet of you. This echo is a magical, translucent, gray image of you that lasts until it is destroyed, until you dismiss it as a bonus action, until you manifest another echo, or until you're incapacitated.\n"
+                                                          "\nYour echo has AC " (+ 14 ?prof-bonus) ", 1 hit point, and immunity to all conditions. If it has to make a saving throw, it uses your saving throw bonus for the roll. It is the same size as you, and it occupies its space. On your turn, you can mentally command the echo to move up to 30 feet in any direction (no action required). If your echo is ever more than 30 feet from you at the end of your turn, it is destroyed.\n"
+                                                          "\n- As a bonus action, you can teleport, magically swapping places with your echo at a cost of 15 feet of your movement, regardless of the distance between the two of you.\n"
+                                                          "- When you take the Attack action on your turn, any attack you make with that action can originate from your space or the echo's space.\n"
+                                                          "- When a creature that you can see within 5 feet of your echo moves at least 5 feet away from it, you can use your reaction to make an opportunity attack against that creature as if you were in the echo's space.")})
+                                          (mod5e/dependent-trait
+                                           {:name "Unleash Incarnation"
+                                            :frequency (units5e/long-rests (if (< (?ability-bonuses ::char5e/con) 1) 1 (?ability-bonuses ::char5e/con)))
+                                            :summary "Whenever you take the Attack action, you can make one additional melee attack from the echo's position."})]}
+                           7 {:modifiers [(mod5e/action
+                                           {:name "Echo Avatar"
+                                            :summary "You can temporarily transfer your consciousness to your echo. As an action, you can see through your echo's eyes and hear through its ears. During this time, you are deafened and blinded. You can sustain this effect for up to 10 minutes, and you can end it at any time (requires no action). While your echo is being used in this way, it can be up to 1,000 feet away from you without being destroyed."})]}
+                           10 {:modifiers [(mod5e/reaction
+                                            {:name "Shadow Martyr"
+                                             :frequency units5e/long-rests-1
+                                             :summary "You can make your echo throw itself in front of an attack directed at another creature that you can see. Before the attack roll is made, you can use your reaction to teleport the echo to an unoccupied space within 5 feet of the targeted creature. The attack roll that triggered the reaction is instead made against your echo."})]}
+                           15 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Reclaim Potential"
+                                             :frequency (units5e/long-rests (if (< (?ability-bonuses ::char5e/con) 1) 1 (?ability-bonuses ::char5e/con)))
+                                             :summary (str "When an echo of yours is destroyed by taking damage, you can gain 2d6+" (?ability-bonuses ::char5e/con) " temp HP, provided you don't already have temporary hit points.")})]}
+                           18 {:modifiers [(mod5e/bonus-action
+                                            {:name "Legion of One"
+                                             :summary "Create two echos that can co-exist. If you try to create a third echo, the previous two echoes are destroyed.\n\nWhen you roll initiative and have no uses of Unleash Incarnation left, regain one use."})]}}}
+                 eldritch-knight-cfg
+                 {:name "Rune Knight"
+                  :modifiers [(mod5e/bonus-action
+                               {:name "Giant Might"
+                                :duration units5e/minutes-1
+                                :frequency (units5e/long-rests ?prof-bonus)
+                                :summary (str "- If there's enough room, become Large, along with anything you're wearing.\n\n- Advantage on Strength checks and saves.\n\n- Once on each of your turns, deal 1d" (condp <= (?class-level :fighter) 18 10  10 8  6) " extra damage from a melee weapon attack.\n")})
+                              (mod5e/trait-cfg
+                               {:name "Rune Carver"
+                                :summary "Whenever you gain a fighter level, you can replace a rune. After a long rest, you can inscribe the runes you know onto different objects that you can wear or hold in a hand. Con is your save DC"})]
+                  :selections [(opt5e/rune-selection 2 1 (opt5e/total-levels-option-prereq 7 :fighter))]
+                  :levels {7 {:selections [(opt5e/rune-selection 1 2 (opt5e/total-levels-option-prereq 7 :fighter))]
+                              :modifiers [(mod5e/reaction
+                                           {:name "Runic Shield"
+                                            :frequency (units5e/long-rests ?prof-bonus)
+                                            :summary "When another creature you can see within 60 feet of you is hit by an attack roll, force the attacker to reroll the d20 and use the new roll"})]}
+                           10 {:selections [(opt5e/rune-selection 1 3 (opt5e/total-levels-option-prereq 7 :fighter))]
+                               :modifiers [(mod5e/trait-cfg
+                                            {:name "Great Stature"
+                                             :summary "You grow 3d6 inches taller"})]}
+                           15 {:selections [(opt5e/rune-selection 1 4 (opt5e/total-levels-option-prereq 7 :fighter))]
+                               :modifiers [(mod5e/trait-cfg
+                                            {:name "Master of Runes"
+                                             :summary "You can invoke each rune twice instead of once per rest"})]}
+                           18 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Runic Juggernaut"
+                                             :summary "Your size can increase to Huge when using Giant's Might. While Huge, your range increases by 5 ft"})]}}}
+                 {:name "Samurai"
+                  :selections [(t/selection-cfg
+                                {:name "Proficiency"
+                                 :tags #{:profs}
+                                 :order 0
+                                 :options [(t/option-cfg
+                                            {:name "Skill Proficiency"
+                                             :selections [(opt5e/skill-selection [:history :insight :performance :persuasion] 1)]})
+                                           (t/option-cfg
+                                            {:name "Language"
+                                             :selections [(opt5e/language-selection-aux (vals language-map) 1)]})]})]
+                  :modifiers [(mod5e/bonus-action
+                               {:name "Fighting Spirit"
+                                :frequency (units5e/long-rests 3)
+                                :summary (str "Give yourself advantage on all weapon attack rolls until the end of the current turn, and gain " (condp <= (?class-level :fighter) 15 15  10 10  5) " temp HP")})]
+                  :levels {7 {:modifiers [(mod5e/saving-throws nil ::char5e/wis)
+                                          (mod5e/dependent-trait
+                                           {:name "Elegant Courtier"
+                                            :summary (str "You gain a " (?ability-bonuses ::char5e/wis) " bonus to Persuasion checks and gain proficiency in Wis Saves, Cha or Int of you already have Wis")})]}
+                           10 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Tireless Spirit"
+                                             :summary "When you roll initiative and have no uses of Fighting Spirit remaining, regain one use"})]}                  
+                           15 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Rapid Strike"
+                                             :frequency units5e/turns-1
+                                             :summary "If you take the Attack action on your turn and have advantage on an attack roll against against one of the targets, you can forgo the advantage for that roll to make an additional weapon attack against that target, as part of the same action"})]}
+                          18 {:modifiers [(mod5e/reaction
+                                           {:name "Strength Before Death"
+                                            :frequency units5e/long-rests-1
+                                            :summary "Immediately take an extra turn if you are reduced to 0 HP"})]}}}]}))
 
 (defn monk-weapon? [{:keys [key ::weapon5e/type ::weapon5e/melee? ::weapon5e/heavy? ::weapon5e/two-handed?]}]
   (or (= key :shortsword)
@@ -1216,6 +1685,27 @@
            melee?
            (not heavy?)
            (not two-handed?))))
+
+(defn weapon-option [dedicated-weapon & [num]]
+  (t/option-cfg
+   {:name (:name dedicated-weapon)
+    :key (:key dedicated-weapon)
+    :help (:description dedicated-weapon)
+    :modifiers [(mod/vec-mod ?weapon-ability-modifiers
+                              (fn [weapon finesse?]
+                                (if (= :name dedicated-weapon :name weapon)
+                                  (get ?ability-bonuses ::char5e/dex)
+                                  0)))]}))
+
+(defn weapon-options [weapons & [num]]
+  (map
+   #(weapon-option % num)
+   weapons))
+
+(defn dedicated-weapon-options [num weapons]
+  (weapon-options
+   (filter #(and (= :martial (::weapon5e/type %)) (nil? (::weapon5e/heavy? %)) (not= :shortsword (:key %)) (nil? (::weapon5e/special? %))) weapons)
+   num))
 
 (defn monk-option [spells spells-map plugin-subclasses-map language-map weapon-map]
   (opt5e/class-option
@@ -1278,7 +1768,7 @@
                               {:name "Ki"
                                :page 78
                                :level 2
-                               :summary (str "You have " (?class-level :monk) " ki points")})
+                               :summary (str "You have " (+ 3 (?class-level :monk)) " ki points")})
                              (mod5e/bonus-action
                               {:name "Flurry of Blows"
                                :page 78
@@ -1291,22 +1781,38 @@
                              (mod5e/bonus-action
                               {:name "Step of the Wind"
                                :page 78
-                               :summary "Spend 1 ki point to take the Disengage or Dash action and jump distance is doubled for the turn"})]}
+                               :summary "Spend 1 ki point to take the Disengage or Dash action and jump distance is doubled for the turn"})
+                             (mod5e/trait-cfg
+                              {:name "Dedicated Weapon"
+                               :summary "During a rest, can touch a weapon to count it as a monk weapon. Criteria: simple or martial, proficient, lacks heavy and special properties"})]
+                 :selections [(t/selection-cfg
+                              {:name "Dedicated Weapon"
+                                :tags #{:equipment}
+                                :options (dedicated-weapon-options 1 (vals weapon-map))})]}
               3 {:modifiers [(mod5e/reaction
                               {:name "Deflect Missiles"
                                :page 78
-                               :summary (str "When hit by a ranged attack, reduce the damage by 1d10 " (common/mod-str (+ (?ability-bonuses ::char5e/dex) (?class-level :monk))) ". If you reduce it to 0, you can catch the missile (if you have a free hand and it's small enough to hold) and use it in a ranged attack with proficiency, as a monk weapon, for 1 ki point with range 20/60")})]}
+                               :summary (str "When hit by a ranged attack, reduce the damage by 1d10 " (common/mod-str (+ (?ability-bonuses ::char5e/dex) (?class-level :monk))) ". If you reduce it to 0, you can catch the missile (if you have a free hand and it's small enough to hold) and use it in a ranged attack with proficiency, as a monk weapon, for 1 ki point with range 20/60")})
+                             (mod5e/bonus-action
+                              {:name "Ki-Fueled Attack"
+                               :summary "If spent 1 or more ki as part of your action, make one attack with an unarmed strike or a monk weapon"})]}
               4 {:modifiers [(mod5e/reaction
                               {:name "Slow Fall"
                                :page 78
                                :level 4
-                               :summary (str "reduce falling damage by " (* 5  (?class-level :monk)))})]}
+                               :summary (str "reduce falling damage by " (* 5  (?class-level :monk)))})
+                             (mod5e/action
+                              {:name "Quickened Healing"
+                               :summary (str "Spend 2 ki to regain 1d" ?martial-arts-die "+" ?prof-bonus " HP")})]}
               5 {:modifiers [(mod5e/num-attacks 2)
                              (mod5e/dependent-trait
                               {:name "Stunning Strike"
                                :page 79
                                :level 5
-                               :summary (str "when you hit a creature with melee attack, spend 1 ki point to stun the creature if it fails a DC " (?spell-save-dc ::char5e/wis) " CON save")})]}
+                               :summary (str "when you hit a creature with melee attack, spend 1 ki point to stun the creature if it fails a DC " (?spell-save-dc ::char5e/wis) " CON save")})
+                             (mod5e/action
+                              {:name "Focused Aim"
+                               :summary "When you miss with an attack roll, spend 1 to 3 ki to increase the roll by 2 for each ki point spent"})]}
               6 {:modifiers [(mod5e/unarmored-speed-bonus 5)]}
               7 {:modifiers [(mod5e/action
                               {:name "Stillness of Mind"
@@ -1356,7 +1862,35 @@
                :page 79
                :level 20
                :summary "regain 4 ki when you have none and roll initiative"}]
-     :subclasses [{:name "Way of the Open Hand"
+     :subclasses [{:name "Way of the Astral Self"
+                   :modifiers [(mod5e/bonus-action
+                                {:name "Arms of the Astral Self"
+                                 :summary (str "Spend 1 ki point to summon the arms of your astral self. Each creature of your choice that you can see within 10 ft. of you must succeed on a DEX Save or take 2d" ?martial-arts-die " force damage."
+                                              "\nThese spectral arms last for 10 minutes or until you are incapacitated or die, during which you gain the following benefits:"
+                                              "\n- You can use your Wisdom modifier in place of your Strength modifier when making Strength checks and Strength saving throws."
+                                              "\n- You can use the spectral arms to make unarmed strikes."
+                                              "\n- When you make an unarmed strike with the arms on your turn, your reach for it is 5 ft. greater than normal."
+                                              "\n- The unarmed strikes you make with the arms can use your WIS mod in place of your STR or DEX mod for the attack and damage rolls, and their damage type is force.")})]
+                   :levels {6 {:modifiers [(mod5e/bonus-action
+                                            {:name "Visage of the Astral Self"
+                                             :summary (str "As a bonus action, or as part of the bonus action you take to activate Arms of the Astral Self, you can spend 1 ki point to summon this visage for 10 minutes. It vanishes early if you are incapacitated or die."
+                                                           "\nWhile the spectral visage is present, you gain the following benefits."
+                                                           "\nAstral Sight. You can see normally in darkness, both magical and nonmagical, to a distance of 120 feet."
+                                                           "\nWisdom of the Spirit. You have advantage on Insight and Intimidation checks."
+                                                           "\nWord of the Spirit. When you speak, you can direct your words to a creature of your choice that you can see within 60 feet of you, making it so only that creature can hear you. Alternatively, you can amplify your voice so that all creatures within 600 feet can hear you.")})]}
+                            11 {:modifiers [(mod5e/dependent-trait
+                                             {:name "Body of the Astral Self"
+                                              :summary (str "When you have both your astral arms and visage summoned, you can cause the body of your astral self to appear."
+                                                            "\nWhile the spectral body is present, you gain the following benefits."
+                                                            "\nDeflect Energy. When you take acid, cold, fire, force, lightning, or thunder damage, you can use your reaction to reduce the damage by 1d10 + " (max 1 (?ability-bonuses ::char5e/wis)) "."
+                                                            "\nEmpowered Arms. Once on each of your turns when you hit a target with the Arms of the Astral Self, you can deal 1d" ?martial-arts-die " extra damage.")})]}
+                            17 {:modifiers [(mod5e/bonus-action
+                                             {:name "Awakened Astral Self"
+                                              :summary (str "You can spend 5 ki points to summon the arms, visage, and body of your astral self and awaken it for 10 minutes, ending early if you are incapacitated or die."
+                                                            "\nWhile your astral self is awakened, you gain the following benefits."
+                                                            "\nArmor of the Spirit. You gain a +2 bonus to Armor Class."
+                                                            "\nAstral Barrage. Whenever you use the Extra Attack feature to attack twice, you can instead attack three times if all the attacks are made with your astral arms.")})]}}}
+                  {:name "Way of the Open Hand"
                    :modifiers [(mod5e/dependent-trait
                                 {:name "Open Hand Technique"
                                  :page 79
@@ -1376,40 +1910,88 @@
                                              {:name "Quivering Palm"
                                               :level 17
                                               :page 80
-                                              :summary (str "when you hit a creature with unarmed strike, set up vibrations that last " (?class-level :monk) " days. Use an action to end the vibrations, reducing the target to 0 HPs on failed DC " (?spell-save-dc ::char5e/wis) " CON save. It takes 10d10 necrotic damage on successful save.")})]}}}
-                  #_{:name "Way of Shadow"
-                     :modifiers [(mod5e/spells-known 0 :minor-illusion ::char5e/wis "Monk (Way of Shadow)")
-                                 (mod5e/action
-                                  {:name "Shadow Arts"
-                                   :page 80
-                                   :summary "spend 2 ki to cast 'darkness', 'darkvision', 'pass without trace', or 'silence' spell"})]
-                     :levels {6 {:modifiers [(mod5e/bonus-action
-                                              {:name "Shadow Step"
-                                               :page 80
-                                               :summary "teleport 60 ft. and gain advantage on first melee attack before end of turn"})]}
-                              11 {:modifiers [(mod5e/action
-                                               {:name "Cloak of Shadows"
-                                                :level 11
-                                                :page 80
-                                                :summary "become invisible"})]}
-                              17 {:modifiers [(mod5e/reaction
-                                               {:name "Opportunist"
-                                                :page 80
-                                                :level 17
-                                                :summary "when a creature within 5 ft. is hit by attack from someone else, make a melee attack"})]}}}
+                                              :summary (str "when you hit a creature with unarmed strike, spend 3 ki to set up vibrations that last " (?class-level :monk) " days. Use an action to end the vibrations if on the same plane, reducing the target to 0 HPs on failed DC " (?spell-save-dc ::char5e/wis) " CON save. It takes 10d10 necrotic damage on successful save.\n\nCan only affect one creature at a time, and can end it harmlessly")})]}}}
+                  {:name "Way of the Kensei"
+                   :modifiers [
+                               (mod5e/bonus-action
+                                {:name "Kensei's Shot"
+                                 :summary "Any target you hit with a ranged attack using a kensei weapon takes an extra 1d4 damage of the weapon’s type for this turn"})]
+                   :selections [(opt5e/tool-selection [:calligraphers-supplies :painters-supplies] 1)]
+                   :levels {6 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Magic Kensei Weapons"
+                                             :summary "Attacks with kensei weapons count as magical"})
+                                           (mod5e/dependent-trait
+                                            {:name "Deft Strike"
+                                            :frequency units5e/turns-1
+                                            :summary (str "When you hit a target with a kensei weapon, spend 1 ki to deal 1d" ?martial-arts-die " extra damage")})]}
+                            11 {:modifiers [(mod5e/bonus-action
+                                             {:name "Sharpen the Blade"
+                                              :duration units5e/minutes-1
+                                              :summary "Expend up to 3 ki points to grant one kensei weapon you touch a bonus to attack and damage rolls when you attack with it. The bonus equals the number of ki points you spent. Has no effect on a magic weapon that already has a bonus to attack and damage rolls. Ends if you use this again"})]}
+                            17 {:modifiers [(mod5e/dependent-trait
+                                             {:name "Unerring Accuracy"
+                                              :frequency units5e/turns-1
+                                              :summary "If you miss with an attack roll using a monk weapon on your turn, you can reroll it"})]}}
+                   :traits [{:name "Agile Parry"
+                             :summary "If you make an unarmed strike as part of the Attack action on your turn and are holding a kensei weapon, gain +2 AC until your next turn, while the weapon is in your hand and you aren’t incapacitated."}]}
+                  {:name "Way of the Long Death"
+                   :modifiers [(mod5e/dependent-trait
+                                {:name "Touch of Death"
+                                 :summary (str "When you reduce a creature within 5 ft. of you to 0 HP, you gain " (max 1 (+ (?ability-bonuses ::char5e/wis) (?class-level :monk))) " temp HP.")})]
+                   :levels {6 {:modifiers [(mod5e/action
+                                            {:name "Hour of Reaping"
+                                             :summary "Each creature within 30 ft. of you that can see you must succeed on a WIS Save or be frightened of you until the end of your next turn."})]}
+                            11 {:modifiers [(mod5e/trait-cfg
+                                             {:name "Mastery of Death"
+                                              :summary "When you are reduced to 0 HP, you can expend 1 ki to have 1 HP instead."})]}
+                            17 {:modifiers [(mod5e/action
+                                             {:name "Touch of the Long Death"
+                                              :summary "You touch one creature within 5 ft. of you, and expend 1 to 10 ki. The target must make a CON Save, and it takes 2d10 necrotic damage per ki spent on a failed save, or half as much on a successful one."})]}}}
+                  {:name "Way of the Ascendant Dragon"
+                   :modifiers [(mod5e/reaction
+                                {:name "Draconic Disciple: Draconic Presence"
+                                 :summary "Reroll a failed Intimidation or Persuasion check. Once failure turns into success, you can't use it again until a long rest"})
+                               (mod5e/trait-cfg
+                                {:name "Draconic Disciple: Draconic Strike"
+                                 :summary "Change the damage type of an unarmed strike to acid, cold, fire, lightning, or poison"})
+                               (mod5e/dependent-trait
+                                {:name "Breath of the Dragon"
+                                 :frequency (units5e/long-rests ?prof-bonus)
+                                 :summary (str "Replace an attack from the Attack Action with an exhalation of craconic energy in either a 20-foot cone or 30-foot line that is 5 ft. wide, dealing " (mod5e/level-val (?class-level :monk) {11 3 :default 2}) "d" ?martial-arts-die " acid, cold, fire, lightning, or poison damage on a failed DC " (?spell-save-dc ::char5e/wis) " DEX save, half if successful. You can spend 2 ki points if you have no uses left")})]
+                   :selections [(opt5e/language-selection-aux (vals language-map) 1)]
+                   :levels {6 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Wings Unfurled"
+                                             :frequency (units5e/long-rests ?prof-bonus)
+                                             :summary "When you use Step of the WInd, you can unfurl spectral draconic wings that vanish at the end of your turn, giving you a flying speed equal to your walking speed"})]}
+                            11 {:modifiers [(mod5e/bonus-action
+                                             {:name "Aspect of the Wyrm"
+                                              :frequency units5e/long-rests-1
+                                              :summary (str "Active a 10 ft. radius aura that lasts 1 minute and choose one of the following effects:"
+                                                        "\n• Frightful Presence. When you create the aura and as a bonus action on subsequent turns, choose a creature within the aura. The creature must succeed on a DC " (?spell-save-dc ::char5e/wis) " WIS save or become frightened of you for 1 minute, repeating the save at the end of its turns."
+                                                        "\n• Resistance. You and your allies within the aura are resistant to acid, cold, fire, lightning, or poison damage."
+                                                        "You can exoend 3 ki points to create it again if you have no uses left")})]}
+                            17 {:modifiers [(mod5e/dependent-trait
+                                             {:name "Ascendant Aspect: Augment Breath"
+                                              :summary (str "When you use Breath of the Dragon, spend 1 ki point to change the shape to either a 60-foot cone or a 90-foot line that is 5 ft. wide, and each creature takes 4d" ?martial-arts-die " damage on a failed save, half if successful")})
+                                             (mod5e/trait-cfg
+                                              {:name "Ascendant Aspect: Blindsight"
+                                               :summary "You gain 10 ft. blindsight. Within that range, you can effectively see anything that isn’t behind total cover, even if you’re blinded or in darkness. Moreover, you can see an invisible creature within that range, unless the creature successfully hides from you"})
+                                             (mod5e/dependent-trait
+                                              {:name "Ascendant Aspect: Explosive Fury"
+                                               :summary (str "When you activate Aspect of the Wyrm, any creature you choose in the aura must make a DC " (?spell-save-dc ::char5e/wis) " DEX save or take 3d10 acid, cold, fire, lightning, or poison damage")})]}}}
                   #_{:name "Way of the Four Elements"
-                     :modifiers [(mod5e/dependent-trait
+                   :modifiers [(mod5e/dependent-trait
                                   {:name "Disciple of the Elements"
                                    :page 80
                                    :summary (str "You learn elemental disciplines with spell save DC " (?spell-save-dc ::char5e/wis) "."
                                                  (if (>= (?class-level :monk) 5)
                                                    (str " You can increase the level of elemental discipline spells you cast by 1 for each additional ki point you spend, up to " (mod5e/level-val (?class-level :monk)
                                                                                                                                                                                                    {9 4 13 5 17 6 :default 3}))))})]
-                     :levels {3 {:selections [(opt5e/monk-elemental-disciplines)]}
+                   :levels {3 {:selections [(opt5e/monk-elemental-disciplines)]}
                               6 {:selections [(opt5e/monk-elemental-disciplines)]}
                               11 {:selections [(opt5e/monk-elemental-disciplines)]}
                               17 {:selections [(opt5e/monk-elemental-disciplines)]}}
-                     :traits [{:name "Elemental Attunement"
+                   :traits [{:name "Elemental Attunement"
                                :page 81
                                :summary "create minor elemental effect"}]}]})))
 
@@ -1445,12 +2027,25 @@
                           :options {:priests-pack 1
                                     :explorers-pack 1}}]
      :armor {:chain-mail 1}
-     :levels {2 {:selections [(opt5e/fighting-style-selection :paladin #{:defense :dueling :great-weapon-fighting :protection})]}
+     :levels {2 {:selections [(opt5e/fighting-style-selection :paladin #{:blind-fighting :defense :dueling :great-weapon-fighting :interception :protection :two-weapon-fighting})]}
               3 {:modifiers [(mod5e/immunity :disease)
                              (mod5e/trait-cfg
                               {:name "Divine Health"
                                :page 85
-                               :summary "immune to disease"})]}
+                               :summary "immune to disease"})
+                             (mod5e/bonus-action
+                             {:name "Harness Divine Power"
+                              :frequency (units5e/long-rests (mod5e/level-val
+                                             (?class-level :cleric)
+                                             {7 2
+                                              15 3
+                                              :default 1}))
+                              :summary (str "Expend a use of your Channel Divinity to regain one spell slot of level "
+                                            (common/round-up (/ ?prof-bonus 2))
+                                            " or lower")})]}
+              4 {:modifiers [(mod5e/trait-cfg
+                             {:name "Martial Versatility"
+                              :summary "When you reach level 4, 8, 12, 16, and 19 in paladin, you can replace one fighting style from the class."})]}
               5 {:modifiers [(mod5e/num-attacks 2)]}
               6 {:modifiers (conj
                              (map
@@ -1470,7 +2065,7 @@
               14 {:modifiers [(mod5e/action
                                {:name "Cleansing Touch"
                                 :page 85
-                                :frequency (units5e/long-rests (?ability-bonuses ::char5e/cha))
+                                :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/cha)))
                                 :summary "end a spell on yourself or willing creature"})]}}
      :modifiers [(mod/modifier ?paladin-aura (if (< (?class-level :paladin) 18) 10 30))
                  (mod5e/action
@@ -1578,6 +2173,73 @@
                              :level 15
                              :page 86
                              :summary "always under effects of protection from evil and good spell"}]}
+                  {:name "Oathbreaker"
+                   :modifiers [(opt5e/paladin-spell 1 :hellish-rebuke)
+                               (opt5e/paladin-spell 1 :inflict-wounds)
+                               (opt5e/paladin-spell 2 :crown-of-madness)
+                               (opt5e/paladin-spell 2 :darkness)
+                               (opt5e/paladin-spell 3 :animate-dead)
+                               (opt5e/paladin-spell 3 :bestow-curse)
+                               (opt5e/paladin-spell 4 :blight)
+                               (opt5e/paladin-spell 4 :confusion)
+                               (opt5e/paladin-spell 5 :contagion)
+                               (opt5e/paladin-spell 5 :dominate-person)
+                               (mod5e/action
+                                {:name "Channel Divinity: Control Undead"
+                                 :duration (units5e/hours 24)
+                                 :summary (str "Target an undead creature you can see within 30 ft. It must make a DC " (?spell-save-dc ::char5e/cha) " WIS save, obeying your commands for 24 hours or until you use this again. Undead with CR " (?class-level :paladin) " or above are immune")})
+                               (mod5e/action
+                                {:name "Channel Divinity: Dreadful Aspect"
+                                 :duration units5e/minutes-1
+                                 :summary (str "Each creature of your choice within 30 ft. must make a DC " (?spell-save-dc ::char5e/cha) " WIS save if it can see you or be frightened of you for 1 min. A creature who ends its turn more than 30 ft. away from you can repeat the save")})]
+                   :levels {7 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Aura of Hate"
+                                             :summary (str "You and fiends and undead within " ?paladin-aura " ft. gain a " (common/bonus-str (max 1 (?ability-bonuses ::char5e/cha))) " bonus to melee weapon damage. A creature can only benefit from this once")})]}
+                            20 {:modifiers [(mod5e/action
+                                             {:name "Dread Lord"
+                                              :frequency units5e/long-rests-1
+                                              :duration units5e/minutes-1
+                                              :summary "You create an aura of gloom with 30 ft. radius. Within the aura, bright light becomes dim, enemies starting their turn frightened by you take 4d10 psychic damage, and attacks against chosen creatures have disadvantage."})
+                                            (mod5e/bonus-action
+                                             {:name "Dread Lord Attack"
+                                              :summary (str "While within your Dread Lord aura, make a melee spell attack against a target, dealing 3d10+" (?ability-bonuses ::char5e/cha) " necrotic damage on a hit")})]}}
+                   :traits [{:name "Supernatural Resistance"
+                             :level 15
+                             :summary "You gain resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons"}]}
+                  {:name "Oath of the Crown"
+                   :modifiers [(opt5e/paladin-spell 1 :command)
+                               (opt5e/paladin-spell 1 :compelled-duel)
+                               (opt5e/paladin-spell 2 :warding-bond)
+                               (opt5e/paladin-spell 2 :zone-of-truth)
+                               (opt5e/paladin-spell 3 :aura-of-vitality)
+                               (opt5e/paladin-spell 3 :spirit-guardians)
+                               (opt5e/paladin-spell 4 :banishment)
+                               (opt5e/paladin-spell 4 :guardian-of-faith)
+                               (opt5e/paladin-spell 5 :circle-of-power)
+                               (opt5e/paladin-spell 5 :geas)
+                               (mod5e/bonus-action
+                                {:name "Channel Divinity: Champion Challenge"
+                                 :summary (str "Each creature of your choice that you can see within 30 ft. must make a DC " (?spell-save-dc ::char5e/wis) " WIS save or become unable to move more than 30 ft. away from you. Ends on a creature if you're incapacitated or if it's more than 30 ft. away from you")})
+                               (mod5e/bonus-action
+                                {:name "Channel Divinity: Turn the Tide"
+                                 :summary (str "Each creature of your choice that can hear you within 30 ft. regains 1d6+" (?ability-bonuses ::char5e/cha) " HP if it has no more than half its HP")})]
+                   :levels {7 {:modifiers [(mod5e/reaction
+                                            {:name "Divine Allegiance"
+                                             :summary "When a creature within 5 ft. takes damage, take that damage instead of them. This damage can't be reduced or prevented in any way"})]}
+                            15 {:modifiers [(mod5e/trait-cfg
+                                             {:name "Unyielding Saint"
+                                              :summary "Advantage on saves against becoming paralyzed or stunned"})
+                                            (mod5e/saving-throw-advantage [:paralyzed])
+                                            (mod5e/saving-throw-advantage [:stunned])]}
+                            20 {:modifiers [(mod5e/action
+                                             {:name "Exalted Champion"
+                                              :duration units5e/hours-1
+                                              :frequency units5e/long-rests-1
+                                              :summary (str "Gain the following benefits:"
+                                                            "\n• Resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons"
+                                                            "\n• Allies within 30 ft. have advantage on death saves"
+                                                            "\n• You and your allies within 30 ft. have advantage on WIS saves"
+                                                            "\nEnds early if your are incapacitated or die")})]}}}
                   #_{:name "Oath of the Ancients"
                      :modifiers [(opt5e/paladin-spell 1 :ensnaring-strike 3)
                                  (opt5e/paladin-spell 1 :speak-with-animals 3)
@@ -1654,7 +2316,44 @@
                      :traits [{:name "Relentless Avenger"
                                :level 7
                                :page 88
-                               :summary "when you hit with opportunity attack, you can also move up to half your speed after the attack without provoking opportunity attacks"}]}]})))
+                               :summary "when you hit with opportunity attack, you can also move up to half your speed after the attack without provoking opportunity attacks"}]}
+                  {:name "Oath of the Watchers"
+                     :modifiers [(opt5e/paladin-spell 1 :alarm)
+                                 (opt5e/paladin-spell 1 :detect-magic)
+                                 (opt5e/paladin-spell 2 :moonbeam)
+                                 (opt5e/paladin-spell 2 :see-invisibility)
+                                 (opt5e/paladin-spell 3 :counterspell)
+                                 (opt5e/paladin-spell 3 :nondetection)
+                                 (opt5e/paladin-spell 4 :aura-of-purity)
+                                 (opt5e/paladin-spell 4 :banishment)
+                                 (opt5e/paladin-spell 5 :hold-monster)
+                                 (opt5e/paladin-spell 5 :scrying)
+                                 (mod5e/action
+                                  {:name "Channel Divinity: Watcher's Will"
+                                   :level 3
+                                   :duration units5e/minutes-1
+                                   :summary (str "up to " (max 1 (?ability-bonuses ::char5e/cha)) " creatures you can see within 30 ft. gain advantage on INT, WIS, and CHA Saves")})
+                                 (mod5e/action
+                                  {:name "Channel Divinity: Abjure the Extraplanar"
+                                   :level 3
+                                   :duration units5e/minutes-1
+                                   :summary (str "each aberration, celestial, elemental, fey, or fiend within 30 ft. that can hear you must make a DC " (?spell-save-dc ::char5e/cha) " WIS Save or take be turned until it takes damage")})]
+                     :levels {7 {:modifiers [(mod5e/dependent-trait
+                                              {:name "Aura of the Sentinel"
+                                               :level 7
+                                               :summary (str "unless incapacitated, when you and any creatures of your choice within 10 ft. of you roll initiative, you all gain a +" ?prof-bonus " bonus to initiative")})]}
+                              15 {:modifiers [(mod5e/reaction
+                                               {:name "Vigilant Rebuke"
+                                                :level 15
+                                                :summary (str "when you or a creature you can see within 30 ft. succeeds on a INT, WIS, or CHA Save, deal 2d8 + " (?ability-bonuses ::char5e/cha) " force damage to the creature who forced the save")})]}
+                              20 {:modifiers [(mod5e/bonus-action
+                                               {:name "Mortal Bulwark"
+                                                :level 20
+                                                :duration units5e/minutes-1
+                                                :frequency units5e/long-rests-1
+                                                :summary (str "- Gain 120 ft. truesight"
+                                                              "- Gain advantage on attack rolls against aberrations, celestials, elementals, fey, and fiends"
+                                                              "- When you hit a creature with an attack roll and deal damage to it, force it to make a DC " (?spell-save-dc ::char5e/cha) " CHA Save or magically banish it to its native plane of existence if currently not there. On a successful save, the creature can't be banished by this feature for 24 hours. Expend lvl 5 spell slot to use again")})]}}}]})))
 
 (defn favored-enemy-option [language-map [enemy-type info]]
   (let [vec-info? (sequential? info)
@@ -1674,11 +2373,13 @@
                        (mod5e/language (first languages)))
                      (mod/set-mod ?ranger-favored-enemies enemy-type)])})))
 
-(defn favored-enemy-selection [language-map order]
+(defn favored-enemy-selection [language-map order & [prereq-level]]
   (t/selection-cfg
-   {:name (str "Favored Enemy " order)
+  {:name (str "Favored Enemy " order)
     :tags #{:class}
     :order 3
+    :prereq-fn (fn [c] (let [class-level @(subscribe [::char5e/class-level-fn nil c])]
+                               (>= (class-level :ranger) prereq-level)))
     :options [(t/option-cfg
                {:name "Type"
                 :selections [(t/selection-cfg
@@ -1704,13 +2405,15 @@
                                          (partial favored-enemy-option language-map)
                                          opt5e/humanoid-enemies)})]})]}))
 
-(defn favored-terrain-selection [order]
+(defn favored-terrain-selection [order & [prereq-level]]
   (t/selection-cfg
    {:name "Favored Terrain"
     :tags #{:class}
     :order 5
     :ref [:class :ranger :favored-terrain]
     :multiselect? true
+    :prereq-fn (fn [c] (let [class-level @(subscribe [::char5e/class-level-fn nil c])]
+                               (>= (class-level :ranger) prereq-level)))
     :options (map
               (fn [terrain]
                 (t/option-cfg
@@ -1785,9 +2488,10 @@
      :ability-increase-levels [4 8 12 16 19]
      :spellcaster true
      :spellcasting {:level-factor 2
-                    :known-mode :schedule
-                    :spells-known half-caster-spells-known-schedule
-                    :ability ::char5e/wis}
+                    :known-mode :all
+                    ;;:spells-known half-caster-spells-known-schedule
+                    :ability ::char5e/wis
+                    :prepares-spells? true}
      :armor-choices [{:name "Armor"
                       :options {:scale-mail 1
                                 :leather 1}}]
@@ -1797,16 +2501,6 @@
      :weapons {:longbow 1}
      :equipment {:quiver 1
                  :arrow 20}
-     :modifiers [(mod5e/dependent-trait
-                  {:name "Favored Enemy"
-                   :page 91
-                   :summary (str "You have advantage on survival checks to track " (common/list-print (map #(common/kw-to-name % false) ?ranger-favored-enemies)) " creatures and on INT checks to recall info about them")})
-                 (mod5e/dependent-trait
-                  {:name "Natural Explorer"
-                   :page 91
-                   :summary (let [favored-terrain ?ranger-favored-terrain
-                                  one-terrain? (= 1 (count favored-terrain))]
-                              (str "your favored terrain " (if one-terrain? "type is" "types are") " " (if (seq favored-terrain) (common/list-print (map #(common/kw-to-name % false) ?ranger-favored-terrain)) "not selected") ". Related to the terrain type" (if (not one-terrain?) "s") ": 2X proficiency bonus for INT and WIS checks for which you are proficient, difficult terrain doesn't slow your group, always alert for danger, can move stealthily alone at normal pace, 2x food when foraging, while tracking learn exact number, size, and when they passed through"))})]
      :selections [(opt5e/new-starting-equipment-selection
                    :ranger
                    {:name "Melee Weapon"
@@ -1821,38 +2515,139 @@
                                                :options (opt5e/simple-melee-weapon-options 1 (vals weapon-map))
                                                :min 2
                                                :max 2})]})]})
-                  (favored-enemy-selection language-map 1)
-                  (favored-terrain-selection 1)]
-     :levels {2 {:selections [(opt5e/fighting-style-selection :ranger #{:archery :defense :dueling :two-weapon-fighting})]}
-              3 {:modifiers [(mod5e/action
-                              {:name "Primeval Awareness"
-                               :level 3
-                               :page 92
-                               :summary (str "spend an X-level spell slot, for X minutes, you sense the types of creatures within 1 mile" (if (seq ?ranger-favored-terrain) (str "(6 if " (common/list-print (map #(common/kw-to-name % false) ?ranger-favored-terrain))) ")"))})]}
+                  (t/selection-cfg
+                   {:name "Favored Selection"
+                    :tags #{:class}
+                    :order 3
+                    :options [(t/option-cfg
+                               {:name "Favored Enemy"
+                                :order 1
+                                :selections [(favored-enemy-selection language-map 1)
+                                             (favored-enemy-selection language-map 2 6)
+                                             (favored-enemy-selection language-map 3 14)]
+                                :modifiers [(mod5e/dependent-trait
+                                             {:name "Favored Enemy"
+                                              :page 91
+                                              :summary (str "You have advantage on survival checks to track " (common/list-print (map #(common/kw-to-name % false) ?ranger-favored-enemies)) " creatures and on INT checks to recall info about them")})]})
+                              (t/option-cfg
+                               {:name "Favored Foe"
+                                :order 2
+                                :modifiers [(mod5e/action
+                                             {:name "Favored Foe"
+                                              :frequency (units5e/long-rests ?prof-bonus)
+                                              :summary (str "When you hit a creature with an attack roll, mark the target for 1 minute or until you lose concentration.\n\nFirst time you hit the target on each of your turns and deal damage, add 1d" (condp <= (?class-level :ranger) 14 8  6 6  4) " damage")})]})]})
+                  (t/selection-cfg
+                   {:name "Explorer Selection"
+                    :tags #{:class}
+                    :order 3
+                    :options [(t/option-cfg
+                               {:name "Natural Explorer"
+                                :order 1
+                                :selections [(favored-terrain-selection 1)
+                                             (favored-terrain-selection 2 6)
+                                             (favored-terrain-selection 3 10)]
+                                :modifiers [(mod5e/dependent-trait
+                                             {:name "Natural Explorer"
+                                              :page 91
+                                              :summary (let [favored-terrain ?ranger-favored-terrain
+                                                             one-terrain? (= 1 (count favored-terrain))]
+                                                        (str "your favored terrain " (if one-terrain? "type is" "types are") " " (if (seq favored-terrain) (common/list-print (map #(common/kw-to-name % false) ?ranger-favored-terrain)) "not selected") ". When you make an Intelligence or Wisdom check related to your favored terrain, your proficiency bonus is doubled if you are using a skill that you're proficient in.\n\nWhile traveling for an hour or more in your favored terrain, you gain the following benefits:"
+                                                             "\n - Difficult terrain doesn’t slow your group’s travel."
+                                                             "\n - Your group can’t become lost except by magical means."
+                                                             "\n - Even when you are engaged in another activity while traveling (such as foraging, navigating, or tracking), you remain alert to danger."
+                                                             "\n - If you are traveling alone, you can move stealthily at a normal pace."
+                                                             "\n - When you forage, you find twice as much food as you normally would."
+                                                             "\n - While tracking other creatures, you also learn their exact number, their sizes, and how long ago they passed through the area."))})]})
+                              (t/option-cfg
+                               {:name "Deft Explorer"
+                                :order 2
+                                :selections [(opt5e/language-selection-aux (vals language-map) 2)
+                                             (opt5e/expertise-selection 1)]
+                                :modifiers [(mod/cum-sum-mod ?speed (if (>= (?class-level :ranger) 6) 5 0))
+                                            (mod/vec-mod ?swimming-speed-overrides (if (>= (?class-level :ranger) 6) ?speed 0))
+                                            (mod/vec-mod ?climbing-speed-overrides (if (>= (?class-level :ranger) 6) ?speed 0))
+                                            (mod5e/bonus-action
+                                             {:name "Roving"
+                                              :level 6
+                                              :summary "Your walking speed increases by 5, and you gain a climbing speed and a swimming speed equal to your walking speed"})
+                                            (mod5e/action
+                                             {:name "Tireless"
+                                              :level 10
+                                              :frequency (units5e/long-rests ?prof-bonus)
+                                              :summary (str "Whenever you finish a short rest, your exhaustion level, if any, is decreased by 1."
+                                                            "\n\nAs an action, you can give yourself a number of temporary hit points equal to 1d8 + your Wisdom modifier (" (common/bonus-str (?ability-bonuses ::char5e/wis)) ") (minimum of 1 temporary hit point).")})]})]})]
+     :levels {2 {:selections [(opt5e/fighting-style-selection :ranger #{:archery :blind-fighting :defense :druidic-warrior :dueling :thrown-weapon-fighting :two-weapon-fighting})]}
+              3 {:selections [(t/selection-cfg
+                               {:name "Awareness"
+                                :tags #{:class}
+                                :options [(t/option-cfg
+                                           {:name "Primeval Awareness"
+                                            :order 1
+                                            :modifiers [(mod5e/action
+                                                          {:name "Primeval Awareness"
+                                                          :level 3
+                                                          :page 92
+                                                          :summary (str "you can use your action and expend one ranger spell slot to focus your awareness on the region around you. For 1 minute per level of the spell slot you expend, you can sense whether the following types of creatures are present within 1 mile of you" (if (seq ?ranger-favored-terrain) (str "(or within up to 6 miles if you are in your favored terrain)")) ": aberrations, celestials, dragons, elementals, fey, fiends, and undead. This feature doesn't reveal the creatures' location or number.")})]})
+                                            (t/option-cfg
+                                             {:name "Primal Awareness"
+                                              :order 2
+                                              :modifiers [(mod5e/spells-known 1 :speak-with-animals ::char5e/wis "Ranger (Primal Awareness)" 3)
+                                                          (mod5e/spells-known 2 :beast-sense ::char5e/wis "Ranger (Primal Awareness)" 5)
+                                                          (mod5e/spells-known 3 :speak-with-plants ::char5e/wis "Ranger (Primal Awareness)" 9)
+                                                          (mod5e/spells-known 4 :locate-creature ::char5e/wis "Ranger (Primal Awareness)" 13)
+                                                          (mod5e/spells-known 5 :commune-with-nature ::char5e/wis "Ranger (Primal Awareness)" 17)
+                                                          (mod5e/dependent-trait
+                                                           {:name "Primal Awareness"
+                                                            :summary (str "You know the spell" (if (>= (?class-level :ranger) 5) "s")
+                                                                      (common/list-print
+                                                                        (let [lvl (?class-level :ranger)]
+                                                                          (cond-> []
+                                                                            (>= lvl 3) (conj " Speak with Animals")
+                                                                            (>= lvl 5) (conj "Beast Sense")
+                                                                            (>= lvl 9) (conj "Speak with Plants")
+                                                                            (>= lvl 13) (conj "Locate Creature")
+                                                                            (>= lvl 17) (conj "Commune with Nature"))))
+                                                                      " as " (if (< (?class-level :ranger) 5) "a ranger spell and can cast it" "ranger spells and can cast each one") " once per long rest without expending a spell slot.")})]})]})]}
               5 {:modifiers [(mod5e/num-attacks 2)]}
-              6 {:selections [(favored-enemy-selection language-map 2)
-                              (favored-terrain-selection 2)]}
-              10 {:selections [(favored-terrain-selection 3)]}
-              14 {:selections [(favored-enemy-selection language-map 3)]}
+              10 {:selections [(t/selection-cfg
+                                {:name "Hide in Plain Sight/Nature's Veil"
+                                 :tags #{:class}
+                                 :options [(t/option-cfg
+                                            {:name "Hide in Plain Sight"
+                                             :order 1
+                                             :modifiers [(mod5e/trait-cfg
+                                                          {:name "Hide in Plain Sight"
+                                                           :page 92
+                                                           :summary "You can spend 1 minute camouflaging yourself. You must have access to fresh mud, dirt, plants, soot, and other naturally occurring materials with which to create your camouflage.\n\n While camouflaged, you can hide by pressing yourself up against a solid surface, such as a tree or wall, that is at least as tall and wide as you. You gain a +10 bonus to Stealth checks as long as you remain there without moving or taking actions. Once you move or take an action or a reaction, you must camouflage yourself again to gain this benefit."})]})
+                                           (t/option-cfg
+                                            {:name "Nature's Veil"
+                                             :order 2
+                                             :modifiers [(mod5e/bonus-action
+                                                          {:name "Nature's Veil"
+                                                           :frequency (units5e/long-rests ?prof-bonus)
+                                                           :summary "You draw on the powers of nature to hide yourself from view briefly. As a bonus action, you can magically become invisible, along with any equipment you are wearing or carrying, until the start of your next turn"})]})]})]}
+              14 {:modifiers [(mod5e/bonus-action
+                               {:name "Vanish"
+                                :page 92
+                                :summary "You can use the Hide action as a bonus action on your turn. Also, you can't be tracked by nonmagical means, unless you choose to leave a trail."})]}
               20 {:modifiers [(mod5e/dependent-trait
                                {:name "Foe Slayer"
                                 :frequency units5e/turns-1
                                 :level 20
                                 :page 92
-                                :summary (str "add " (common/bonus-str (?ability-bonuses ::char5e/wis)) " to an attack or damage roll")})]}}
-     :traits [(lands-stride 8)
-              {:name "Hide in Plain Sight"
-               :level 10
-               :page 92
-               :summary "You can spend 1 minute camouflaging yourself to gain +10 to Stealth checks when you don't move"}
-              {:name "Vanish"
-               :level 14
-               :page 92
-               :summary "You can use the Hide action as a bonus action on your turn. Also, you can’t be tracked by nonmagical means, unless you choose to leave a trail."}
+                                :summary (str "you become an unparalleled hunter of your enemies. Once on each of your turns, you can add your Wisdom modifier (" (common/bonus-str (?ability-bonuses ::char5e/wis)) ") to the attack roll or the damage roll of an attack you make against one of your favored enemies. You can choose to use this feature before or after the roll, but before any effects of the roll are applied")})]}}
+     :traits [{:name "Spellcasting Focus"
+               :level 2
+               :summary "You can use a druidic focus as a spellcasting focus for your ranger spells. A druidic focus might be a sprig of mistletoe or holly, a wand or rod made of yew or another special wood, a staff drawn whole from a living tree, or an object incorporating feathers, fur, bones, and teeth from sacred animals."}
+              {:name "Martial Versatility"
+               :level 4
+               :summary "When you reach level 4, 8, 12, 16, and 19 in ranger, you can replace one fighting style from the class"}
+              (lands-stride 8)
               {:name "Feral Senses"
                :level 18
                :page 92
-               :summary "When you attack a creature you can’t see, your inability to see it doesn’t impose disadvantage on your attack rolls against it. You are also aware of the location of any invisible creature within 30 feet of you, provided that the creature isn’t hidden from you and you aren’t blinded or deafened."}]
+               :summary (str "you gain preternatural senses that help you fight creatures you can't see. When you attack a creature you can't see, your inability to see it doesn't impose disadvantage on your attack rolls against it."
+                             "\n\nYou are also aware of the location of any invisible creature within 30 feet of you, provided that the creature isn't hidden from you and you aren't blinded or deafened.")}]
      :subclasses [{:name "Hunter"
                    :levels {3 {:selections [(t/selection-cfg
                                              {:name "Hunter's Prey"
@@ -1938,32 +2733,143 @@
                                                                        (mod5e/trait-cfg {:name "Uncanny Dodge"
                                                                                          :page 93
                                                                                          :summary "When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack’s damage against you."})]})]})]}}}
-                  #_{:name "Beast Master"
+                  {:name "Drakewarden"
+                   :modifiers [(mod5e/spells-known 0 :thaumaturgy ::char5e/wis "Drakewarden")
+                               (mod5e/language :draconic)
+                               (mod5e/action
+                                {:name "Summon Drake"
+                                 :frequency units5e/long-rests-1
+                                 :summary "Magically summon the bounded drake in an unoccupied space within 30 ft., and choose a Draconic Essence damage type. Can expend a spell splot to summon it again"})
+                               (mod5e/bonus-action
+                                {:name "Command Drake"
+                                 :summary "Command the drake to take an action other than dodge"})
+                               (mod5e/dependent-trait
+                                {:name "Drake Companion"
+                                 :summary "The drake is friendly to you and your companions, and it obeys your commands.\n\nIn combat, the drake shares your initiative count, but it takes its turn immediately after yours. It can move and use its reaction on its own, but the only action it takes on its turn is the Dodge action. If you are incapacitated, the drake can take any action of its choice, not just Dodge.\n\nThe drake remains until it is reduced to 0 hit points, until you use this feature to summon the drake again, or until you die. Anything the drake was wearing or carrying is left behind when the drake vanishes."})
+                               (mod5e/dependent-trait
+                                {:name "Drake Statblock"
+                                 :summary (str (condp <= (?class-level :ranger) 15 "Large"  7 "Medium"  "Small") " dragon\n"
+                                           "Armor Class: " (+ 14 ?prof-bonus)
+                                           "\nHit Points: " (+ 5 (* 5 (?class-level :ranger))) ", " (?class-level :ranger) "d10 hit dice"
+                                           "\nSpeed: 40 ft.\n"
+                                           "\nStr: 16 (+3)  Dex: 12 (+1)  Con: 15 (+2)  Int: 8 (-1)   Wis: 14 (+2)  Cha: 8 (-1)\n"
+                                           "Saving Throws: Dex: +" (+ 1 ?prof-bonus) "  Wis: +" (+ 2 ?prof-bonus)
+                                           "\nDamage Immunities: Draconic Essence trait"
+                                           "\nSenses: darkvision 60ft., passive Perception 12"
+                                           "\nLanguages: Draconic"
+                                           "\nDraconic Essence: When you summon the drake, choose a damage type: acid, cold, fire, lightning, or poison.\n"
+                                           "\nActions:\nBite. Melee Weapon Attack: +" (+ 3 ?prof-bonus) " to hit, reach 5 ft., one target. Hit: 1d6+" ?prof-bonus "piercing damage.\n"
+                                           "\nReactions:\nInfused Strikes. When another creature within 30 ft. of the drake that it can see hits a target with a weapon attack, the drake causes the target to take an extra 1d6 damage of the type determined by its Draconic Essence.")})]
+                   :selections [(opt5e/language-selection-aux (vals language-map) 1)]
+                   :levels {7 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Bond of Fang and Scale"
+                                             :summary "Your drake gains a flying speed equal to its walking speed.\n\nIt grows to medium size, and you can use it as a mount if medium or smaller, but it can't fly while mounted.\n\nThe drake's bite attack deals an additional 1d6 damage of the Draconic Essence damage type.\n\nYou gain resistance to the Draconic Essence damage type"})]}
+                            11 {:modifiers [(mod5e/action
+                                             {:name "Drake's Breath"
+                                              :frequency units5e/long-rests-1
+                                              :summary (str "You or your drake exhale a 30-foot cone of acid, cold, fire, lightning, or poison damage. Each creature must make a DC " (?spell-save-dc ::char5e/wis) " DEX save or take " (condp <= (?class-level :ranger) 15 "10d6"  "8d6") " damage, half on success. Can expend a 3rd level or higher spell slot to use again")})]}
+                            15 {:modifiers [(mod5e/trait-cfg
+                                             {:name "Perfected Bond"
+                                              :summary "The drake's bite attack deals an additional 1d6 damage of it's Draconic Essence\n\nThe drake grows to large size and can fly while mounted"})
+                                            (mod5e/reaction
+                                             {:name "Reflexive Resistance"
+                                              :frequency (units5e/long-rests ?prof-bonus)
+                                              :summary "When either you or the drake takes damage while within 30 ft. of each other, give yourself or the drake resistance to that instance of damage"})]}}}
+                  ;; (condp <= (?class-level :ranger) 15 "Large"  7 "Medium"  "Small") " dragon\n"
+                  ;;                          "Armor Class: " (+ 14 ?prof-bonus)
+                                          ;;  "\nHit Points: " (+ 5 (* 5 (?class-level :ranger))) ", " (?class-level :ranger) "d10 hit dice"
+                                          ;;  "\nSpeed: 40 ft.\n"
+                                          ;;  "\nStr: 16 (+3)  Dex: 12 (+1)  Con: 15 (+2)  Int: 8 (-1)   Wis: 14 (+2)  Cha: 8 (-1)\n"
+                                          ;;  "Saving Throws: Dex: +" (+ 1 ?prof-bonus) "  Wis: +" (+ 2 ?prof-bonus)
+                                          ;;  "\nDamage Immunities: Draconic Essence trait"
+                                          ;;  "\nSenses: darkvision 60ft., passive Perception 12"
+                                          ;;  "\nLanguages: Draconic"
+                                          ;;  "\nDraconic Essence: When you summon the drake, choose a damage type: acid, cold, fire, lightning, or poison.\n"
+                                          ;;  "\nActions:\nBite. Melee Weapon Attack: +" (+ 3 ?prof-bonus) " to hit, reach 5 ft., one target. Hit: 1d6 + " (?prof-bonus) "piercing damage.\n"
+                                          ;;  "\nReactions:\nInfused Strikes. When another creature within 30 ft. of the drake that it can see hits a target with a weapon attack, the drake causes the target to take an extra 1d6 damage of the type determined by its Draconic Essence."
+                  
+                  {:name "Beast Master"
                      :selections [(t/selection-cfg
-                                   {:name "Ranger's Companion"
+                                   {:name "Companion Selection"
                                     :tags #{:class}
-                                    :options (map
-                                              (fn [monster-name]
-                                                (t/option-cfg
-                                                 {:name monster-name
-                                                  :modifiers [(mod5e/action
-                                                               {:name "Ranger's Companion"
-                                                                :page 93
-                                                                :summary (str "You have a " monster-name " as your companion, you can command it to Attack, Dash, Disengage, Dodge, or Help")})]}))
-                                              ["Stirge" "Baboon" "Bat" "Badger" "Blood Hawk" "Boar" "Cat" "Crab" "Deer" "Eagle" "Flying Snake" "Frog" "Giant Badger" "Giant Centipede" "Giant Crab" "Giant Fire Beetle" "Giant Frog" "Giant Poisonous Snake" "Giant Rat" "Giant Wolf Spider" "Goat" "Hawk" "Hyena" "Jackal" "Lizard" "Mastiff" "Mule" "Octopus" "Panther" "Owl" "Poisonous Snake" "Pony" "Quipper" "Rat" "Raven" "Scorpion" "Sea Horse" "Spider" "Vulture" "Weasel" "Wolf"])})]
+                                    :options [(t/option-cfg
+                                               {:name "Ranger's Companion"
+                                                :order 1
+                                                :selections [(t/selection-cfg
+                                                              {:name "Ranger's Companion"
+                                                                :tags #{:class}
+                                                                :options (map
+                                                                          (fn [monster-name]
+                                                                            (t/option-cfg
+                                                                            {:name monster-name
+                                                                              :modifiers [(mod5e/action
+                                                                                          {:name "Ranger's Companion"
+                                                                                            :page 93
+                                                                                            :summary (str "You have a " monster-name " as your companion, you can command it to Attack, Dash, Disengage, Dodge, or Help")})]}))
+                                                                          ["Stirge" "Baboon" "Bat" "Badger" "Blood Hawk" "Boar" "Cat" "Crab" "Deer" "Eagle" "Flying Snake" "Frog" "Giant Badger" "Giant Centipede" "Giant Crab" "Giant Fire Beetle" "Giant Frog" "Giant Poisonous Snake" "Giant Rat" "Giant Wolf Spider" "Goat" "Hawk" "Hyena" "Jackal" "Lizard" "Mastiff" "Mule" "Octopus" "Panther" "Owl" "Poisonous Snake" "Pony" "Quipper" "Rat" "Raven" "Scorpion" "Sea Horse" "Spider" "Vulture" "Weasel" "Wolf"])})]})
+                                              (t/option-cfg
+                                               {:name "Primal Companion"
+                                                :order 2
+                                                :modifiers [(mod5e/trait-cfg
+                                                             {:name "Primal Companion"
+                                                              :summary (str "You magically summon a primal beast, which draws strength from your bond with nature. The beast is friendly to you and your companions and obeys your commands. Choose its stat block-Beast of the Land, Beast of the Sea, or Beast of the Sky-which uses your proficiency bonus (PB) in several places. You also determine the kind of animal the beast is, choosing a kind appropriate for the stat block. Whatever kind you choose, the beast bears primal markings, indicating its mystical origin."
+                                                                            "\n\nIn combat, the beast acts during your turn. It can move and use its reaction on its own, but the only action it takes is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. You can also sacrifice one of your attacks when you take the Attack action to command the beast to take the Attack action. If you are incapacitated, the beast can take any action of its choice, not just Dodge."
+                                                                            "\n\nIf the beast has died within the last hour, you can use your action to touch it and expend a spell slot of 1st level or higher. The beast returns to life after 1 minute with all its hit points restored. When you finish a long rest, you can summon a different primal beast. The new beast appears in an unoccupied space within 5 feet of you, and you choose its stat block and appearance. If you already have a beast from this feature, it vanishes when the new beast appears. The beast also vanishes if you die.")})]})]})]
                      :levels {7 {:modifiers [(mod5e/bonus-action
                                               {:name "Exceptional Training"
                                                :page 93
                                                :level 7
-                                               :summary "when your companion doesn't attack, you can command it to take the Dash, Disengage, Dodge, or Help action"})]}}
+                                               :summary "on any of your turns when your beast companion doesn't attack, you can use a bonus action to command the beast to take the Dash, Disengage, or Help action on its turn. In addition, the beas's attacks now count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage"})]}}
                      :traits [{:name "Bestial Fury"
                                :level 11
                                :page 93
-                               :summary "your companion attacks twice when it takes the Attack action"}
+                               :summary "when you command your beast companion to take the Attack action, the beast can make two attacks, or it can take the Multiattack action if it has that action"}
                               {:name "Share Spells"
                                :level 15
                                :page 93
-                               :summary "when you target yourself with a spell you can also affect your companion if within 30 ft."}]}]})))
+                               :summary "when you cast a spell targeting yourself, you can also affect your beast companion with the spell if the beast is within 30 feet of you"}]}]})))
+
+(defn arcane-trickster-spell? [s]
+    (let [school (:school s)]
+      (or (= school "enchantment")
+          (= school "illusion"))))
+
+(defn arcane-trickster-ref [subclass-key subpath]
+    (concat
+     [:class :rogue :levels :level-3 :roguish-archetype subclass-key]
+     subpath))
+
+(defn arcane-trickster-spell-selection [num spell-levels]
+  (subclass-wizard-spell-selection sl5e/spell-lists
+                                   spells5e/spell-map
+                                   "Rogue Enchantment or Illusion Spells"
+                                     (arcane-trickster-ref :arcane-trickster [:enchantment-or-illusion-spells-known])
+                                     :rogue
+                                     "Rogue"
+                                     num
+                                     spell-levels
+                                     arcane-trickster-spell?))
+
+(defn arcane-trickster-any-spell-selection [num spell-levels]
+  (subclass-wizard-spell-selection sl5e/spell-lists
+                                   spells5e/spell-map
+                                   "Rogue Spells: Any School"
+                                     (arcane-trickster-ref :arcane-trickster [:spells-known-any-school])
+                                     :rogue
+                                     "Rogue"
+                                     num
+                                     spell-levels))
+
+(defn arcane-trickster-cantrip [num]
+  (opt5e/spell-selection sl5e/spell-lists
+                         spells5e/spell-map
+                         {:class-key :rogue
+                          :level 0
+                          :ref (arcane-trickster-ref :arcane-trickster [:cantrips-known])
+                          :spellcasting-ability ::char5e/int
+                          :class-name "Rogue"
+                          :num num
+                          :spell-keys (get-in sl5e/spell-lists [:wizard 0])}))
 
 (def rogue-skills {:acrobatics true :athletics true :deception true :insight true :intimidation true :investigation true :perception true :performance true :persuasion true :sleight-of-hand true :stealth true})
 
@@ -2001,6 +2907,10 @@
                   :page 96
                   :frequency units5e/turns-1
                   :summary (str (common/round-up (/ (?class-level :rogue) 2)) "d6 extra damage on attack where you have advantage or another enemy of creature is within 5 ft.")
+                  })
+                (mod5e/bonus-action
+                 {:name "Steady Aim"
+                  :summary "Give yourself advantage on an attack if you don't move during the turn."
                   })]
     :levels {2 {:modifiers [(mod5e/bonus-action
                              {:level 2
@@ -2083,9 +2993,10 @@
                             :name "Thief's Reflexes"
                             :page 97
                             :summary "when not surprised, take 2 turns in first round of combat, one at your normal initiative and the next at your initiative minus 10"}]}
-                 #_{:name "Assassin"
+                 {:name "Assassin"
                     :profs {:tool {:disguise-kit true :poisoners-kit true}}
-                    :levels {17 {:modifiers [(mod5e/dependent-trait
+                    :levels {9 {:modifiers [(mod5e/tool-expertise :poisoners-kit)]} ;;homebrew
+                             17 {:modifiers [(mod5e/dependent-trait
                                               {:name "Death Strike"
                                                :level 17
                                                :page 97
@@ -2097,12 +3008,15 @@
                              {:name "Infiltration Expertise"
                               :level 9
                               :page 97
-                              :summary "spend 25 gp and 7 days to establish a false identity"}
+                              :summary "spend 25 gp and 7 days to establish a false identity, which can't be someone else"}
                              {:name "Impostor"
                               :level 13
                               :page 97
-                              :summary "accurately mimic the behavior, speech, and writing of another person"}]}
-                 #_{:name "Arcane Trickster"
+                              :summary "spend 3 hours studying to accurately mimic the behavior, speech, and writing of another person. Advantage on Deception checks to avoid detection of this"}
+                             {:name "Poison Expert"
+                              :level 13
+                              :summary "When extracting or making poison, treat any roll lower than 10 as a 10"}]}
+                 {:name "Arcane Trickster"
                     :spellcasting {:level-factor 3}
                     :modifiers [(mod5e/spells-known 0 :mage-hand ::char5e/int "Arcane Trickster")]
                     :levels {3 {:selections [(arcane-trickster-cantrip 2)
@@ -2126,17 +3040,99 @@
                                               {:name "Spell Thief"
                                                :level 17
                                                :page 98
-                                               :summary (str "steal a spell for 8 hours if it is cast on you and the spellcaster fails a DC " (?spell-save-dc ::char5e/int) " save with its spellcasting ability")})]}
+                                               :frequency units5e/long-rests-1
+                                               :summary (str "Negate a spells effect against you if the spellcaster fails a DC " (?spell-save-dc ::char5e/int) " save with its spellcasting ability. Steal the spell if it's a 1st level or higher, letting you cast it using your spell slots for 8 hours. The creature can't cast that spell again until the 8 hours have passed")})]}
                              19 {:selections [(arcane-trickster-spell-selection 1 [1 2 3 4])]}
                              20 {:selections [(arcane-trickster-any-spell-selection 1 [1 2 3 4])]}}
                     :traits [{:name "Mage Hand Legerdemain"
                               :level 3
                               :page 98
-                              :summary "when you cast mage hand, you can make it invisible and perform Sleight of Hand tasks"}
+                              :summary "when you cast mage hand, you can make it invisible and perform Sleight of Hand tasks, and can control it using your Cunning Action bonus action"}
                              {:name "Magical Ambush"
                               :level 9
                               :page 98
-                              :summary "creatures have disadvantage on saves against your spells (only on the turn you cast them) if you are hidden from them"}]}]}))
+                              :summary "creatures have disadvantage on saves against your spells (only on the turn you cast them) if you are hidden from them"}]}
+                 {:name "Inquisitive"
+                  :modifiers [(mod5e/bonus-action
+                               {:name "Eye for Detail"
+                                :summary "Make a Perception check to stop a hidden creature or object or an Investigation check to uncover or decipher clues"})
+                              (mod5e/bonus-action
+                               {:name "Insightful Fighting"
+                                :duration units5e/minutes-1
+                                :summary "Make an Insight check against a creature you can see that isn't incapacitated, contested by the target's Deception check. If you succeed, you can use your Sneak Attack against that target even if you don't have advantage on the attack roll, but not if you have disadvantage on it. Ends if you successfully target another creature"})]
+                  :levels {13 {:modifiers [(mod5e/action
+                                            {:name "Unerring Eye"
+                                             :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/wis)))
+                                             :summary "You sense the presence of illusions, shapechangers not in their original form, and other magic designed to deceive the senses within 30 ft., provided you aren't blinded or deafened. You sense that an effect is attempting to trick you, but you gain no insight into what is hidden or into its true nature"})]}
+                           17 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Eye for Weakness"
+                                             :summary "Sneak Attack damage increases by 3d6 while your Insightful Fighting feature is applied"})]}}
+                  :traits [{:name "Ear for Deceit"
+                            :level 3
+                            :summary "When making Insight checks to determine whether a creature is lying, treat a roll of 7 or lower on the d20 as an 8"}
+                           {:name "Steady Eye"
+                            :level 9
+                            :summary "Advantage on Perception and Investigation checks if moving no more than half your speed on the turn"}]}
+                 {:name "Mastermind"
+                  :modifiers [(mod5e/tool-proficiency :disguise-kit)
+                              (mod5e/tool-proficiency :forgery-kit)]
+                  :selections [(opt5e/tool-selection (map :key equipment5e/gaming-sets) 1)
+                               (opt5e/language-selection-aux (vals language-map) 2)]
+                  :levels {3 {:modifiers [(mod5e/bonus-action
+                                           {:name "Master of Tactics"
+                                            :summary "You can use the help action as a bonus action. When you use the Help action to aid an ally in attacking a creature, the target of that attack can be within 30 ft. of you, rather than 5 ft., if the target can see or hear you"})]}
+                           13 {:modifiers [(mod5e/reaction
+                                            {:name "Misdirection"
+                                             :summary "When targeted by an attack while a creature within 5 ft. is ganting cover against it, have the attack target that creature instead"})]}}
+                  :traits [{:name "Master of Intrigue"
+                            :level 3
+                            :summary "You can unerringly mimic the speech patterns and accent of a creature that you hear speak for at least 1 minute, enabling you to pass yourself off as a native speaker of a particular land, provided that you know the language"}
+                           {:name "Insightful Manipulator"
+                            :level 9
+                            :summary "If you spend at least 1 minute observing or interacting with a creature outside combat, you can learn if it is equal, superior, or inferior in regard to two characteristics: int, wis, cha, class levels. DM might also tell you a piece of their history or one pf its personality traits"}
+                           {:name "Soul of Deceit"
+                            :level 17
+                            :summary (str "Your thoughts can't be read by telepathy or other means, unless you allow it. You can present false thoughts by making a Deception check contested by the mind reader's Insight check.\n"
+                                      "\nNo matter what you say, magic that would determine if you are telling the truth indicates you are being truthful if you so choose, and you can't be compelled to tell the truth by magic")}]}
+                 {:name "Scout"
+                  :modifiers [(mod5e/skill-proficiency :nature)
+                              (mod5e/skill-proficiency :survival)
+                              (mod5e/skill-expertise :nature)
+                              (mod5e/skill-expertise :survival)
+                              (mod5e/reaction
+                               {:name "Skirmisher"
+                                :summary "Move up to half your speed when an enemy ends its turn within 5 ft. of you, without provoking opportunity attacks"})]
+                  :levels {9 {:modifiers [(mod5e/speed 10)
+                                          (mod5e/climbing-speed 10) ;;should be only if has climbing/swimming speed
+                                          (mod5e/swimming-speed 10)]}
+                           17 {:modifiers [(mod5e/bonus-action
+                                            {:name "Sudden Strike"
+                                             :summary "Make one additional attack if you take the Attack action on your turn, which can benefit from sneak attack even if you've already used it, but can't be used against the same target"})]}}
+                  :traits [{:name "Ambush Master"
+                            :level 13
+                            :summary "You have advantage on initiative. Attack rolls against the first creature you hit on the first round of combat have advantage until the start of your next turn"}]
+                  }
+                 {:name "Swashbuckler"
+                  :modifiers [(mod5e/dependent-trait
+                               {:name "Rakish Audacity"
+                                :summary (str "You can give yourself a " (common/bonus-str (?ability-bonuses ::char5e/cha)) " bonus to your initiative rolls.\n"
+                                          "\nYou don't need advantage on the attack roll to use your Sneak Attack against a creature if you are within 5 ft. of it, no other creatures are within 5 feet of you, and you don't have disadvantage on the attack roll")})]
+                  :levels {9 {:modifiers [(mod5e/action
+                                           {:name "Panache"
+                                            :summary (str "Make a Persuasion check contested by a creature's Insight check that can hear you and share's a language.\n"
+                                                      "\nIf the creature is hostile to you, it has disadvantage on attack rolls against targets other than you and can't make opportunity attacks against targets other than you. Lasts for 1 minute, until one of your companions attacks it or affects it with a spell, or until you are more than 60 ft. apart.\n"
+                                                      "\nIf the creature is isn't hostile to you, it is charmed for 1 minute. While charmed, it regards you as a friendly acquaintance. Ends immediately if you or your companions do anything harmful to it.")})]}
+                           13 {:modifiers [(mod5e/bonus-action
+                                            {:name "Elegant Maneuver"
+                                             :summary "Gain advantage on the next Acrobatics or Athletics check you make during the same turn"})]}
+                           17 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Master Duelist"
+                                             :frequency units5e/rests-1
+                                             :summary "If you miss with an attack roll, you can roll it again with advantage"})]}}
+                  :traits [{:name "Fancy Footwork"
+                            :level 3
+                            :summary "During your turn, if you make a melee attack against a creature, that creature can't make opportunity attacks against you for the rest of your turn."}]}
+                 ]}))
 
 (defn metamagic-selection [num]
   (t/selection-cfg
@@ -2183,11 +3179,23 @@
                               :page 102
                               :summary "spend 2 sorcery pts. to convert a casting of a spell with 1 action casting time to 1 bonus-action"})]})
               (t/option-cfg
+               {:name "Seeking Spell"
+                :modifiers [(mod5e/trait-cfg
+                             {:name "Seeking Spell"
+                              :page 102
+                              :summary "spend 2 sorcery pts. to reroll a spell you miss. You must use the new roll, and you can use Seeking Spell even if you already used a different Metamagic on the spell"})]})
+              (t/option-cfg
                {:name "Subtle Spell"
                 :modifiers [(mod5e/trait-cfg
                              {:name "Subtle Spell"
                               :page 102
                               :summary "spend 1 sorcery pt. to cast a spell without somatic or verbal components"})]})
+              (t/option-cfg
+               {:name "Transmuted Spell"
+                :modifiers [(mod5e/trait-cfg
+                             {:name "Transmuted Spell"
+                              :page 102
+                              :summary "spend 1 sorcery pt. to change the damage type of a spell from one of the following options to another: acid, cold, fire, lightning, poison, thunder"})]})
               (t/option-cfg
                {:name "Twinned Spell"
                 :modifiers [(mod5e/trait-cfg
@@ -2244,6 +3252,12 @@
                               :page 101
                               :summary "you can convert sorcery points into spell slots (level - point cost: 1st - 2, 2nd - 3, 3rd - 5, 4th - 6, 5th - 7). You can also convert spell slots into sorcery points equal to the slot's level"})]}
              3 {:selections [(metamagic-selection 2)]}
+             4 {:selections [(mod5e/trait-cfg
+                             {:name "Sorcerous Versatility"
+                              :summary "When you reach an ASI in sorcerer, you can replace one Metamagic option and one cantrip from the class."})]}
+             5 {:selections [(mod5e/trait-cfg
+                              {:name "Magical Guidance"
+                               :summary "When you make an ability check that fails, you can spend 1 sorcery point to reroll the d20, and you must use the new roll."})]}
              10 {:selections [(metamagic-selection 1)]}
              17 {:selections [(metamagic-selection 1)]}}
     :equipment-choices [{:name "Equipment Pack"
@@ -2272,7 +3286,9 @@
                                            opt5e/draconic-ancestries)})]
                   :traits [{:name "Draconic Resilience"
                             :page 102
-                            :summary "+1 HP/level, unarmored AC 13 + DEX modifier"}]
+                            :summary "+1 HP/level, unarmored AC 13 + DEX modifier"}
+                           {:name "Dragon Ancestor"
+                            :summary "Your proficiency bonus is doubled for Charisma checks when interacting with dragons."}]
                   :levels {6 {:modifiers [(mod5e/dependent-trait
                                            {:name "Elemental Affinity"
                                             :page 102
@@ -2288,41 +3304,68 @@
                            14 {:modifiers [(mod5e/bonus-action
                                             {:name "Dragon Wings"
                                              :page 103
-                                             :summary "Sprout wings and gain flying speed equal to land speed"})]}
+                                             :summary "Sprout wings and gain flying speed equal to current speed"})]}
                            18 {:modifiers [(mod5e/action
                                             {:name "Draconic Presence"
                                              :page 103
-                                             :summary (str "Spend 5 sorcery pts. and create an aura that causes hostile creatures that start their turn within it to be charmed or afraid if they fail a DC " (?spell-save-dc ::char5e/cha) " Wisdom save.")})]}}}
-                 #_{:name "Wild Magic"
+                                             :summary (str "Spend 5 sorcery pts. and create an aura that causes hostile creatures that start their turn within it to be charmed or frightened if they fail a DC " (?spell-save-dc ::char5e/cha) " Wisdom save.")})]}}}
+                 {:name "Shadow Magic"
+                  :modifiers [(mod5e/darkvision 120 1)
+                              (mod5e/dependent-trait
+                               {:name "Strength of the Grave"
+                                :frequency units5e/long-rests-1
+                                :summary (str "When damage reduces you to 0 HP, make a CHA Save (DC 5 + damage taken). On a success, you instead drop to 1 HP. You can't use this feature if you are reduced to 0 HP by radiant damage or by a critical hit."
+                                              "\nAfter the saving throw succeeds, you can't use this feature again until you finish a long rest.")})]
+                  :levels {3 {:modifiers [(mod5e/trait-cfg
+                                           {:name "Eyes of the Dark"
+                                            :summary "You know the darkness spell. Can also cast it using 2 sorcery points, in which case you can see through it."})]}
+                           6 {:modifiers [(mod5e/bonus-action
+                                            {:name "Hound of Ill Omen"
+                                             :summary (str "Spend 3 sorcery points to summon a hound of ill omen to target one creature you can see within 120 ft. Uses the dire wolf's stats with the following changes:"
+                                                           "\n- The hound is medium and a monstrosity."
+                                                           "\n- Appears with " (/ (?class-level :sorcerer) 2) " temp HP."
+                                                           "\n- Can move through other creatures and objects as if difficult terrain. Takes 5 force damage if it ends its turn inside an object."
+                                                           "\n- At the start of its turn, the hound automatically knows its target's location. If the target was hidden, it is no longer hidden from the hound."
+                                                           "\nThe hound appears within 30 ft. of the target. Roll initiative for the hound. On its turn, it can move only toward its target by the most direct route, and it can use its action only to attack its target. The hound can make opportunity attacks, but only against its target. Additionally, while the hound is within 5 ft. of the target, the target has disadvantage on saves against any spell you cast. Disappears if it is reduced to 0 HP, if its target is reduced to 0 HP, or after 5 min.")})]}
+                           14 {:modifiers [(mod5e/bonus-action
+                                            {:name "Shadow Walk"
+                                             :summary "If in dim light or darkness, teleport up to 120 ft. to a space you can see within dim light or darkness."})]}
+                           18 {:modifiers [(mod5e/bonus-action
+                                            {:name "Umbral Form"
+                                             :duration units5e/minutes-1
+                                             :summary "Spend 6 sorcery points to transform into a shadowy form. Gain resistance to all damage except force and radiant, and move through other creatures and objects as if difficult terrain. Take 5 force damage if turn ends inside an object. Ends if incapacitated, you die, or dismissed as bonus action."})]}}}                     
+                 {:name "Wild Magic"
                     :levels {6 {:modifiers [(mod5e/reaction
                                              {:name "Bend Luck"
                                               :level 6
                                               :page 103
-                                              :summary "spend 2 sorcery pts. to add or subtract 1d4 from a creature's d20 roll"})]}}
+                                              :summary "spend 2 sorcery pts. to add or subtract 1d4 from a creature you can see's attack roll, ability check, or saving throw"})]}}
                     :traits [{:name "Wild Magic Surge"
                               :level 1
-                              :summary "Do a d20 check when casting sorcerer spells, on a 1 roll on the Wild Magic Surge table"
+                              :frequency units5e/turns-1
+                              :summary "DM can have you roll a d20 check immediately after casting a leveled sorcerer spell. On a 1, roll on the Wild Magic Surge table"
                               :page 103}
                              {:name "Tides of Chaos"
                               :level 1
-                              :summary "Gain advantage on a roll"
+                              :summary "Gain advantage on an attack roll, ability check, or saving throw. Immediately after casting a leveled sorcerer spell, the DM can have you roll the the Wild Magic Surge table, regaining this feature"
                               :page 103
                               :frequency units5e/long-rests-1}
                              {:name "Controlled Chaos"
                               :level 14
+                              :frequency units5e/turns-1
                               :page 103
-                              :summary "When rolling on Wild Magic Surge table, roll twice and use either roll"}
+                              :summary "When rolling on the Wild Magic Surge table, roll twice and use either roll"}
                              {:name "Spell Bombardment"
                               :level 18
                               :page 103
-                              :summary "When you roll a die for spell damage, roll max rolls an additional time"
+                              :summary "When you roll max on a die when rolling for spell damage, roll that die one additional time"
                               :frequency units5e/turns-1}]}]}))
 
 (defn spell-school-savant [school page]
   {:level 2
    :name (str (s/capitalize school) " Savant")
    :page page
-   :description (str "time and money to copy an " school " spell is halved")})
+   :description (str "the gold and time you must spend to copy an " school " spell into your spellbook is halved")})
 
 (defn spell-in-spells-known? [known level spell-key]
   (and known (some #(= spell-key (:key %)) (known level))))
@@ -2367,6 +3410,18 @@
                                true)]})))
               (get-in sl5e/spell-lists [:wizard 3]))}))
 
+(defn bladesinging-weapon-options [weapons]
+  (opt5e/weapon-proficiency-options
+   (filter
+    #(and (= nil (::weapon5e/two-handed? %)) (::weapon5e/melee? %))
+    weapons)))
+
+(defn bladesinging-weapon-prof-selection [weapon-map]
+  (t/selection-cfg
+   {:name "Weapon Proficiency"
+    :tags #{:profs}
+    :options (bladesinging-weapon-options (vals weapon-map))}))
+
 (defn wizard-option [spells spells-map plugin-subclasses-map language-map weapon-map] 
   (opt5e/class-option
    spells
@@ -2403,8 +3458,11 @@
                  {:name "Arcane Recovery"
                   :page 115
                   :frequency units5e/days-1
-                  :summary (str "When you finish a short rest, regain spell slots totalling no more than " (common/round-up (/ ?wizard-level 2)) ", and each must be 5th level or lower.")})]
-    :levels {18 {:selections [(spell-mastery-selection 1)
+                  :summary (str "Once per day when you finish a short rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your wizard level (rounded up) (" (common/round-up (/ ?wizard-level 2)) "), and none of the slots can be 6th level or higher.")})]
+    :levels {3 {:modifiers [(mod5e/trait-cfg
+                             {:name "Cantrip Formulas"
+                              :summary "You have scribed a set of arcane formulas in your spellbook that you can use to formulate a cantrip in your mind. Whenever you finish a long rest and consult those formulas in your spellbook, you can replace one wizard cantrip you know with another cantrip from the wizard spell list."})]}
+             18 {:selections [(spell-mastery-selection 1)
                               (spell-mastery-selection 2)]
                  :modifiers [(mod5e/dependent-trait
                               {:name "Spell Mastery"
@@ -2423,7 +3481,32 @@
                                              ", you always have them prepared and can cast them once without expending a slot")})]}}
     :subclass-level 2
     :subclass-title "Arcane Tradition"
-    :subclasses [{:name "School of Evocation"
+    :subclasses [{:name "School of Bladesinging"
+                  :profs {:armor {:light true}}
+                  :modifiers [(mod5e/skill-proficiency :performance)
+                              (mod5e/bonus-action
+                               {:name "Bladesong"
+                                :frequency (units5e/long-rests ?prof-bonus)
+                                :duration units5e/minutes-1
+                                :summary (str "Invoke an elven magic called the Bladesong, provided that you aren't wearing medium or heavy armor or using a shield.
+                                          \nThe bladesong lasts for 1 minute, and ends early if you are incapacitated, if you don medium or heavy armor or a shield, or if you use two hands to make an attack with a weapon. You can also dismiss the Bladesong at any time (no action required).
+                                          \nWhile your Bladesong is active, you gain the following benefits:
+                                          \n• You gain a +" (max 1 (?ability-bonuses ::char5e/int)) " bonus to your AC.
+                                          \n• Your walking speed increases by 10 ft.
+                                          \n• You have advantage on Acrobatics checks.
+                                          \n• You gain a +" (max 1 (?ability-bonuses ::char5e/int)) " bonus to any CON save you make to maintain your concentration on a spell.")})]
+                  :selections [(bladesinging-weapon-prof-selection weapon-map)]
+                  :levels {6 {:modifiers [(mod5e/num-attacks 2)
+                                          (mod5e/trait-cfg
+                                           {:name "Extra Attack"
+                                             :summary "Attack twice when taking the Attack action. Can cast a cantrip in place of one attack"})]}
+                           10 {:modifiers [(mod5e/reaction
+                                            {:name "Song of Defense"
+                                             :summary "When you take damage, expend one spell slot to reduce that damage to you by an amount equal to five times the spell slot's level"})]}
+                           14 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Song of Victory"
+                                             :summary (str "Add +" (max 1 (?ability-bonuses ::char5e/int) " to the damage of your melee weapon attacks while bladesong is active"))})]}}}
+                 {:name "School of Evocation"
                   :levels {10 {:modifiers [(mod5e/dependent-trait
                                             {:level 10
                                              :name "Empowered Evocation"
@@ -2442,26 +3525,44 @@
                             :name "Overchannel"
                             :page 118
                             :summary "deal max damage with evocation spells 1st-5th level. You take necrotic damage if you use this feature more than once per long rest"}]}
-                 #_{:name "School of Abjuration"
+                 {:name "Order of Scribes"
+                  :modifiers [(mod5e/bonus-action
+                               {:name "Wizardly Quill"
+                                :summary (str "Create a Tiny Quill in your hand.\n"
+                                          "• Doesn't require ink, and produces ink of a color of your choice on the writing surface.\n"
+                                          "• Time to copy a spell into your spellbook equals 2 minutes per spell level.\n"
+                                          "• You can erase anything your write with it by using a bonus action if within 5 ft.\n"
+                                          "The quill disappears if you create another one or if you die.")})]
+                  :traits [{:level 2
+                            :name "Awakened Spellbook"
+                            :summary (str "While holding your spellbook, you gain the following:\n"
+                                      "• You can use the book as a spellcasting focus for your wizard spells.\n"
+                                      "• When you cast a wizard spell with a spell slot, you can replace its damage type with a type that appears in another spell in your spellbook, which alters the spell for this casting only. The latter spell must be of the same level as the spell slot you expend.\n"
+                                      "• When you cast a wizard spell as a ritual, you can use the spell's normal casting time (use once/long rest).\n"
+                                      "You can replace the book over a short rest to a magic spellbook to which you're attuned, copying over the spells to it. The spells in the previous book vanishes.")}]}
+                 {:name "School of Abjuration"
                     :modifiers [(mod5e/dependent-trait
                                  {:name "Arcane Ward"
                                   :page 115
-                                  :summary (str "magical ward with HP max " (+ (?class-level :wizard) (?ability-bonuses ::char5e/int)) ", casting X-th level abjuration spells restores 2X HPs to it")})]
+                                  :summary (str "you can weave magic around yourself for protection. When you cast an abjuration spell of 1st level or higher, you can simultaneously use a strand of the spell's magic to create a magical ward on yourself that lasts until you finish a long rest. The ward has hit points equal to twice your wizard level + your Intelligence modifier (" (+ (* 2 (?class-level :wizard)) (?ability-bonuses ::char5e/int)) "). Whenever you take damage, the ward takes the damage instead. If this damage reduces the ward to 0 hit points, you take any remaining damage."
+                                                "\nWhile the ward has 0 hit points, it can't absorb damage, but its magic remains. Whenever you cast an abjuration spell of 1st level or higher, the ward regains a number of hit points equal to twice the level of the spell."
+                                                "\nOnce you create the ward, you can't create it again until you finish a long rest.")})]
                     :levels {6 {:modifiers [(mod5e/reaction
                                              {:name "Projected Ward"
                                               :page 115
                                               :range units5e/ft-30
-                                              :summary "shield a creature using your ward"})]}
+                                              :summary "when a creature that you can see within 30 feet of you takes damage, you can use your reaction to cause your Arcane Ward to absorb that damage. If this damage reduces the ward to 0 hit points, the warded creature takes any remaining damage."})]}
                              10 {:modifiers [(mod5e/dependent-trait
                                               {:name "Improved Abjuration"
                                                :page 115
-                                               :summary (str "add your proficiency bonus (" (common/bonus-str ?prof-bonus) ") to ability checks required by abjuration spells")})]}
-                             14 {:modifiers [(mod5e/saving-throw-advantage [:spells])]}}
+                                               :summary (str "when you cast an abjuration spell that requires you to make an ability check as a part of casting that spell (as in Counterspell and Dispel Magic), you add your proficiency bonus (" ?prof-bonus ") to that ability check.")})]}
+                             14 {:modifiers [(mod5e/saving-throw-advantage [:spells])
+                                             (mod5e/damage-resistance :spells)]}}
                     :traits [(spell-school-savant "abjuration" 115)
                              {:name "Spell Resistance"
                               :level 14
                               :page 116
-                              :summary "advantage on saves against spells, resistance to damage from spells"}]}
+                              :summary "you have advantage on saving throws against spells. Furthermore, you have resistance against the damage of spells."}]}
                  #_{:name "School of Conjuration"
                     :levels {6 {:modifiers [(mod5e/action
                                              {:name "Benign Transposition"
@@ -2623,7 +3724,7 @@
                              melee-weapons-xform
                              weapons)})]}))
 
-(defn pact-boon-options [plugin-boons spell-lists spells-map]
+(defn pact-boon-options [plugin-boons spell-lists spells-map ?ability]
  (concat
    (map
     (fn [{:keys [name description edit-event]}]
@@ -2636,7 +3737,7 @@
     plugin-boons)
   [(t/option-cfg
     {:name "Pact of the Chain"
-     :modifiers [(mod5e/spells-known 1 :find-familiar ::char5e/cha "Warlock")
+     :modifiers [(mod5e/spells-known 1 :find-familiar ?ability "Warlock")
                  (mod5e/trait-cfg
                   {:name opt5e/pact-of-the-chain-name
                    :page 107
@@ -2661,7 +3762,7 @@
                                                     (fn [[cls-kw spells-by-level]]
                                                       (spells-by-level 0))
                                                     spell-lists))
-                                                  ::char5e/cha
+                                                  ?ability
                                                   "Warlock"
                                                   false
                                                   "uses Book of Shadows")})]
@@ -2671,7 +3772,7 @@
                    :summary "you have a spellbook with 3 extra cantrips"})]})]))
 
 
-(defn eldritch-invocation-options [plugin-invocations spell-lists spells-map]
+(defn eldritch-invocation-options [plugin-invocations spell-lists spells-map ?ability]
   (concat
    (map
     (fn [{:keys [name description]}]
@@ -2681,37 +3782,49 @@
                      {:name (str "Eldritch Invocation: " name)
                       :description description})]}))
     plugin-invocations)
-   [(t/option-cfg
+   [(t/option-cfg 
      {:name "Agonizing Blast"
       :modifiers [(mod5e/dependent-trait
                    {:name "Eldritch Invocation: Agonizing Blast"
                     :page 110
-                    :summary (str "add " (?ability-bonuses ::char5e/cha) " to eldritch blast spell damage")})]
+                    :summary (str "add " (?ability-bonuses ?warlock-ability) " to eldritch blast spell damage")})]
+      :help "Add your Charisma modifier to eldritch blast spell damage."
       :prereqs [opt5e/has-eldritch-blast-prereq]})
     (t/option-cfg
      {:name "Armor of Shadows"
+      :help "Cast mage armor on yourself at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Armor of Shadows"
                     :page 110
                     :summary "cast mage armor on yourself at will"})
-                  (mod5e/spells-known 1 :mage-armor ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :mage-armor ?ability "Warlock" 0 "at will")]})
     (t/option-cfg
      {:name "Ascendant Step"
+      :help "Cast levitate on yourself at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Ascendant Step"
                     :page 110
                     :summary "cast levitate on yourself at will"})
-                  (mod5e/spells-known 2 :levitate ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 2 :levitate ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
+     {:name "Aspect of the Moon"
+      :help "Don't need to sleep and can't be forced to sleep."
+      :modifiers [(mod5e/trait-cfg
+                   {:name "Eldritch Invocation: Aspect of the Moon"
+                    :summary "don't need to sleep and can't be forced to sleep"})]
+      :prereqs [opt5e/pact-of-the-tome-prereq]})
+    (t/option-cfg
      {:name "Beast Speech"
+      :help "Can cast speak with animals at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Beast Speech"
                     :page 110
                     :summary "can cast speak with animals at will"})
-                  (mod5e/spells-known 1 :speak-with-animals ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :speak-with-animals ?ability "Warlock" 0 "at will")]})
     (t/option-cfg
      {:name "Beguiling Influence"
+      :help "Proficiency in deception and persuasion."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Beguiling Influence"
                     :page 110
@@ -2720,14 +3833,25 @@
                   (mod5e/skill-proficiency :persuasion)]})
     (t/option-cfg
      {:name "Bewitching Whispers"
+      :help "Cast compulsion using warlock spell slot once per long rest."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Bewitching Whispers"
                     :page 110
                     :frequency units5e/long-rests-1
                     :summary "cast compulsion once using warlock spell slot"})
-                  (mod5e/spells-known 4 :compulsion ::char5e/cha "Warlock" 0 "once per long rest")]})
+                  (mod5e/spells-known 4 :compulsion ?ability "Warlock" 0 "once per long rest")]})
+    (t/option-cfg
+     {:name "Bond of the Talisman"
+      :help "Teleport to the unoccupied space closest to the talisman wearer if on the same plane, or they can teleport to you."
+      :modifiers [(mod5e/action
+                   {:name "Eldritch Invocation: Bond of the Talisman"
+                    :frequency (units5e/long-rests ?prof-bonus)
+                    :summary "teleport to the unoccupied space closest to the talisman wearer if on the same plane, or they can teleport to you"})]
+      :prereqs [opt5e/pact-of-the-talisman-prereq
+                (opt5e/total-levels-option-prereq 12 :warlock)]})
     (t/option-cfg
      {:name "Book of Ancient Secrets"
+      :help "Learn 2 ritual spells; inscribe and cast rituals."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Book of Ancient Secrets"
                     :page 110
@@ -2744,7 +3868,7 @@
                                 (filter
                                  (fn [s] (and (= 1 (:level s)) (opt5e/ritual-spell? s)))
                                  spells5e/spells))
-                               ::char5e/cha
+                               ?ability
                                "Warlock"
                                false
                                "Book of Ancient Secrets Ritual")
@@ -2753,16 +3877,26 @@
       :prereqs [opt5e/pact-of-the-tome-prereq]})
     (t/option-cfg
      {:name "Chains of Carceri"
+      :help "Cast hold monster at will on celestials, fiends, or elementals."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Chains of Carceri"
                     :page 110
                     :frequency units5e/long-rests-1
-                    :summary "cast hold monster at will on celestials, fiends, or elementals"})
-                  (mod5e/spells-known 5 :hold-monster ::char5e/cha "Warlock" 0 "at will")]
+                    :summary "cast hold monster at will on celestials, fiends, or elementals. Must finish a long rest before using it on the same creature again"})
+                  (mod5e/spells-known 5 :hold-monster ?ability "Warlock" 0 "at will")]
       :prereqs [opt5e/pact-of-the-chain-prereq
                 (opt5e/total-levels-option-prereq 15 :warlock)]})
     (t/option-cfg
+     {:name "Cloak of Flies"
+      :help "Once per short rest, active to get advantage on Intimidation checks and disadvantage on all other CHA checks. Any other creature starting their turn within 5 ft. takes poison damage equal to your CHA modifier. Ends if incapacitated or dismissed as bonus action."
+      :modifiers [(mod5e/bonus-action
+                   {:name "Eldritch Invocation: Cloak of Flies"
+                    :frequency units5e/rests-1
+                    :summary (str "advantage on Intimidation checks and disadvantage on all other CHA checks. Any other creature starting their turn within 5 ft. takes " (max 0 (?ability-bonuses ?warlock-ability)) " poison damage. Ends if incapacitated or dismissed as bonus action")})]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
+    (t/option-cfg
      {:name "Devil's Sight"
+      :help "See normally in magical and nonmagical darkness up to 120 ft."
       :modifiers [(mod5e/darkvision 120 1)
                   (mod5e/trait-cfg
                    {:name "Eldritch Invocation: Devil's Sight"
@@ -2771,22 +3905,40 @@
                     :summary "see normally in magical and nonmagical darkness"})]})
     (t/option-cfg
      {:name "Dreadful Word"
+      :help "Use warlock spell slot to cast confusion once per long rest"
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Dreadful Word"
                     :page 110
                     :summary "use warlock spell slot to cast confusion"
                     :frequency units5e/long-rests-1})
-                  (mod5e/spells-known 4 :confusion ::char5e/cha "Warlock" 0 "once per long rest")]
+                  (mod5e/spells-known 4 :confusion ?ability "Warlock" 0 "once per long rest")]
       :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
     (t/option-cfg
+     {:name "Eldritch Mind"
+      :help "Advantage on CON saves to mantain concentration on a spell."
+      :modifiers [(mod5e/trait-cfg
+                   {:name "Eldritch Invocation: Eldritch Mind"
+                    :summary "advantage on CON saves to mantain concentration on a spell"})]})
+    (t/option-cfg
      {:name "Eldritch Sight"
+      :help "Cast detect magic at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Eldritch Sight"
                     :page 110
                     :summary "cast detect magic at will"})
-                  (mod5e/spells-known 1 :detect-magic ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :detect-magic ?ability "Warlock" 0 "at will")]})
+    (t/option-cfg
+     {:name "Eldritch Smite"
+      :help "When you hit a creature with your pact weapon, expend a warlock spell slot to deal an extra 1d8 force damage plus 1d8 per level of the slot, and knock prone if it is Huge or smaller."
+      :modifiers [(mod5e/trait-cfg
+                   {:name "Eldritch Invocation: Eldritch Smite"
+                    :frequency units5e/turns-1
+                    :summary "when you hit a creature with your pact weapon, expend a warlock spell slot to deal an extra 1d8 force damage plus 1d8 per level of the slot, and knock prone if it is Huge or smaller"})]
+      :prereqs [opt5e/pact-of-the-blade-prereq
+                (opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Eldritch Spear"
+      :help "Eldrich blast with range 300 ft."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Eldritch Spear"
                     :page 111
@@ -2794,156 +3946,310 @@
       :prereqs [opt5e/has-eldritch-blast-prereq]})
     (t/option-cfg
      {:name "Eyes of the Rune Keeper"
+      :help "Read any writing."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Eyes of the Rune Keeper"
                     :page 111
-                    :summary "read any writing."})]})
+                    :summary "read any writing"})]})
+    (t/option-cfg
+     {:name "Far Scribe"
+      :help "Up to your PB creatures can write their names in your book. Can cast sending at will to those creatures by writing the message on the page. Replies appear on the page, and disappears after 1 minute."
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Far Scribe"
+                    :summary (str "a creature can use its action to write its name of a page in the book (max " ?prof-bonus " names). Cast sending without using spell slot or material components to the creature by writing the message on the page. Replies appear on the page, and disappears after 1 minute. Use action to erase name")})
+                  (mod5e/spells-known 3 :false-life ?ability "Warlock")]
+      :prereqs [opt5e/pact-of-the-tome-prereq
+                (opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Fiendish Vigor"
+      :help "Cast false life at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Fiendish Vigor"
                     :page 111
                     :summary "cast false life at will"})
-                  (mod5e/spells-known 1 :false-life ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :false-life ?ability "Warlock" 0 "at will")]})
     (t/option-cfg
      {:name "Gaze of Two Minds"
+      :help "Touch a willing humanoid to perceive through its senses while it's on the same plane as you."
       :modifiers [(mod5e/trait "Eldritch Invocation: Gaze of Two Minds"
                                "You can use your action to touch a willing humanoid and perceive through its senses until the end of your next turn. As long as the creature is on the same plane of existence as you, you can use your action on subsequent turns to maintain this connection, extending the duration until the end of your next turn. While perceiving through the other creature’s senses, you benefit from any special senses possessed by that creature, and you are blinded and deafened to your own surroundings.")]})
     (t/option-cfg
+     {:name "Ghostly Gaze"
+      :help "See through solid objects to a 30 ft. range. Darkvision within the range, and uses your concentration. Objects are percieved as ghostly, transparent images."
+      :modifiers [(mod5e/action
+                   {:name "Eldritch Invocation: Ghostly Gaze"
+                    :duration units5e/minutes-1
+                    :summary "see through solid objects to a 30 ft. range. Darkvision within the range, and uses your concentration. Objects are percieved as ghostly, transparent images"})]
+      :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
+    (t/option-cfg
+     {:name "Gift of the Depths"
+      :help "Breathe underwater and gain swimming speed equal to your walking speed. Cast water breathing once per long rest for free"
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Gift of the Depths"
+                    :frequency units5e/long-rests-1
+                    :summary "breathe underwater and gain swimming speed equal to your walking speed. Cast water breathing once for free"})
+                  (mod5e/swimming-speed-equal-to-walking)
+                  (mod5e/spells-known 3 :water-breathing ?ability "Warlock" 0 "once/long rest")]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
+    (t/option-cfg
+     {:name "Gift of the Ever-Living Ones"
+      :help "Always roll max when rolling to regain hp while your familiar is within 100 ft."
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Gift of the Ever-Living Ones"
+                    :summary "always roll max when rolling to regain hp while your familiar is within 100 ft"})]
+      :prereqs [opt5e/pact-of-the-chain-prereq]})
+    (t/option-cfg
+     {:name "Gift of the Protectors"
+      :help "Up to your PB creatures can write their names in your book. Once per long rest, a creature drops to 1 hp instead of 0."
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Gift of the Protectors"
+                    :frequency units5e/long-rests-1
+                    :summary (str "a creature can use its action to write its name of a page in the book (max " ?prof-bonus " names). Use action to erase name. Any creature on the page drops to 1 hp instead of 0")})]
+      :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)
+                opt5e/pact-of-the-tome-prereq]})
+    (t/option-cfg
+     {:name "Grasp of Hadar"
+      :help "Once per turn, move a creature that you hit with eldritch blast 10 ft. straight closer to you."
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Grasp of Hadar"
+                    :frequency units5e/turns-1
+                    :summary "move a creature that you hit with eldritch blast 10 ft. straight closer to you"})]
+      :prereqs [opt5e/has-eldritch-blast-prereq]})
+    (t/option-cfg
+     {:name "Improved Pact Weapon"
+      :help "Use any Pact of the Blade weapon as a warlock spellcasting focus. The weapon gains a +1 bonus to attack and damage rolls unless if it already has a bonus. You can conjure a shortbow, longbow, light crossbow, or heavy crossbow."
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Improved Pact Weapon"
+                    :summary "use any Pact of the Blade weapon as a warlock spellcasting focus. The weapon gains a +1 bonus to attack and damage rolls unless if it already has a bonus. You can conjure a shortbow, longbow, light crossbow, or heavy crossbow"})]
+      :prereqs [opt5e/pact-of-the-blade-prereq]})
+    (t/option-cfg
+     {:name "Investment of the Chain Master"
+      :help "Familiars from find familiar gain a flying or swimming speed of 40 ft., as a bonus action, command the familiar to take the Attack action, familiar's attacks are magical. familiar uses your spell save DC, you can use your reaction to grant the familiar resistance against damage it takes."
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Investment of the Chain Master"
+                    :summary "familiars from find familiar gets these benefits:\n- gain flying or swimming speed of 40 ft.\n- as a bonus action, command the familiar to take the Attack action.\n- attacks are magical.\n- familiar uses your spell save DC.\n- you can use your reaction to grant the familiar resistance against damage it takes"})]
+      :prereqs [opt5e/pact-of-the-chain-prereq]})
+    (t/option-cfg
+     {:name "Lance of Lethargy"
+      :help "Once per turn, reduce the speed of a creature you hit with eldritch blast by 10 ft. until the end of your next turn."
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Lance of Lethargy"
+                    :frequency units5e/turns-1
+                    :summary "reduce the speed of a creature you hit with eldritch blast by 10 ft. until the end of your next turn"})]
+      :prereqs [opt5e/has-eldritch-blast-prereq]})
+    (t/option-cfg
      {:name "Lifedrinker"
+      :help "Deal your CHA modifier extra damage with your pact weapon"
       :modifiers [(mod5e/dependent-trait
                    {:name "Eldritch Invocation: Lifedrinker"
                     :page 111
-                    :summary (str "extra " (max 1 (?ability-bonuses ::char5e/cha)) " necrotic damage with your pact weapon")})]
+                    :summary (str "extra " (max 1 (?ability-bonuses ?warlock-ability)) " necrotic damage with your pact weapon")})]
       :prereqs [(opt5e/total-levels-option-prereq 12 :warlock)
                 opt5e/pact-of-the-blade-prereq]})
     (t/option-cfg
+     {:name "Maddening Hex"
+      :help "Use bonus action to deal your CHA modifier psychic damage to a creature cursed by you and each creature you can see of your choice within 5 ft. of it."
+      :modifiers [(mod5e/bonus-action
+                   {:name "Eldritch Invocation: Maddening Hex"
+                    :summary (str "deal " (max 1 (?ability-bonuses ?warlock-ability)) "psychic damage to a creature within 30 ft. cursed by your hex spell or by a warlock feature of yours that you can see, and each creature you can see within 5 ft. of it of your choice")})]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]}) ;; curse prereq
+    (t/option-cfg
      {:name "Mask of Many Faces"
+      :help "Cast disguise self at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Mask of Many Faces"
                     :page 111
                     :summary "cast disguise self at will"})
-                  (mod5e/spells-known 1 :disguise-self ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :disguise-self ?ability "Warlock" 0 "at will")]})
     (t/option-cfg
      {:name "Master of Myriad Forms"
+      :help "Cast alter self at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Master of Myriad Forms"
                     :page 111
                     :summary "cast alter self at will"})
-                  (mod5e/spells-known 2 :alter-self ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 2 :alter-self ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 15 :warlock)]})
     (t/option-cfg
      {:name "Minions of Chaos"
+      :help "Cast conjure elemental using warlock spell slot once long rest."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Minions of Chaos"
                     :page 111
                     :frequency units5e/long-rests-1
-                    :summary "cast conjure elemental using warlock spell slot
-long rest."})
-                  (mod5e/spells-known 5 :conjure-elemental ::char5e/cha "Warlock" 0 "once per rest")]
+                    :summary "cast conjure elemental using a warlock spell slot"})
+                  (mod5e/spells-known 5 :conjure-elemental ?ability "Warlock" 0 "once per rest")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
      {:name "Mire the Mind"
+      :help "Cast slow using warlock spell slot once per long rest."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Mire the Mind"
                     :page 111
                     :frequency units5e/long-rests-1
                     :summary "cast slow using warlock spell slot"})
-                  (mod5e/spells-known 3 :slow ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 3 :slow ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Misty Visions"
+      :help "Cast silent image at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Misty Visions"
                     :page 111
                     :summary "cast silent image at will"})
-                  (mod5e/spells-known 1 :silent-image ::char5e/cha "Warlock" 0 "at will")]})
+                  (mod5e/spells-known 1 :silent-image ?ability "Warlock" 0 "at will")]})
     (t/option-cfg
      {:name "One with Shadows"
+      :help "In dim light or darkness, become invisible until you move or take an action or a reaction."
       :modifiers [(mod5e/action
                    {:name "Eldritch Invocation: One with Shadows"
                     :page 111
-                    :summary "in dim light or darkness, become invisible"})]
+                    :summary "in dim light or darkness, become invisible until you move or take an action or a reaction"})]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Otherworldly Leap"
+      :help "Cast jump on yourself at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Otherworldly Leap"
                     :page 111
                     :summary "cast jump on yourself at will"})
-                  (mod5e/spells-known 1 :jump ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 1 :jump ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
+     {:name "Protection of the Talisman"
+      :help "The wearer of your talisman can add a d4 to a failed saving throw a number of times equal to your PB."
+      :modifiers [(mod5e/dependent-trait
+                   {:name "Eldritch Invocation: Protection of the Talisman"
+                    :frequency (units5e/long-rests ?prof-bonus)
+                    :summary "the wearer of your talisman can add a d4 to a failed saving throw"})]
+      :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)
+                opt5e/pact-of-the-talisman-prereq]})
+    (t/option-cfg
+     {:name "Rebuke of the Talisman"
+      :help "When an attacker you can see hits the wearer of your talisman, use your reaction to Deal your PB psychic damage to to it and push it up to 10 ft. away from the wearer."
+      :modifiers [(mod5e/reaction
+                   {:name "Eldritch Invocation: Rebuke of the Talisman"
+                    :summary (str "deal " ?prof-bonus " psychic damage to an attacker that you can see within 30 ft. that hit the wearer of your talisman and push it up to 10 ft. away from the wearer")})]
+      :prereqs [opt5e/pact-of-the-talisman-prereq]})
+    (t/option-cfg
+     {:name "Relentless Hex"
+      :help "Teleport up to 30 ft. to an unoccupied space you can see within 5 ft. of a target you can see cursed by your hex spell of by a warlock feature of yours"
+      :modifiers [(mod5e/bonus-action
+                   {:name "Eldritch Invocation: Relentless Hex"
+                    :summary "teleport up to 30 ft. to an unoccupied space you can see within 5 ft. of a target you can see cursed by your hex spell of by a warlock feature of yours"})]
+      :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]}) ;; curse prereq
+    (t/option-cfg
      {:name "Repelling Blast"
+      :help "Push a creature hit by your eldritch blast up to 10 ft. straight away from you."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Repelling Blast"
                     :page 111
-                    :summary "push the creature 10 ft when you cast eldritch blast"})]
+                    :summary "push a creature hit by your eldritch blast up to 10 ft. straight away from you"})]
       :prereqs [opt5e/has-eldritch-blast-prereq]})
     (t/option-cfg
      {:name "Sculptor of Flesh"
+      :help "Cast polymorph using a warlock spell slot once per long rest."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Sculptor of Flesh"
                     :page 111
                     :frequency units5e/long-rests-1
                     :summary "cast polymorph using a warlock spell slot"})
-                  (mod5e/spells-known 4 :polymorph ::char5e/cha "Warlock" 0 "once per long rest")]
+                  (mod5e/spells-known 4 :polymorph ?ability "Warlock" 0 "once per long rest")]
       :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
     (t/option-cfg
+     {:name "Shroud of Shadow"
+      :help "Cast invisibility at will without expending a spell slot."
+      :modifiers [(mod5e/trait-cfg
+                   {:name "Eldritch Invocation: Shroud of Shadow"
+                    :summary "cast invisibility at will without expending a spell slot"})
+                  (mod5e/spells-known 2 :invisibility ?ability "Warlock")]
+      :prereqs [(opt5e/total-levels-option-prereq 15 :warlock)]})
+    (t/option-cfg
      {:name "Sign of Ill Omen"
+      :help "Cast bestow curse using a warlock spell slot once per long rest."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Sign of Ill Omen"
                     :page 111
                     :frequency units5e/long-rests-1
                     :summary "cast bestow curse using warlock spell slot"})
-                  (mod5e/spells-known 3 :bestow-curse ::char5e/cha "Warlock" 0 "once per long rest")]
+                  (mod5e/spells-known 3 :bestow-curse ?ability "Warlock" 0 "once per long rest")]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
     (t/option-cfg
      {:name "Thief of Five Fates"
+      :help "Cast bane using a warlock spell slot once per long rest."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Thief of Five Fates"
                     :page 111
                     :frequency units5e/long-rests-1
                     :summary "cast bane warlock spell slot"})
-                  (mod5e/spells-known 1 :bane ::char5e/cha "Warlock" 0 "once per long rest")]})
+                  (mod5e/spells-known 1 :bane ?ability "Warlock" 0 "once per long rest")]})
     (t/option-cfg
      {:name "Thirsting Blade"
+      :help "When taking the Attack action, attack with pact blade twice."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Thirsting Blade"
                     :page 111
-                    :summary "when using Attack action, attack with pact blade twice"})]
+                    :summary "when taking the Attack action, attack with pact blade twice"})]
       :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)
                 opt5e/pact-of-the-blade-prereq]})
     (t/option-cfg
+     {:name "Tomb of Levistus"
+      :help "When you take damage, use your reaction to entomb yourself in ice until the end of your next turn, gaining temp HP which take from the triggering damage. Immediately afterwards, you gain vulnerability to fire damage, speed is reduced to 0, and you are incapacitated. These effects end when the ice melts, including the temp HP"
+      :modifiers [(mod5e/reaction
+                   {:name "Eldritch Invocation: Tomb of Levistus"
+                    :frequency units5e/rests-1
+                    :summary (str "when you take damage, entomb yourself in ice until the end of your next turn. You gain " (* 10 (?class-level :warlock)) " temp HP, which take from the triggering damage. Immediately afterwards, you gain vulnerability to fire damage, speed is reduced to 0, and you are incapacitated. These effects end when the ice melts, including the temp HP")})]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
+    (t/option-cfg
+     {:name "Trickster's Escape"
+      :help "Cast freedom of movement on yourself without expending a spell slot once per long rest."
+      :modifiers [(mod5e/reaction
+                   {:name "Eldritch Invocation: Trickster's Escape"
+                    :frequency units5e/long-rests-1
+                    :summary "cast freedom of movement on yourself without expending a spell slot"})]
+      :prereqs [(opt5e/total-levels-option-prereq 7 :warlock)]})
+    (t/option-cfg
+     {:name "Undying Servitude"
+      :help "Cast animate dead without expending a spell slot once per long rest."
+      :modifiers [(mod5e/reaction
+                   {:name "Eldritch Invocation: Undying Servitude"
+                    :frequency units5e/long-rests-1
+                    :summary "cast animate dead without expending a spell slot"})]
+      :prereqs [(opt5e/total-levels-option-prereq 5 :warlock)]})
+    (t/option-cfg
      {:name "Visions of Distant Realms"
+      :help "Cast arcane eye at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Visions of Distant Realms"
                     :page 111
                     :summary "cast arcane eye at will"})
-                  (mod5e/spells-known 4 :arcane-eye ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 4 :arcane-eye ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 15 :warlock)]})
     (t/option-cfg
      {:name "Voice of the Chain Master"
+      :help "Communicate telepathically with, perceive through, and speak through your familiar."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Voice of the Chain Master"
                     :page 111
-                    :summary "communicate telepathically with, perceive through, and speak through your familiar"})]
+                    :summary "communicate telepathically with and perceive through your familiar's senses while on the same plane. While perceiving through your familiar's senses, you can speak through it in your own voice"})]
       :prereqs [opt5e/pact-of-the-chain-prereq]})
     (t/option-cfg
      {:name "Whispers of the Grave"
+      :help "Cast speak with dead at will."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Whispers of the Grave"
                     :page 111
                     :summary "cast speak with dead at will"})
-                  (mod5e/spells-known 3 :speak-with-dead ::char5e/cha "Warlock" 0 "at will")]
+                  (mod5e/spells-known 3 :speak-with-dead ?ability "Warlock" 0 "at will")]
       :prereqs [(opt5e/total-levels-option-prereq 9 :warlock)]})
     (t/option-cfg
      {:name "Witch Sight"
+      :help "See the true form of any shapechanger or creature concealed by illusion or transmutation magic while the creature is within 30 feet of you and within line of sight."
       :modifiers [(mod5e/trait-cfg
                    {:name "Eldritch Invocation: Witch Sight"
                     :range units5e/ft-30
                     :page 111
-                    :summary "see the true form of a creature"})]
+                    :summary "you can see the true form of any shapechanger or creature concealed by illusion or transmutation magic while the creature is within 30 feet of you and within line of sight"})]
       :prereqs [(opt5e/total-levels-option-prereq 15 :warlock)]})]))
 
 
@@ -2963,50 +4269,44 @@ long rest."})
    17 1
    19 1})
 
-(defn eldritch-invocation-selection [plugin-invocations spell-lists spells-map & [num]]
+(defn eldritch-invocation-selection [plugin-invocations spell-lists spells-map ?ability class-kw & [num]]
   (opt5e/eldritch-invocation-selection
-   {:options (eldritch-invocation-options plugin-invocations spell-lists spells-map)
+   {:options (eldritch-invocation-options plugin-invocations spell-lists spells-map ?ability)
     :min (or num 1)
-    :max (or num 1)}))
+    :max (or num 1)}
+   class-kw))
 
-(defn mystic-arcanum-selection [spells-map spell-level]
+(defn mystic-arcanum-selection [spells-map spell-level ?ability class-kw]
   (t/selection-cfg
    {:name (str "Mystic Arcanum: Spell Level " spell-level)
     :tags #{:spells}
     :options (opt5e/spell-options
               spells-map
-              (get-in sl5e/spell-lists [:warlock spell-level])
-              ::char5e/cha
+              (get-in sl5e/spell-lists [class-kw spell-level])
+              ?ability
               "Warlock"
               false
               "uses Mystic Arcanum")}))
 
-(defn warlock-option [spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons]
-  (opt5e/class-option
-   spell-lists
-   spells-map
-   plugin-subclasses-map
-   language-map
-   weapon-map
-   {:name "Warlock"
-    :key :warlock
+(defn warlock-option [spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons ?ability ?ability-name class-kw]
+   {
     :spellcasting {:cantrips-known {1 2 4 1 10 1}
                    :spells-known warlock-spells-known
                    :slot-schedule t-base/warlock-spell-slot-schedule
                    :known-mode :schedule
                    :pact-magic? true
-                   :ability ::char5e/cha}
-    :multiclass-prereqs [(opt5e/ability-prereq ::char5e/cha 13)]
+                   :ability ?ability}
+    :multiclass-prereqs [(opt5e/ability-prereq ?ability 13)]
     :spellcaster true
     :hit-die 8
     :ability-increase-levels [4 8 12 16 19]
     :profs {:armor {:light false}
             :weapon {:simple false}
-            :save {::char5e/wis true ::char5e/cha true}
+            :save {::char5e/wis true ?ability true}
             :skill-options {:choose 2 :options {:arcana true :deception true :history true :intimidation true :investigation true :nature true :religion true}}}
-    :modifiers [(mod/modifier ?pact-magic? true)]
+    ;; :modifiers [(mod/modifier ?pact-magic? true)]
     :selections [(opt5e/new-starting-equipment-selection
-                  :warlock
+                  class-kw
                   {:name "Weapon"
                    :options [(t/option-cfg
                               {:name "Light Crossbow & 20 Bolts"
@@ -3015,12 +4315,12 @@ long rest."})
                              (t/option-cfg
                               {:name "Simple Weapon"
                                :selections [(opt5e/new-starting-equipment-selection
-                                             :warlock
+                                             class-kw
                                              {:name "Simple Weapon"
                                               :options (opt5e/simple-weapon-options 1 (vals weapon-map))
                                               :min 1
                                               :max 1})]})]})
-                 (opt5e/simple-weapon-selection 1 :warlock weapon-map)]
+                 (opt5e/simple-weapon-selection 1 class-kw weapon-map)]
     :equipment-choices [{:name "Equipment Pack"
                          :options {:scholars-pack 1
                                    :dungeoneers-pack 1}}
@@ -3029,15 +4329,15 @@ long rest."})
                                    :arcane-focus 1}}]
     :weapons {:dagger 2}
     :armor {:leather 1}
-    :levels {2 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map 2)]}
+    :levels {2 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw 2)]}
              3 {:selections [(t/selection-cfg
                               {:name "Pact Boon"
                                :tags #{:class}
-                               :options (pact-boon-options boons spell-lists spells-map)})]}
-             5 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}
-             7 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}
-             9 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}
-             11 {:selections [(mystic-arcanum-selection spells-map 6)]
+                               :options (pact-boon-options boons spell-lists spells-map ?ability)})]}
+             5 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}
+             7 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}
+             9 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}
+             11 {:selections [(mystic-arcanum-selection spells-map 6 ?ability class-kw)]
                  :modifiers [(mod5e/dependent-trait
                               {:name "Mystic Arcanum"
                                :level 11
@@ -3045,22 +4345,25 @@ long rest."})
                                :summary "You gain a 6th level spell you can cast without expending a slot, more at higher levels"
                                :frequency (units5e/long-rests
                                            (mod5e/level-val
-                                            (?class-level :warlock)
+                                            (?class-level :class-kw)
                                             {13 2
                                              15 3
                                              17 4
                                              :default 1}))})]}
-             12 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}
-             13 {:selections [(mystic-arcanum-selection spells-map 7)]}
-             15 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)
-                              (mystic-arcanum-selection spells-map 8)]}
-             17 {:selections [(mystic-arcanum-selection spells-map 9)]}
-             18 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map)]}}
+             12 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}
+             13 {:selections [(mystic-arcanum-selection spells-map 7 ?ability class-kw)]}
+             15 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)
+                              (mystic-arcanum-selection spells-map 8 ?ability class-kw)]}
+             17 {:selections [(mystic-arcanum-selection spells-map 9 ?ability class-kw)]}
+             18 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}}
     :traits [{:name "Eldrich Master"
               :level 20
               :page 108
               :summary "Regain all Pact Magic spell slots"
-              :frequency units5e/long-rests-1}]
+              :frequency units5e/long-rests-1}
+             {:name "Eldritch  Versatility"
+              :level 4
+              :summary "When you reach an ASI in warlock, you can replace one cantrip, one Pact Boon, and one spell from Mystic Arcanum from the class. You must replace any Eldritch Invocations you become ineligible for."}]
     :subclass-level 1
     :subclass-title "Otherworldly Patron"
     :subclasses [{:name "The Fiend"
@@ -3081,64 +4384,147 @@ long rest."})
                   :levels {1 {:modifiers [(mod5e/dependent-trait
                                            {:name "Dark One's Blessing"
                                             :page 109
-                                            :summary (str "gain " (+ (?class-level :warlock)
-                                                                     (?ability-bonuses ::char5e/cha)) " temp HPs when you reduce a hostile creature to 0 HPs")})]
-                              :selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:burning-hands :command])]}
-                           3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:blindness-deafness :scorching-ray])]}
-                           5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:fireball :stinking-cloud])]}
-                           7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:fire-shield :wall-of-fire])]}
-                           9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map [:flame-strike :hallow])]}}}
-                 #_{:name "The Archfey"
+                                            :summary (str "gain " (+ (?class-level :class-kw)
+                                                                     (?ability-bonuses ?warlock-ability)) " temp HPs when you reduce a hostile creature to 0 HPs")})]
+                              :selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:burning-hands :command])]}
+                           3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:blindness-deafness :scorching-ray])]}
+                           5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:fireball :stinking-cloud])]}
+                           7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:fire-shield :wall-of-fire])]}
+                           9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:flame-strike :hallow])]}}}
+                 {:name "The Archfey"
                     :modifiers [(mod5e/action
                                  {:name "Fey Presence"
                                   :page 109
-                                  :summary (str "charm or frighten creatures in a 10 ft cube from you unless the succeed on a DC " (?spell-save-dc ::char5e/cha) " WIS save.")
+                                  :summary (str "As an action, you can cause each creature in a 10-foot cube originating from you to make a Wisdom saving throw against your warlock spell save DC. The creatures that fail their saving throws are all charmed or frightened by you (your choice) until the end of your next turn.")
                                   :duration units5e/turns-1
                                   :frequency units5e/rests-1})]
-                    :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection [:faerie-fire :sleep])]}
-                             3 {:selections [(opt5e/warlock-subclass-spell-selection [:calm-emotions :phantasmal-force])]}
-                             5 {:selections [(opt5e/warlock-subclass-spell-selection [:blink :plant-growth])]}
+                    :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:faerie-fire :sleep])]}
+                             3 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:calm-emotions :phantasmal-force])]}
+                             5 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:blink :plant-growth])]}
                              6 {:modifiers [(mod5e/reaction
                                              {:name "Misty Escape"
                                               :page 109
                                               :frequency units5e/rests-1
                                               :duration units5e/rounds-1
-                                              :summary "when you take damage, turn invisible and teleport up to 60 ft."})]}
-                             7 {:selections [(opt5e/warlock-subclass-spell-selection [:dominate-beast :greater-invisibility])]}
-                             9 {:selections [(opt5e/warlock-subclass-spell-selection [:dominate-person :seeming])]}
+                                              :summary "When you take damage, you can use your reaction to turn invisible and teleport up to 60 feet to an unoccupied space you can see. You remain invisible until the start of your next turn or until you attack or cast a spell."})]}
+                             7 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:dominate-beast :greater-invisibility])]}
+                             9 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:dominate-person :seeming])]}
                              10 {:modifiers [(mod5e/condition-immunity :charmed)
                                              (mod5e/reaction
                                               {:name "Beguiling Defenses"
                                                :page 109
                                                :duration units5e/minutes-1
-                                               :summary (str "when a creature attempts to charm you, you can turn it back on them with a spell save DC " (?spell-save-dc ::char5e/cha) " WIS save")})]}
+                                               :summary (str "You are immune to being charmed, and when another creature attempts to charm you, you can use your reaction to attempt to turn the charm back on that creature. The creature must succeed on a Wisdom saving throw against your warlock spell save DC or be charmed by you for 1 minute or until the creature takes any damage.")})]}
                              14 {:modifiers [(mod5e/action
                                               {:name "Dark Delerium"
                                                :page 109
-                                               :summary (str "charm or frighten a creature within 60 ft., spell save DC " (?spell-save-dc ::char5e/cha) "WIS save")
+                                               :summary (str "As an action, choose a creature that you can see within 60 feet of you. It must make a Wisdom saving throw against your warlock spell save DC. On a failed save, it is charmed or frightened by you (your choice) for 1 minute or until your concentration is broken (as if you are concentrating on a spell). This effect ends early if the creature takes any damage."
+                                                             "\n\nUntil this illusion ends, the creature thinks it is lost in a misty realm, the appearance of which you choose. The creature can see and hear only itself, you, and the illusion.")
                                                :frequency units5e/rests-1})]}}}
-                 #_{:name "The Great Old One"
-                    :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection [:dissonant-whispers :hideous-laughter])]}
-                             3 {:selections [(opt5e/warlock-subclass-spell-selection [:detect-thoughts :phantasmal-force])]}
-                             5 {:selections [(opt5e/warlock-subclass-spell-selection [:clairvoyance :sending])]}
+                 {:name "The Celestial"
+                  :modifiers [(mod5e/spells-known 0 :light ?ability "Warlock")
+                              (mod5e/spells-known 0 :sacred-flame ?ability "Warlock")]
+                  :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:cure-wounds :guiding-bolt])]
+                              :modifiers [(mod5e/bonus-action
+                                           {:name "Healing Light"
+                                            :frequency (units5e/long-rests (+ 1 (?class-level :class-kw)))
+                                            :summary (str "Heal a creature within 60 ft. from a " (+ 1 (?class-level class-kw)) "d6 dice pool, spending at max " (max 1 (?ability-bonuses ?warlock-ability)) " dice at once")})]}
+                           3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:flaming-sphere :lesser-restoration])]}
+                           5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:daylight :revivify])]}
+                           6 {:modifiers [(mod5e/damage-resistance :radiant)
+                                          (mod5e/dependent-trait
+                                           {:name "Radiant Soul"
+                                            :level 6
+                                            :summary (str "When you cast a spell that deals radiant or fire damage, add " (common/bonus-str (?ability-bonuses ?warlock-ability)) " to the damage against one target")})]}
+                           7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:guardian-of-faith :wall-of-fire])]}
+                           9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:flame-strike :greater-restoration])]}
+                           10 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Celestial Resistance"
+                                             :summary (str "Gain " (+ (?class-level :class-kw) (?ability-bonuses ?warlock-ability)) " temp HP at the end of a rest. Choose up to 5 creatures that each gain " (+ (int (/ (?class-level :class-kw) 2)) (?ability-bonuses ?warlock-ability)) " temp HP")})]}
+                           14 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Searing Vengeance"
+                                             :frequency units5e/long-rests-1
+                                             :summary (str "When you have to make a death saving throw, instead regain " (int (/ ?max-hit-points 2)) " HP, and stand up if you so choose. Each creature of choice within 30 ft. takes 2d8+" (?ability-bonuses ?warlock-ability) " radiant damage, and is blinded until the end the turn")})]}}}
+                 {:name "The Great Old One"
+                    :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:dissonant-whispers :hideous-laughter])]}
+                             3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:detect-thoughts :phantasmal-force])]}
+                             5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:clairvoyance :sending])]}
                              6 {:modifiers [(mod5e/reaction
                                              {:name "Entropic Ward"
                                               :page 110
                                               :frequency units5e/rests-1
-                                              :summary "impose disadvantage on an attack roll against you, if it misses, gain advantage on your next attack roll against the attacker"})]}
-                             7 {:selections [(opt5e/warlock-subclass-spell-selection [:dominate-beast :black-tentacles])]}
-                             9 {:selections [(opt5e/warlock-subclass-spell-selection [:dominate-person :telekinesis])]}
-                             10 {:modifiers [(mod5e/damage-resistance :psychic)]}}
+                                              :summary "impose disadvantage on an attack roll against you, if it misses, gain advantage on your next attack roll against the attacker before the end of your next turn"})]}
+                             7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:dominate-beast :black-tentacles])]}
+                             9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:dominate-person :telekinesis])]}
+                             10 {:modifiers [(mod5e/damage-resistance :psychic)]}
+                             14 {:modifiers [(mod5e/action
+                                              {:name "Create Thrall"
+                                               :page 110
+                                               :summary "Touch an incapacitated humanoid to charm it until Remove Curse is cast on it, the charmed condition is removed from it, or you use this feature again.\n\nYou can communicate telepathically with it while on the same plane"})]}}
                     :traits [{:name "Awakened Mind"
                               :level 1
                               :page 110
-                              :summary "speak telepathically to a creature"
+                              :summary "speak telepathically to a creature. You don't need to share a language, but the target must be able to understand at least one language"
                               :range units5e/ft-30}
                              {:name "Thought Shield"
                               :level 10
                               :page 110
-                              :summary "your thoughts can't be read; resistance to psychic damage; when a creature deals psychic damage to you it takes the same amount"}
-                             {:name "Create Thrall"
-                              :level 14
-                              :page 110
-                              :summary "charm incapacitated creature, it becomes charmed by you, you can communicate with it telepathically"}]}]}))
+                              :summary "your thoughts can't be read unless allowed; resistance to psychic damage; when a creature deals psychic damage to you it takes the same amount"}]}
+                 {:name "The Hexblade"
+                  :profs {:armor {:medium true :shields true}
+                          :weapon {:martial true}}
+                  :modifiers [(mod5e/bonus-action
+                                {:name "Hexblade's Curse"
+                                :frequency units5e/rests-1
+                                :duration units5e/minutes-1
+                                :summary (str "Curse a creature you can see within 30 ft. for 1 minute. Ends early if the target dies, you die, or you are incapacitated."
+                                          "\n• Gain a +" ?prof-bonus " bonus to damage rolls against the cursed target."
+                                          "\n• Attacks rolls against the cursed target are critical on 19s and 20s."
+                                          "\n• If the cursed target dies, regain " (max 1 (+ (?class-level class-kw) (?ability-bonuses ?warlock-ability))) " HP.")})
+                              (mod5e/dependent-trait
+                                {:name "Hex Warrior"
+                                 :summary (str "Touch one proficient, one-handed weapon when you finish a long rest. You can use your " (str ?ability-name) " modifier for attack and damage rolls with it. Lasts until you finish a long rest. Applies to every pact weapon conjured with the pact of the blade feature")})]
+                  :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:shield :wrathful-smite])]}
+                            3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:blur :branding-smite])]}
+                            5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:blink :elemental-weapon])]}
+                            6 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Accursed Specter"
+                                            :frequency units5e/long-rests-1
+                                            :summary (str "Cause a specter to appear when you slay a humanoid. It has " (int (/ (?class-level class-kw) 2)) " temp HP, its own initiative, obeys verbal commands, and a +" (max 0 (?ability-bonuses ?warlock-ability)) " bonus to its attack rolls."
+                                                      "\nRemains until the end of your next long rest")})]}
+                            7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:phantasmal-killer :staggering-smite])]}
+                            9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:banishing-smite :cone-of-cold])]}
+                            10 {:modifiers [(mod5e/reaction
+                                            {:name "Armor of Hexes"
+                                              :summary "If the target cursed by your Hexblade’s Curse hits you with an attack roll, roll a d6. On a 4 or higher, the attack instead misses"})]}}
+                  :traits [{:name "Master of Hexes"
+                            :level 14
+                            :summary "When the creature cursed by your Hexblade's Curse dies, you can apply the curse to a different creature you can see within 30 ft., provided you aren't incapacitated. You don't regain hit points from the death of the previously cursed creature"}]}]})
+
+(defn warlock-cha-option [spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons]
+  (opt5e/class-option
+   spell-lists
+   spells-map
+   plugin-subclasses-map
+   language-map
+   weapon-map
+   (merge 
+   {:name "Warlock"
+    :key :warlock-cha
+    :modifiers [(mod/modifier ?pact-magic? true)
+                (mod/modifier ?warlock-ability ::char5e/cha)]}
+   (warlock-option spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons ::char5e/cha "Charisma" :warlock-cha))))
+
+(defn warlock-int-option [spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons]
+  (opt5e/class-option
+   spell-lists
+   spells-map
+   plugin-subclasses-map
+   language-map
+   weapon-map
+   (merge 
+   {:name "Warlock (Int)"
+    :key :warlock-int
+    :modifiers [(mod/modifier ?pact-magic? true)
+                (mod/modifier ?warlock-ability ::char5e/int)]}
+   (warlock-option spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons ::char5e/int "Intelligence" :warlock-int))))

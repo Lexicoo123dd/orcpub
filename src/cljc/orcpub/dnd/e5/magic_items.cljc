@@ -377,6 +377,22 @@ direction to the closest dragon within 30 miles of you that is of the same type 
                    " to spell attack rolls and saving throw DCs for your warlock spells")
    })
 
+(defn amulet-of-the-devout [bonus]
+  {name-key (str "Amulet of the Devout +" bonus)
+   ::type :wondrous-item
+   ::rarity :uncommon
+   ::attunement [:cleric, :paladin]
+   ::modifiers [(mod5e/spell-save-dc-bonus bonus)
+               (mod5e/spell-attack-modifier-bonus bonus)
+               (mod5e/action
+                {:name "Amulet of the Devout"
+                 :page 197
+                 :source :dmg
+                 :summary "Use your channel divinity feature"})]
+   ::summary (str (common/bonus-str bonus)
+                   " to spell attack rolls and saving throw DCs for your warlock spells")
+   })
+
 (defn ioun-stone [name rarity description & modifiers]
   (let [full-name (str "Ioun Stone (" name ")")]
     {
@@ -739,6 +755,11 @@ Whenever a hostile creature damages you while the axe is in your possession, you
      ::type :wondrous-item
      ::rarity :uncommon
      ::description "While you wear these boots, your steps make no sound, regardless of the surface you are moving across. You also have advantage on Dexterity (Stealth) checks that rely on moving silently."
+     ::modifiers [(mod5e/trait-cfg
+                    {:name "Boots of Elvenkind"
+                     :source :dmg
+                     :page 155
+                     :summary "Steps make no sound, regardless of the surface. Advantage on Stealth checks for moving silently"})]
      }{
      name-key "Boots of Levitation"
      ::type :wondrous-item
@@ -2324,6 +2345,9 @@ Terrify. While holding the rod, you can use an action to force each creature you
     (rod-of-the-pact-keeper 1)
     (rod-of-the-pact-keeper 2)
     (rod-of-the-pact-keeper 3)
+    (amulet-of-the-devout 1)
+    (amulet-of-the-devout 2)
+    (amulet-of-the-devout 3)
     {
      name-key "Rod of Rulership"
      ::type :rod
@@ -2390,7 +2414,6 @@ The rope has AC 20 and 20 hit points. It regains 1 hit point every 5 minutes as 
      ::summary "Cast sending between stones"}
     {
      name-key "Shield +1"
-     :name-fn (plus-1-name :name)
      ::type :armor
      ::item-subtype :shield
      ::rarity :uncommon
@@ -2939,6 +2962,14 @@ The boots regain 2 hours of flying capability for every 12 hours they aren’t i
      ::rarity :rare
      ::attunement [:any]
      ::description "While wearing this cloak, you can use an action to speak its command word. This turns the cloak into a pair of bat wings or bird wings on your back for 1 hour or until you repeat the command word as an action. The wings give you a flying speed of 60 feet. When they disappear, you can’t use them again for 1d12 hours."
+     }{
+     name-key "Hag's Deal"
+     ::type :wondrous-item
+     ::modifiers [(mod5e/spells-known 2 :tashas-mind-whip ::char5e/cha "Hag Deal")]
+     }{
+     name-key "Consumed Darkness"
+     ::type :wondrous-item
+     ::description "Cast Darkness once/long rest. Additionally, select one person who can see through this darkness."
      }]))
 
 (def weapons-and-ammunition
