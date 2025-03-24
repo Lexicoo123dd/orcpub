@@ -2278,9 +2278,9 @@
    {:level 8
     :page page
     :source source
-    :summary (str "Add "
+    :summary (str "You add your Wisdom modifiers ("
                   (common/bonus-str (?ability-bonuses ::character/wis))
-                  " to the damage you deal with any cleric cantrip")
+                  ") to the damage you deal with any cleric cantrip")
     :name "Potent Spellcasting"}))
 
 (def monk-base-cfg
@@ -3617,18 +3617,18 @@
     :page page
     :source source
     :frequency units5e/turns-1
-    :summary (str "Once on each of your turns, add "
+    :summary (str "you gain the ability to infuse your weapon strikes with divine energy. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra "
                   (if (>= (?class-level :cleric) 14) 2 1)
                   "d8 "
                   damage-desc
-                  " damage to a successful weapon attack's damage")}))
+                  " damage to the target")}))
 
 (defn blessed-strikes []
   (modifiers/dependent-trait
    {:level 8
     :name "Blessed Strikes"
     :frequency units5e/rounds-1
-    :summary "When a creature takes damage from one of your cantrips or weapon attacks, deal an additional d8 radiant damage to it"}))
+    :summary "you are blessed with divine might in battle. When a creature takes damage from one of your cantrips or weapon attacks, you can also deal 1d8 radiant damage to that creature. Once you deal this damage, you can't use this feature again until the start of your next turn"}))
 
 (defn divine-strike-selection [damage-desc page & [source]]
   (t/selection-cfg

@@ -561,7 +561,7 @@
     :levels {2 {:modifiers [(mod5e/dependent-trait
                              {:page 59
                               :name "Channel Divinity"
-                              :summary "Channel divine power using Turn Undead or one of your domain Channel Divinity options."
+                              :summary "you gain the ability to channel divine energy directly from your deity, using that energy to fuel magical effects. You start with two such effects: Turn Undead and an effect determined by your domain. Some domains grant you additional effects as you advance in levels, as noted in the domain description"
                               :frequency (units5e/rests (mod5e/level-val
                                                          (?class-level :cleric)
                                                          {6 2
@@ -570,9 +570,8 @@
                             (mod5e/action
                              {:page 59
                               :name "Channel Divinity: Turn Undead"
-                              :summary (str "undead within 30 feet must make a DC "
-                                            (?spell-save-dc ::char5e/wis)
-                                            " Wisdom save or be turned for 1 min. or until damaged")})
+                              :summary (str "As an action, you present your holy symbol and speak a prayer censuring the undead. Each undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. If the creature fails its saving throw, it is turned for 1 minute or until it takes any damage."
+                                            "\n\nA turned creature must spend its turns trying to move as far away from you as it can, and it can't willingly move to a space within 30 feet of you. It also can't take reactions. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there's nowhere to move, the creature can use the Dodge action")})
                             (mod5e/bonus-action
                              {:name "Harness Divine Power"
                               :frequency (units5e/long-rests (mod5e/level-val
@@ -580,9 +579,9 @@
                                              {6 2
                                               18 3
                                               :default 1}))
-                              :summary (str "Expend a use of your Channel Divinity to regain one spell slot of level "
+                              :summary (str "you can expend a use of your Channel Divinity to fuel your spells. As a bonus action, you touch your holy symbol, utter a prayer, and regain one expended spell slot, the level of which can be no higher than half your proficiency bonus (rounded up) ("
                                             (common/round-up (/ ?prof-bonus 2))
-                                            " or lower")})]}
+                                            ")")})]}
              4 {:modifiers [(mod5e/trait-cfg
                              {:name "Cantrip Versatility"
                               :summary "When you reach level 4, 8, 12, 16, and 19 in cleric, you can replace one cantrip from the class."})]}
@@ -590,7 +589,7 @@
                              {:level 5
                               :name "Destroy Undead"
                               :page 59
-                              :summary (str "Destroy CR "
+                              :summary (str "when an undead fails its saving throw against your Turn Undead feature, the creature is instantly destroyed if its challenge rating is at or below CR "
                                             (let [level (?class-level :cleric)]
                                               (mod5e/level-val
                                                level
@@ -598,17 +597,14 @@
                                                 8 1
                                                 11 2
                                                 14 3
-                                                17 4}))
-                                            " or less creatures who fail turn save.")})]}
+                                                17 4})))})]}
              
-             10 {:modifiers [(mod5e/dependent-trait
+             10 {:modifiers [(mod5e/action
                               {:name "Divine Intervention"
                                :page 59
                                :summary (str
-                                         "You call for aid from your deity, succeeding "
-                                         (if (= 20 (?class-level :cleric))
-                                           "automatically"
-                                           "if you make a percentile roll less than or equal to your cleric level"))})]}}
+                                         "you can call on your deity to intervene on your behalf when your need is great. Imploring your deity's aid requires you to use your action. Describe the assistance you seek, and roll percentile dice. If you roll a number equal to or lower than your cleric level, your deity intervenes. The DM chooses the nature of the intervention; the effect of any cleric spell or cleric domain spell would be appropriate. If your deity intervenes, you can't use this feature again for 7 days. Otherwise, you can use it again after you finish a long rest."
+                                         "\n\nAt 20th level, your call for intervention succeeds automatically, no roll required"))})]}}
     :subclass-level 1
     :subclass-title "Divine Domain"
     :subclasses [{:name "Forge Domain"
@@ -628,18 +624,24 @@
                                  {:name "Blessing of the Forge"
                                   :level 1
                                   :frequency units5e/long-rests-1
-                                  :summary "make a nonmagical armor or weapon magical, granting +1 AC or +1 to attack and damage rolls respectively"})]
+                                  :summary "you gain the ability to imbue magic into a weapon or armor. At the end of a long rest, you can touch one nonmagical object that is a suit of armor or a simple or martial weapon. Until the end of your next long rest or until you die, the object becomes a magic item, granting a +1 bonus to AC if it's armor or a +1 bonus to attack and damage rolls if it's a weapon"})]
                     :levels {6 {:modifiers [(mod5e/damage-resistance :fire)]}
                              8 {:selections [(opt5e/divine-strike-selection "fire" 63)]}}
                     :traits [{:name "Channel Divinity: Artisan's Blessing"
                               :level 2
-                              :summary "Conduct a hour-long ritual to craft a nonmagical item that must include some metal: a weapon, armor, ten pieces of ammunition, set of tools, or another metal object. Can be worth no more than 100 gp, with the metal having an equal value to the creation"}
+                              :summary (str "you can use your Channel Divinity to create simple items. You conduct an hour-long ritual that crafts a nonmagical item that must include some metal: a simple or martial weapon, a suit of armor, ten pieces of ammunition, a set of tools, or another metal object. The creation is completed at the end of the hour, coalescing in an unoccupied space of your choice on a surface within 5 feet of you."
+                                            "\n\nThe thing you create can be something that is worth no more than 100 gp. As part of this ritual, you must lay out metal, which can include coins, with a value equal to the creation. The metal irretrievably coalesces and transforms into the creation at the ritual's end, magically forming even nonmetal parts of the creation."
+                                            "\n\nThe ritual can create a duplicate of a nonmagical item that contains metal, such as a key, if you possess the original during the ritual")}
                              {:name "Soul of the Forge"
                               :level 6
-                              :summary "You gain resistance to fire damage. +1 AC while wearing heavy armor"}
+                              :summary (str "your mastery of the forge grants you special abilities:"
+                                            "\u2022 You gain resistance to fire damage."
+                                            "\u2022 While wearing heavy armor, you gain a +1 bonus to AC.")}
                              {:name "Saint of Forge and Fire"
                               :level 17
-                              :summary "resistance to slashing, bludgeoning, and piercing damage from nonmagical attacks"}]}
+                              :summary (str "your blessed affinity with fire and metal becomes more powerful:"
+                                            "\u2022 You gain immunity to fire damage."
+                                            "\u2022 While wearing heavy armor, you have resistance to bludgeoning, piercing, and slashing damage from nonmagical attacks.")}]}
 
                  {:name "Life Domain"
                   :profs {:armor {:heavy true}}
@@ -655,21 +657,21 @@
                               (opt5e/cleric-spell 5 :raise-dead 9)]
                   :levels {2 {:modifiers [(mod5e/action
                                            {:name "Channel Divinity: Preserve Life"
-                                            :summary (str "Distribute "
+                                            :summary (str "As an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level ("
                                                           (* 5 (?class-level :cleric))
-                                                          " HPs healing among any creatures within 30 ft., each can be restored to at most 1/2 their HP max")})]}
+                                                          "). Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can't use this feature on an undead or a construct.")})]}
                            8 {:selections [(opt5e/divine-strike-selection "radiant" 60)]}}
                   :traits [{:level 1
                             :name "Disciple of Life"
                             :page 60
-                            :summary "1st level or greater healing spells increase healing by 2 + spell's level HPs"}
+                            :summary "your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points to a creature, the creature regains additional hit points equal to 2 + the spell's level"}
                            {:level 6
                             :name "Blessed Healer"
                             :page 60
-                            :summary "When you cast spells that heal a creature other than you, you regain 2 + spell's level HPs"}
+                            :summary "the healing spells you cast on others heal you as well. When you cast a spell of 1st level or higher that restores hit points to a creature other than you, you regain hit points equal to 2 + the spell's level"}
                            {:level 17
                             :name "Supreme Healing"
-                            :summary "Instead of rolling healing, use max possible roll value." }]}
+                            :summary "when you would normally roll one or more dice to restore hit points with a spell, you instead use the highest number possible for each die. For example, instead of restoring 2d6 hit points to a creature, you restore 12"}]}
                  {:name "Peace Domain"
                   :profs {:skill-options {:choose 1 :options {:insight true :performance true :persuasion true}}}
                   :modifiers [(opt5e/cleric-spell 1 :heroism 1)
@@ -686,14 +688,17 @@
                                            {:name "Emboldening Bond"
                                             :frequency (units5e/long-rests ?prof-bonus)
                                             :duration units5e/minutes-10
-                                            :summary (str "Create a bond between up to " ?prof-bonus " willing creatures within 30 ft. While any bonded creature is within " (if (>= (?class-level :cleric) 17) "60" "30") " ft. of another, they can add a 1d4 to an attack roll, ability check, or saving throw it makes once per turn.")})]}
+                                            :summary "you can forge an empowering bond among people who are at peace with one another. As an action, you choose a number of willing creatures within 30 feet of you (this can include yourself) equal to your proficiency bonus. You create a magical bond among them for 10 minutes or until you use this feature again. While any bonded creature is within 30 feet of another, the creature can roll a d4 and add the number rolled to an attack roll, an ability check, or a saving throw it makes. Each creature can add the d4 no more than once per turn"})]}
                            2 {:modifiers [(mod5e/action
                                            {:name "Channel Divinity: Balm of Peace"
-                                            :summary (str "Move up to your speed without provoking opportunity attacks, and when you move within 5 ft. of any other creature during this action, you can restore 2d6 + " (max 1 (?ability-bonuses ::char5e/wis)) " HP to them once.")})]}
+                                            :summary "you can use your Channel Divinity to make your very presence a soothing balm. As an action, you can move up to your speed, without provoking opportunity attacks, and when you move within 5 feet of any other creature during this action, you can restore a number of hit points to that creature equal to 2d6 + your Wisdom modifier (minimum of 1 hit point). A creature can receive this healing only once whenever you take this action"})]}
                            6 {:modifiers [(mod5e/reaction
                                            {:name "Protective Bond"
-                                            :summary (str "When a bonded creature is about to take damage, a second bonded creature within " (if (>= (?class-level :cleric) 17) "60" "30") " ft. of the first can use its reaction to teleport to an unoccupied space within 5 ft. of the first, taking all the damage instead " (if (>= (?class-level :cleric) 17) "with resistance"))})]}
-                           8 {:selections [(opt5e/potent-spellcasting-selection 32)]}}}
+                                            :summary "the bond you forge between people helps them protect each other. When a creature affected by your Emboldening Bond feature is about to take damage, a second bonded creature within 30 feet of the first can use its reaction to teleport to an unoccupied space within 5 feet of the first creature. The second creature then takes all the damage instead"})]}
+                           8 {:selections [(opt5e/potent-spellcasting-selection 32)]}
+                           17 {:modifiers [(mod5e/trait-cfg
+                                             {:name "Expansive Bond"
+                                              :summary "the benefits of your Emboldening Bond and Protective Bond features now work when the creatures are within 60 feet of each other. Moreover, when a creature uses Protective Bond to take someone else's damage, the creature has resistance to that damage"})]}}
                  #_{:name "Knowledge Domain"
                     :modifiers [(opt5e/cleric-spell 1 :command 1)
                                 (opt5e/cleric-spell 1 :identify 1)
@@ -825,24 +830,22 @@
                                   :page 62
                                   :frequency (units5e/long-rests
                                               (max 1 (?ability-bonuses ::char5e/wis)))
-                                  :summary (str "When a creature you can see within 5 ft. hits you with an attack, you can deal 2d8 lightning or thunder damage to them (half that on successful DC "
-                                                (?spell-save-dc ::char5e/wis)
-                                                " Dexterity save).")})]
+                                  :summary "you can thunderously rebuke attackers. When a creature within 5 feet of you that you can see hits you with an attack, you can use your reaction to cause the creature to make a Dexterity saving throw. The creature takes 2d8 lightning or thunder damage (your choice) on a failed saving throw, and half as much damage on a successful one"})]
                     :levels {2 {:modifiers [(mod5e/trait-cfg
                                              {:name "Channel Divinity: Destructive Wrath"
                                               :page 62
                                               :level 2
-                                              :summary "Rather than roll lighting or thunder damage, deal max damage"})]}
+                                              :summary "you can use your Channel Divinity to wield the power of the storm with unchecked ferocity. When you roll lightning or thunder damage, you can use your Channel Divinity to deal maximum damage, instead of rolling"})]}
                              8 {:selections [(opt5e/divine-strike-selection "thunder" 62)]}
                              17 {:modifiers [(mod5e/flying-speed-equal-to-walking)]}}
-                    :traits [{:name "Thunderbolt Strike"
+                    :traits [{:name "Thunderous Strike"
                               :page 62
                               :level 6
-                              :summary "Push a Large or smaller creature up to 10 ft. when you deal lightning damage to it"}
+                              :summary "when you deal lightning damage to a Large or smaller creature, you can also push it up to 10 feet away from you"}
                              {:name "Stormborn"
                               :page 62
                               :level 17
-                              :summary "Flying speed equal to your walking speed when not underground or indoors"}]}
+                              :summary "you have a flying speed equal to your current walking speed whenever you are not underground or indoors"}]}
                  #_{:name "Trickery Domain"
                     :modifiers [(opt5e/cleric-spell 1 :charm-person 1)
                                 (opt5e/cleric-spell 1 :disguise-self 1)
@@ -894,21 +897,21 @@
                                   :page 63
                                   :frequency (units5e/long-rests
                                               (max 1 (?ability-bonuses ::char5e/wis)))
-                                  :summary "make one extra weapon attack when you use the Attack action"})]
+                                  :summary "your god delivers bolts of inspiration to you while you are engaged in battle. When you use the Attack action, you can make one weapon attack as a bonus action"})]
                     :levels {6 {:modifiers [(mod5e/reaction
                                              {:name "Channel Divinity: War God's Blessing"
                                               :level 6
                                               :page 63
-                                              :summary "+10 to an attack roll made by a creature within 30 ft."})]}
+                                              :summary "when a creature within 30 feet of you makes an attack roll, you can use your reaction to grant that creature a +10 bonus to the roll, using your Channel Divinity. You make this choice after you see the roll, but before the DM says whether the attack hits or misses"})]}
                              8 {:selections [(opt5e/divine-strike-selection nil 63)]}}
                     :traits [{:name "Channel Divinity: Guided Strike"
                               :page 63
                               :level 2
-                              :summary "+10 to an attack roll"}
+                              :summary "you can use your Channel Divinity to strike with supernatural accuracy. When you make an attack roll, you can use your Channel Divinity to gain a +10 bonus to the roll. You make this choice after you see the roll, but before the DM says whether the attack hits or misses"}
                              {:name "Avatar of Battle"
                               :page 63
                               :level 17
-                              :summary "resistance to slashing, bludgeoning, and piercing damage from nonmagical attacks"}]}]}))
+                              :summary "you gain resistance to bludgeoning, piercing, and slashing damage from nonmagical attacks"}]}]}))
 
 (defn druid-spell [spell-level spell-key min-level]
   (mod5e/spells-known-cfg spell-level
