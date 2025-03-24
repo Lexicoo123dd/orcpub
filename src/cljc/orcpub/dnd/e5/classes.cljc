@@ -602,9 +602,8 @@
              10 {:modifiers [(mod5e/action
                               {:name "Divine Intervention"
                                :page 59
-                               :summary (str
-                                         "you can call on your deity to intervene on your behalf when your need is great. Imploring your deity's aid requires you to use your action. Describe the assistance you seek, and roll percentile dice. If you roll a number equal to or lower than your cleric level, your deity intervenes. The DM chooses the nature of the intervention; the effect of any cleric spell or cleric domain spell would be appropriate. If your deity intervenes, you can't use this feature again for 7 days. Otherwise, you can use it again after you finish a long rest."
-                                         "\n\nAt 20th level, your call for intervention succeeds automatically, no roll required"))})]}}
+                               :summary (str "you can call on your deity to intervene on your behalf when your need is great. Imploring your deity's aid requires you to use your action. Describe the assistance you seek, and roll percentile dice. If you roll a number equal to or lower than your cleric level, your deity intervenes. The DM chooses the nature of the intervention; the effect of any cleric spell or cleric domain spell would be appropriate. If your deity intervenes, you can't use this feature again for 7 days. Otherwise, you can use it again after you finish a long rest."
+                                             "\n\nAt 20th level, your call for intervention succeeds automatically, no roll required")})]}}
     :subclass-level 1
     :subclass-title "Divine Domain"
     :subclasses [{:name "Forge Domain"
@@ -635,13 +634,13 @@
                              {:name "Soul of the Forge"
                               :level 6
                               :summary (str "your mastery of the forge grants you special abilities:"
-                                            "\u2022 You gain resistance to fire damage."
-                                            "\u2022 While wearing heavy armor, you gain a +1 bonus to AC.")}
+                                            "\n\u2022 You gain resistance to fire damage."
+                                            "\n\u2022 While wearing heavy armor, you gain a +1 bonus to AC.")}
                              {:name "Saint of Forge and Fire"
                               :level 17
                               :summary (str "your blessed affinity with fire and metal becomes more powerful:"
-                                            "\u2022 You gain immunity to fire damage."
-                                            "\u2022 While wearing heavy armor, you have resistance to bludgeoning, piercing, and slashing damage from nonmagical attacks.")}]}
+                                            "\n\u2022 You gain immunity to fire damage."
+                                            "\n\u2022 While wearing heavy armor, you have resistance to bludgeoning, piercing, and slashing damage from nonmagical attacks.")}]}
 
                  {:name "Life Domain"
                   :profs {:armor {:heavy true}}
@@ -698,7 +697,7 @@
                            8 {:selections [(opt5e/potent-spellcasting-selection 32)]}
                            17 {:modifiers [(mod5e/trait-cfg
                                              {:name "Expansive Bond"
-                                              :summary "the benefits of your Emboldening Bond and Protective Bond features now work when the creatures are within 60 feet of each other. Moreover, when a creature uses Protective Bond to take someone else's damage, the creature has resistance to that damage"})]}}
+                                              :summary "the benefits of your Emboldening Bond and Protective Bond features now work when the creatures are within 60 feet of each other. Moreover, when a creature uses Protective Bond to take someone else's damage, the creature has resistance to that damage"})]}}}
                  #_{:name "Knowledge Domain"
                     :modifiers [(opt5e/cleric-spell 1 :command 1)
                                 (opt5e/cleric-spell 1 :identify 1)
@@ -1025,21 +1024,21 @@
                                               :options (opt5e/simple-melee-weapon-options 1 (vals weapon-map))})]})]})]
     :traits [{:name "Druidic"
               :page 66
-              :summary "You can speak Druidic and use it to leave hidden message and automatically spot messages left by others. Others can spot the message with a DC 15 Perception check but can't decipher it without magic."}
+              :summary "You know Druidic, the secret language of druids. You can speak the language and use it to leave hidden messages. You and others who know this language automatically spot such a message. Others spot the message's presence with a successful DC 15 Wisdom (Perception) check but can't decipher it without magic"}
              {:name "Cantrip Versatility"
               :summary "When you reach level 4, 8, 12, 16, and 19 in druid, you can replace one cantrip from the class."}
              {:name "Timeless Body"
               :level 18
               :page 67
-              :summary "Your body ages 1 year for every 10 years that pass"}
+              :summary "the primal magic that you wield causes you to age more slowly. For every 10 years that pass, your body ages only 1 year"}
              {:name "Beast Spells"
               :level 18
               :page 67
-              :summary "while in Wild Shape, can perform druid spells' somatic and verbal components"}
+              :summary "you can cast many of your druid spells in any shape you assume using Wild Shape. You can perform the somatic and verbal components of a druid spell while in a beast shape, but you aren't able to provide material components"}
              {:name "Archdruid"
               :level 20
               :page 67
-              :summary "Wild Shape unlimited times, ignore verbal and somatic spell components, ignore material components with no cost and aren't consumed by spell"}]
+              :summary "you can use your Wild Shape an unlimited number of times. Additionally, you can ignore the verbal and somatic components of your druid spells, as well as any material components that lack a cost and aren't consumed by a spell. You gain this benefit in both your normal shape and your beast shape from Wild Shape"}]
     :subclass-level 2
     :subclass-title "Druid Circle"
     :subclasses [{:name "Circle of the Land"
@@ -1138,9 +1137,9 @@
                                            {:name "Natural Recovery"
                                             :level 2
                                             :page 68
-                                            :summary (str "During short rest, recover "
+                                            :summary (str "you can regain some of your magical energy by sitting in meditation and communing with nature. During a short rest, you choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your druid level (rounded up) ("
                                                           (common/round-up (/ (?class-level :druid) 2))
-                                                          " spell slots less than 6th level")})]}
+                                                          "), and none of the slots can be 6th level or higher.")})]}
                            6 {:modifiers [(mod5e/saving-throw-advantage ["plants magically created or manipulated to impede movement"])]}
                            10 {:modifiers [(mod5e/damage-immunity :poison)
                                            (mod5e/condition-immunity :poisoned)
@@ -1150,40 +1149,39 @@
                                            (mod5e/trait-cfg
                                             {:name "Nature's Ward"
                                              :page 69
-                                             :summary "immune to being charmed by fey or elementals; immune to poison and disease"})]}
+                                             :summary "you can't be charmed or frightened by elementals or fey, and you are immune to poison and disease"})]}
                            14 {:modifiers [(mod5e/dependent-trait
                                             {:name "Nature's Santuary"
                                              :level 14
                                              :page 69
-                                             :summary (str "beasts or plant creatures must make a DC "
-                                                           (?spell-save-dc ::char5e/wis)
-                                                           " Wisdom save or they cannot attack you.")})]}}
+                                             :summary "creatures of the natural world sense your connection to nature and become hesitant to attack you. When a beast or plant creature attacks you, that creature must make a Wisdom saving throw against your druid spell save DC. On a failed save, the creature must choose a different target, or the attack automatically misses. On a successful save, the creature is immune to this effect for 24 hours. The creature is aware of this effect before it makes its attack against you"})]}}
                   :traits [(lands-stride 6)]}
                  {:name "Circle of the Shepherd"
                   :levels {2 {:modifiers [(mod5e/language :sylvan)
                                           (mod5e/bonus-action
                                            {:name "Spirit Totem"
-                                            :duration units5e/minutes-1
-                                            :frequency units5e/rests-1
-                                            :summary (str "Summon an incorporeal spirit to a point you can see within 60 ft. The spirit creates an aura in a 30-foot radius that point. It does not count as a creature nor an object, but has an appearence. As a bonus action, you can move the spirit up to 60 ft. to a point you can see."
-                                                      "\nThe effect of the aura depends on the spirit summoned:"
-                                                      "\nBear Spirit. Each creature of your choice in the aura when the spirit appears gains " (+ 5 (?class-level :druid)) " temp HP. In addition, you and your allies gain advantage on Strength checks and saves while in the aura."
-                                                      "\nHawk Spirit. Use your reaction to give a creature advantage when it makes an attack roll against a target in the aura. You and your allies have advantage on Perception checks while in the aura."
-                                                      "\nUnicorn Spirit. You and your allies gain advantage on all ability checks made to detect creatures in the aura. If you cast a spell using a spell slot that respores HP to any creature, each creature of your choice in the aura also regain " (?class-level :druid) " HP.")})]}
+                                            :summary (str "As a bonus action, you can magically summon an incorporeal spirit to a point you can see within 60 feet of you. The spirit creates an aura in a 30-foot radius around that point. It counts as neither a creature nor an object, though it has the spectral appearance of the creature it represents. As a bonus action, you can move the spirit up to 60 feet to a point you can see."
+                                                          "\n\nThe spirit persists for 1 minute. Once you use this feature, you can’t use it again until you finish a short or long rest."
+                                                          "\n\nThe effect of the spirit’s aura depends on the type of spirit you summon from the options below."
+                                                          "\n\nBear Spirit. The bear spirit grants you and your allies its might and endurance. Each creature of your choice in the aura when the spirit appears gains temporary hit points equal to 5 + your druid level (" (+ 5 (?class-level :druid)) "). In addition, you and your allies gain advantage on Strength checks and Strength saving throws while in the aura."
+                                                          "\n\nHawk Spirit. The hawk spirit is a consummate hunter, aiding you and your allies with its keen sight. When a creature makes an attack roll against a target in the spirit’s aura, you can use your reaction to grant advantage to that attack roll. In addition, you and your allies have advantage on Wisdom (Perception) checks while in the aura."
+                                                          "\n\nUnicorn Spirit. The unicorn spirit lends its protection to those nearby. You and your allies gain advantage on all ability checks made to detect creatures in the spirit’s aura. In addition, if you cast a spell using a spell slot that restores hit points to any creature inside or outside the aura, each creature of your choice in the aura also regains hit points equal to your druid level.")})]}
                            10 {:modifiers [(mod5e/dependent-trait
                                            {:name "Guardian Spirit"
-                                            :summary (str "When a beast or fey that you summoned or created with a spell ends its turn in your Spirit Totem aura, it regains " (/ (?class-level :druid) 2) " HP")})]}
+                                            :summary "your Spirit Totem safeguards the beasts and fey that you call forth with your magic. When a beast or fey that you summoned or created with a spell ends its turn in your Spirit Totem aura, that creature regains a number of hit points equal to half your druid level"})]}
                            14 {:modifiers [(mod5e/dependent-trait
                                             {:name "Faithful Summons"
                                              :frequency units5e/long-rests-1
                                              :duration units5e/hours-1
-                                             :summary "If reduced to 0 hit points or incapacitated against your will, you can immediately gain the benefits of Conjure Animals as a 9th-level spell slot. Summons 4 beasts of your choice that are CR 2 or lower, appearing within 20 ft. If they recieve no commands from you, they protect you from harm and attack your foes. Lasts 1 hour without concentration or until dismissed."})]}}
+                                             :summary "the nature spirits you commune with protect you when you are the most defenseless. If you are reduced to 0 hit points or are incapacitated against your will, you can immediately gain the benefits of Conjure Animals as if it were cast with a 9th-level spell slot. It summons four beasts of your choice that are challenge rating 2 or lower. The conjured beasts appear within 20 feet of you. If they receive no commands from you, they protect you from harm and attack your foes. The spell lasts for 1 hour, requiring no concentration, or until you dismiss it (no action required)"})]}}
                   :traits [{:name "Speech of the Woods"
                             :level 2
-                            :summary "You learn to speak, read, and write Sylvan. Beasts can understand your speech and you can decipher their noises and motions. Most beasts lack the intelligence to convey or understand sophisticated concepts, but a friendly beast could relay what it has seen or heard in the recent past"}
+                            :summary "You learn to speak, read, and write Sylvan. In addition, beasts can understand your speech, and you gain the ability to decipher their noises and motions. Most beasts lack the intelligence to convey or understand sophisticated concepts, but a friendly beast could relay what it has seen or heard in the recent past. This ability doesn’t grant you any special friendship with beasts, though you can combine this ability with gifts to curry favor with them as you would with any nonplayer character"}
                            {:name "Mighty Summoner"
                             :level 6
-                            :summary "Beasts and fey summoned or created by a spell that you cast gain 2 extra HP per Hit Die it has, and damage from its natural weapons is magical."}]}
+                            :summary (str "beasts and fey that you conjure are more resilient than normal. Any beast or fey summoned or created by a spell that you cast gains two benefits:"
+                                          "\n\u2022 The creature appears with more hit points than normal: 2 extra hit points per Hit Die it has."
+                                          "\n\u2022 The damage from its natural weapons is considered magical for the purpose of overcoming immunity and resistance to nonmagical attacks and damage.")}]}
                  {:name "Circle of Spores"
                   :levels {2 {:modifiers [(druid-spell 0 :chill-touch 2)
                                           (druid-spell 2 :blindness-deafness 3)
@@ -1196,62 +1194,69 @@
                                           (druid-spell 5 :contagion 9)
                                           (mod5e/reaction
                                            {:name "Halo of Spores"
-                                            :summary (str "When a creature you can see moves within 10 ft. of you or starts it turn there, deal 1d"
+                                            :summary (str "you are surrounded by invisible, necrotic spores that are harmless until you unleash them on a creature nearby. When a creature you can see moves into a space within 10 feet of you or starts its turn there, you can use your reaction to deal 1d"
                                                           (condp <= (?class-level :druid)
                                                           14 10
                                                           10 8
                                                           6 6
                                                           4)
-                                                          " necrotic damage to it unless it succeeds on a DC " (?spell-save-dc ::char5e/wis) "CON save.")})
+                                                          " necrotic damage to that creature unless it succeeds on a Constitution saving throw against your spell save DC")})
                                           (mod5e/action
                                            {:name "Symbiotic Entity"
                                             :duration units5e/minutes-10
-                                            :summary (str "Expend a use of your Wild Shape feature to gain the following benefits:"
-                                                      "\n• Gain " (* 4 (?class-level :druid)) " temp HP."
-                                                      "\n• Double the damage die for Halo of Spores."
-                                                      "\n• Melee weapon attacks deal an extra 1d6 necrotic damage."
-                                                      "\nEnds if you lose all these temporary HP or until you use your Wild Shape again.")})]}
+                                            :summary (str "you gain the ability to channel magic into your spores. As an action, you can expend a use of your Wild Shape feature to awaken those spores, rather than transforming into a beast form, and you gain 4 temporary hit points for each level you have in this class ("
+                                                          (* 4 (?class-level :druid)) "). While this feature is active, you gain the following benefits:"
+                                                      "\n\u2022 When you deal your Halo of Spores damage, roll the damage die a second time and add it to the total."
+                                                      "\n\u2022 Your melee weapon attacks deal an extra 1d6 necrotic damage to any target they hit."
+                                                      "\nThese benefits last for 10 minutes, until you lose all these temporary hit points. or until you use your Wild Shape again")})]}
                            6 {:modifiers [(mod5e/reaction
                                            {:name "Fungal Infestation"
                                             :frequency (units5e/long-rests ?prof-bonus)
                                             :duration units5e/hours-1
-                                            :summary (str "When a beast or humanoid that is Small or Medium dies within 10 ft., animate it, causing it to stand up with 1 HP. Uses the Zombie stat block.\n"
-                                                      "Its turn comes immediately after yours, it obeys your mental commands, and can only take the Attack action, making one melee attack.")})]}
+                                            :summary (str "your spores gain the ability to infest a corpse and animate it. If a beast or a humanoid that is Small or Medium dies within 10 feet of you, you can use your reaction to animate it, causing it to stand up immediately with 1 hit point. The creature uses the Zombie stat block in the Monster Manual. It remains animate for 1 hour, after which time it collapses and dies."
+                                                          "\n\nIn combat, the zombie's turn comes immediately after yours. It obeys your mental commands, and the only action it can take is the Attack action, making one melee attack.")})]}
                            10 {:modifiers [(mod5e/bonus-action
                                             {:name "Spreading Spores"
                                              :duration units5e/minutes-1
-                                             :summary (str "While your Symbiotic Entity feature is active, hurl spores in a 10-foot cube up to 30 ft. away. They disappear early if you use this again, dismiss them as a bonus action, or if your Symbotic Entity feature is no longer active.\n"
-                                                       "Whenever a creature moves into the cube of starts its turn there, it must make a DC " (?spell-save-dc ::char5e/wis) " CON save or take your Halo of Spores damage. A creature can take this damage only once per turn. Can't use your Halo of Spores reaction while the cube persists.")})]}}
+                                             :summary (str "you gain the ability to seed an area with deadly spores. As a bonus action while your Symbiotic Entity feature is active, you can hurl spores up to 30 feet away, where they swirl in a 10-foot cube for 1 minute. The spores disappear early if you use this feature again, if you dismiss them as a bonus action, or if your Symbiotic Entity feature is no longer active."
+                                                           "\n\nWhenever a creature moves into the cube or starts its turn there, that creature takes your Halo of Spores damage, unless the creature succeeds on a Constitution saving throw against your spell save DC. A creature can take this damage no more than once per turn."
+                                                           "\n\nWhile the cube of spores persists, you can't use your Halo of Spores reaction")})]}}
                   :traits [{:name "Fungal Body"
                             :level 14
-                            :summary "Can't be blinded, deafened, frightened, or poisoned, and any critical hit against you counts as a normal hit, unless incapacitated."}]}
+                            :summary "the fungal spores in your body alter you: you can't be blinded, deafened, frightened, or poisoned, and any critical hit against you counts as a normal hit instead, unless you're incapacitated"}]}
                  {:name "Circle of Stars"
                   :levels {2 {:modifiers [(druid-spell 0 :guidance 2)
                                           (druid-spell 1 :guiding-bolt 2)
                                           (mod5e/dependent-trait
                                            {:name "Star Map"
-                                            :summary (str "You have a star chart that can serve as a spellcasting focus for your druid spells. While holding it, you know the Guidance cantrip, gain Guiding Bolt, and can cast it " ?prof-bonus " times/long rest. Spend 1 hour to replace it.")})
+                                            :summary (str "you've created a star chart as part of your heavenly studies. It is a Tiny object and can serve as a spellcasting focus for your druid spells. While holding this map, you have these benefits:"
+                                                          "\n\u2022 You know the Guidance cantrip."
+                                                          "\n\u2022 You have the Guiding Bolt spell prepared. It counts as a druid spell for you, and it doesn't count against the number of spells you can have prepared."
+                                                          "\n\u2022 You can cast Guiding Bolt without expending a spell slot. You can do so a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest."
+                                                          "\nIf you lose the map, you can perform a 1-hour ceremony to magically create a replacement. This ceremony can be performed during a short or long rest, and it destroys the previous map.")})
                                           (mod5e/bonus-action
                                            {:name "Starry Form"
                                             :duration units5e/minutes-10
-                                            :summary (str "Expend a use of your Wild Shape feature to shed bright and dim light 10 ft. each and gain one of the following benefits:"
-                                                      "\nArcher. When activated and as a bonus action on subsequent turns, make a ranged spell attack against one creature within 60 ft, dealing 1d8 + " (?ability-bonuses ::char5e/wis) " radiant damage."
-                                                      "\nChalice. Whenever you cast a spell using a spell slot that restores HP, you or another creature within 30 ft. of you can regain 1d8 + " (?ability-bonuses ::char5e/wis) " HP."
-                                                      "\nDragon. When making an INT or WIS check or a CON Save to maintain concentration on a spell, treat a roll of 9 or lower on the d20 as a 10."
-                                                      "\nEnds early if dismissed, you become incapacitated, die, or use the feature again")})]}
+                                            :summary (str "you gain the ability to harness constellations' power to alter your form. As a bonus action, you can expend a use of your Wild Shape feature to take on a starry form, rather than transforming into a beast."
+                                                          "\n\nWhile in your starry form, you retain your game statistics, but your body becomes luminous; your joints glimmer like stars, and glowing lines connect them as on a star chart. This form sheds bright light in a 10-foot radius and dim light for an additional 10 feet. The form lasts for 10 minutes. It ends early if you dismiss it (no action required), are incapacitated, die, or use this feature again."
+                                                          "\n\nWhenever you assume your starry form, choose which of the following constellations glimmers on your body; your choice gives you certain benefits while in the form:"
+                                                          "\nArcher. A constellation of an archer appears on you. When you activate this form, and as a bonus action on your subsequent turns while it lasts, you can make a ranged spell attack, hurling a luminous arrow that targets one creature within 60 feet of you. On a hit, the attack deals radiant damage equal to 1d8 + your Wisdom modifier."
+                                                          "\nChalice. A constellation of a life-giving goblet appears on you. Whenever you cast a spell using a spell slot that restores hit points to a creature, you or another creature within 30 feet of you can regain hit points equal to 1d8 + your Wisdom modifier."
+                                                          "\nDragon. A constellation of a wise dragon appears on you. When you make an Intelligence or a Wisdom check or a Constitution saving throw to maintain concentration on a spell, you can treat a roll of 9 or lower on the d20 as a 10.")})]}
                            6 {:modifiers [(mod5e/reaction
                                            {:name "Cosmic Omen"
                                             :frequency (units5e/long-rests ?prof-bonus)
-                                            :summary (str "When finishing a long rest, roll a die to gain a reaction."
-                                                          "\nWeal (even). Whenever a creature you can see within 30 ft. is about to make an attack roll, a save, or an ability check, add a d6 to the total."
-                                                          "\nWoe (odd). Whenever a creature you can see within 30 ft. is about to make an attack roll, a save, or an ability check, subtract a d6 from the total.")})]}
+                                            :summary (str "you learn to use your star map to divine the will of the cosmos. Whenever you finish a long rest, you can consult your Star Map for omens. When you do so, roll a die. Until you finish your next long rest, you gain access to a special reaction based on whether you rolled an even or an odd number on the die:"
+                                                          "\nWeal (even). Whenever a creature you can see within 30 ft. is about to make an attack roll, a save, or an ability check, add a d6 to the total.Whenever a creature you can see within 30 feet of you is about to make an attack roll, a saving throw, or an ability check, you can use your reaction to roll a d6 and add the number rolled to the total."
+                                                          "\nWoe (odd). Whenever a creature you can see within 30 feet of you is about to make an attack roll, a saving throw, or an ability check, you can use your reaction to roll a d6 and subtract the number rolled from the total."
+                                                          "\nYou can use this reaction a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest")})]}
                            10 {:modifiers [(mod5e/dependent-trait
                                             {:name "Twinkling Constellations"
-                                             :summary (str "Starry Form improves. 1d8 of Archer and CHalice becomes 2d8. While Dragon is active, gain a flying speed of 20 ft. and can hover."
-                                                           "\nAt the start of each turn, can change active constellation.")})]}}
+                                             :summary (str "the constellations of your Starry Form improve. The 1d8 of the Archer and the Chalice becomes 2d8, and while the Dragon is active, you have a flying speed of 20 feet and can hover."
+                                                           "\n\nMoreover, at the start of each of your turns while in your Starry Form, you can change which constellation glimmers on your body")})]}}
                   :traits [{:name "Full of Stars"
                             :level 14
-                            :summary "While in Starry Form, gain resistance to bludgeoning, piercing, and slashing damage."}]}
+                            :summary "while in your Starry Form, you become partially incorporeal, giving you resistance to bludgeoning, piercing, and slashing damage."}]}
                  #_{:name "Circle of the Moon"
                     :levels {2 {:modifiers [(mod5e/bonus-action
                                              {:name "Combat Wild Shape"
