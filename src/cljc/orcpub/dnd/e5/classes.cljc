@@ -369,9 +369,9 @@
                   :range units5e/ft-60
                   :frequency (units5e/long-rests
                               (max 1 (?ability-bonuses ::char5e/cha)))
-                  :summary (str "Inspire another creature with a 1d"
-                                (bardic-inspiration-die ?levels)
-                                " that it can, within the next 10 min., add to one ability check, attack roll, or saving throw")})]
+                  :summary (str "You can inspire others through stirring words or music. To do so, you use a bonus action on your turn to choose one creature other than yourself within 60 feet of you who can hear you. That creature gains one Bardic Inspiration die, a d"
+                                (bardic-inspiration-die ?levels) "."
+                                "\n\nOnce within the next 10 minutes, the creature can roll the die and add the number rolled to one ability check, attack roll, or saving throw it makes. The creature can wait until after it rolls the d20 before deciding to use the Bardic Inspiration die, but must decide before the DM says whether the roll succeeds or fails. Once the Bardic Inspiration die is rolled, it is lost. A creature can have only one Bardic Inspiration die at a time")})]
     :levels {2 {:modifiers [(mod/vec-mod ?default-skill-bonus-fns
                                          (fn [_]
                                            (int (/ ?prof-bonus 2))))
@@ -379,23 +379,23 @@
                             (mod5e/dependent-trait
                              {:name "Jack of All Trades"
                               :page 54
-                              :summary (str (common/bonus-str (int (/ ?prof-bonus 2))) " to ability checks that don't already include your proficiency bonus")})
+                              :summary (str "You can add half your proficiency bonus, rounded down (" (common/bonus-str (int (/ ?prof-bonus 2))) "), to any ability check you make that doesn't already include your proficiency bonus")})
                             (mod5e/dependent-trait
                              {:name "Song of Rest"
                               :page 54
                               :level 2
-                              :summary (str "With a song, you and friendly creatures who have regained HP using Hit Dice on a short rest, gain 1d"
+                              :summary (str "You can use soothing music or oration to help revitalize your wounded allies during a short rest. If you or any friendly creatures who can hear your performance regain hit points at the end of the short rest by spending one or more Hit Dice, each of those creatures regains an extra 1d"
                                             (mod5e/level-val
                                              (?class-level :bard)
                                              {9 8
                                               13 10
                                               17 12
                                               :default 6})
-                                            " additional healing at the end of the short rest")})
+                                            " hit points")})
                             (mod5e/trait-cfg
                              {:name "Magical Inspiration"
                               :level 2
-                              :summary "If a creature has a Bardic Inspiration die from you and casts a spell that restores hit points or deals damage, the creature can roll that die and choose a target affected by the spell. Add the number rolled as a bonus to the hit points regained or the damage dealt."})]}
+                              :summary "If a creature has a Bardic Inspiration die from you and casts a spell that restores hit points or deals damage, the creature can roll that die and choose a target affected by the spell. Add the number rolled as a bonus to the hit points regained or the damage dealt. The Bardic Inspiration die is then lost"})]}
              3 {:selections [(opt5e/expertise-selection 2)]}
              4 {:modifiers [(mod5e/trait-cfg
                              {:name "Bardic Versatility"
@@ -404,7 +404,7 @@
                              {:name "Countercharm"
                               :level 6
                               :page 54
-                              :summary "Start a performance that lasts until the end of your next turn, during which you and friendly creatures within 30 ft. have advantage on frightened or charmed saves. Must be able to hear you to gain this benefit. Ends early if incapacitated, silenced or you end it (no action)"})]}
+                              :summary "You gain the ability to use musical notes or words of power to disrupt mind-influencing effects. As an action, you can start a performance that lasts until the end of your next turn. During that time, you and any friendly creatures within 30 feet of you have advantage on saving throws against being frightened or charmed. A creature must be able to hear you to gain this benefit. The performance ends early if you are incapacitated or silenced or if you voluntarily end it (no action required)"})]}
              10 {:selections (conj [(opt5e/bard-magical-secrets spells-map 10)]
                                    (opt5e/expertise-selection 2))}
              14 {:selections [(opt5e/bard-magical-secrets spells-map 14)]}
@@ -412,12 +412,11 @@
     :traits [{:name "Font of Inspiration"
               :level 5
               :page 54
-              :summary "regain all uses of Bardic Inspiration at the end of a rest"}
+              :summary "you regain all of your expended uses of Bardic Inspiration when you finish a short or long rest"}
              {:name "Superior Inspiration"
               :level 20
               :page 54
-              :summary "regain 1 use of Bardic Inspiration if you have none remaining when rolling initiative"
-              }]
+              :summary "when you roll initiative and have no uses of Bardic Inspiration left, you regain one use"}]
     
     :subclass-level 3
     :subclass-title "Bard College"
@@ -426,59 +425,40 @@
                   :modifiers [(mod5e/trait-cfg
                                {:name "Silver Tongue"
                                 :level 3
-                                :summary "Treat a d20 roll of 9 or lower as a 10 on Persuasion and Deception checks"})
+                                :summary "you are a master at saying the right thing at the right time. When you make a Charisma (Persuasion) or Charisma (Deception) check, you can treat a d20 roll of 9 or lower as a 10"})
                               (mod5e/bonus-action
                                {:name "Unsettling Words"
                                 :level 3
-                                :summary (str "expend a use of Bardic Inspiration to make a creature you can see within 60 ft. subtract 1d"
-                                              (bardic-inspiration-die ?levels)
-                                              " from its next saving throw it makes before the start of your next turn")})]
+                                :summary "you can spin words laced with magic that unsettle a creature and cause it to doubt itself. As a bonus action, you can expend one use of your Bardic Inspiration and choose one creature you can see within 60 feet of you. Roll the Bardic Inspiration die. The creature must subtract the number rolled from the next saving throw it makes before the start of your next turn"})]
                   :levels {6 {:modifiers [(mod5e/trait-cfg
                                            {:name "Unfailing Inspiration"
                                             :level 6
-                                            :summary "When a creature adds one of your Bardic Inspiration dice to its ability check, attack roll, or saving throw and the roll fails, the creature can keep the die"})
+                                            :summary "your inspiring words are so persuasive that others feel driven to succeed. When a creature adds one of your Bardic Inspiration dice to its ability check, attack roll, or saving throw and the roll fails, the creature can keep the Bardic Inspiration die"})
                                           (mod5e/action
                                            {:name "Universal Speech"
                                             :level 6
                                             :duration units5e/hours-1
                                             :frequency units5e/long-rests-1
-                                            :summary (str "Choose up to " (max 1 (?ability-bonuses ::char5e/cha)) " creatures within 60 ft. They can magically understand you, regardless of the language you speak. Can use again by spending a spell slot")})]}
+                                            :summary (str "you have gained the ability to make your speech intelligible to any creature. As an action, choose one or more creatures within 60 feet of you, up to a number equal to your Charisma modifier (minimum of one creature) (" (max 1 (?ability-bonuses ::char5e/cha)) "). The chosen creatures can magically understand you, regardless of the language you speak, for 1 hour."
+                                                          "\n\nOnce you use this feature, you can't use it again until you finish a long rest, unless you expend a spell slot to use it again")})]}
                            14 {:modifiers [(mod5e/reaction
                                             {:name "Infectious Inspiration"
                                              :level 14
                                              :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/cha)))
-                                             :summary "When a creature within 60 ft. adds one of your Bardic Inspiration to a roll and succeeds, you can use your reaction to give a different creature (other than yourself) that can hear you within 60 ft. a Bardic Inspiration die without expending a use"})]}}}
+                                             :summary "when you successfully inspire someone, the power of your eloquence can now spread to someone else. When a creature within 60 feet of you adds one of your Bardic Inspiration dice to its ability check, attack roll, or saving throw and the roll succeeds, you can use your reaction to encourage a different creature (other than yourself) that can hear you within 60 feet of you, giving it a Bardic Inspiration die without expending any of your Bardic Inspiration uses"})]}}}
                  {:name "College of Lore"
                   :profs {:skill-options {:choose 3 :options {:any true}}}
                   :modifiers [(mod5e/reaction
                                {:name "Cutting Words"
                                 :level 3
                                 :page 54
-                                :summary (str "expend a use of Bardic Inspiration to subtract 1d"
-                                              (bardic-inspiration-die ?levels)
-                                              " from an attack, ability, or damage roll made by a creature within 60 ft. Immune if it can't hear you or if immune to being charmed")})]
+                                :summary "you learn how to use your wit to distract, confuse, and otherwise sap the confidence and competence of others. When a creature that you can see within 60 feet of you makes an attack roll, an ability check, or a damage roll, you can use your reaction to expend one of your uses of Bardic Inspiration, rolling a Bardic Inspiration die and subtracting the number rolled from the creature's roll. You can choose to use this feature after the creature makes its roll, but before the DM determines whether the attack roll or ability check succeeds or fails, or before the creature deals its damage. The creature is immune if it can't hear you or if it's immune to being charmed"})]
                   :levels {6 {:selections [(opt5e/bard-magical-secrets spells-map 6)]}
                            14 {:modifiers [(mod5e/dependent-trait
                                             {:name "Peerless Skill"
                                              :level 14
                                              :page 55
-                                             :summary (str "expend one use of Bardic Inspiration to add 1d"
-                                                           (bardic-inspiration-die ?levels)
-                                                           " to an ability check")})]}}}
-                 {:name "College of Valor"
-                    :profs {:armor {:medium true
-                                    :shields true}
-                            :weapon {:martial true}}
-                    :levels {3 {:modifiers [(mod5e/trait-cfg
-                                             {:name "Combat Inspiration"
-                                              :page 55
-                                              :summary "A creature that has a Bardic Inspiration die from you can roll that die and add the number rolled to a weapon damage roll it just made. Alternatively, when an attack roll is made against the creature, it can use its reaction to roll the Bardic Inspiration die and add the number rolled to its AC against that attack, after seeing the roll but before knowing whether it hits or misses."})]}
-                             6 {:modifiers [(extra-attack-trait 55)
-                                            (mod5e/num-attacks 2)]}
-                             14 {:modifiers [(mod5e/bonus-action
-                                              {:name "Battle Magic"
-                                               :page 55
-                                               :summary "When you use your action to cast a bard spell, you can make one weapon attack as a bonus action."})]}}}
+                                             :summary "when you make an ability check, you can expend one use of Bardic Inspiration. Roll a Bardic Inspiration die and add the number rolled to your ability check. You can choose to do so after you roll the die for the ability check, but before the DM tells you whether you succeed or fail"})]}}}
                  {:name "College of Swords"
                     :profs {:armor {:medium true}
                             :weapon {:scimitar true}}
@@ -493,7 +473,21 @@
                                             (mod5e/num-attacks 2)]}
                              14 {:modifiers [(mod5e/bonus-action
                                               {:name "Battle Magic"
-                                               :summary "Whenever you use a Blade Flourish option, you can roll a d6 and use it instead of expending a Bardic Inspiration die."})]}}}]}))
+                                               :summary "Whenever you use a Blade Flourish option, you can roll a d6 and use it instead of expending a Bardic Inspiration die."})]}}}
+                 {:name "College of Valor"
+                    :profs {:armor {:medium true
+                                    :shields true}
+                            :weapon {:martial true}}
+                    :levels {3 {:modifiers [(mod5e/trait-cfg
+                                             {:name "Combat Inspiration"
+                                              :page 55
+                                              :summary "you learn to inspire others in battle. A creature that has a Bardic Inspiration die from you can roll that die and add the number rolled to a weapon damage roll it just made. Alternatively, when an attack roll is made against the creature, it can use its reaction to roll the Bardic Inspiration die and add the number rolled to its AC against that attack, after seeing the roll but before knowing whether it hits or misses"})]}
+                             6 {:modifiers [(extra-attack-trait 55)
+                                            (mod5e/num-attacks 2)]}
+                             14 {:modifiers [(mod5e/bonus-action
+                                              {:name "Battle Magic"
+                                               :page 55
+                                               :summary "you have mastered the art of weaving spellcasting and weapon use into a single harmonious act. When you use your action to cast a bard spell, you can make one weapon attack as a bonus action"})]}}}]}))
 
 (defn blessings-of-knowledge-skill [skill-name]
   (let [skill-kw (common/name-to-kw skill-name)]
