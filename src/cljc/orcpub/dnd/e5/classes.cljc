@@ -2075,7 +2075,7 @@
                              (mod5e/trait-cfg
                               {:name "Divine Health"
                                :page 85
-                               :summary "immune to disease"})
+                               :summary "the divine magic flowing through you makes you immune to disease"})
                              (mod5e/bonus-action
                              {:name "Harness Divine Power"
                               :frequency (units5e/long-rests (mod5e/level-val
@@ -2083,9 +2083,7 @@
                                              {7 2
                                               15 3
                                               :default 1}))
-                              :summary (str "Expend a use of your Channel Divinity to regain one spell slot of level "
-                                            (common/round-up (/ ?prof-bonus 2))
-                                            " or lower")})]}
+                              :summary "you can expend a use of your Channel Divinity to fuel your spells. As a bonus action, you touch your holy symbol, utter a prayer, and regain one expended spell slot, the level of which can be no higher than half your proficiency bonus (rounded up)"})]}
               4 {:modifiers [(mod5e/trait-cfg
                              {:name "Martial Versatility"
                               :summary "When you reach level 4, 8, 12, 16, and 19 in paladin, you can replace one fighting style from the class."})]}
@@ -2100,35 +2098,38 @@
                              (mod5e/dependent-trait
                               {:name "Aura of Protection"
                                :page 85
-                               :summary (str "you and friendly creatures within " ?paladin-aura " ft. have a " (common/bonus-str (max 1 (?ability-bonuses ::char5e/cha))) " bonus to saves")}))}
+                               :summary (str "whenever you or a friendly creature within " ?paladin-aura "feet of you must make a saving throw, the creature gains a bonus to the saving throw equal to your Charisma modifier (with a minimum bonus of +1). You must be conscious to grant this bonus")}))}
               10 {:modifiers [(mod5e/dependent-trait
                                {:name "Aura of Courage"
                                 :page 85
-                                :summary (str (str "you and friendly creatures within " ?paladin-aura " ft. can't be frightened"))})]}
+                                :summary (str (str "you and friendly creatures within " ?paladin-aura " feet of you can't be frightened while you are conscious"))})]}
               14 {:modifiers [(mod5e/action
                                {:name "Cleansing Touch"
                                 :page 85
                                 :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/cha)))
-                                :summary "end a spell on yourself or willing creature"})]}}
+                                :summary "you can use your action to end one spell on yourself or on one willing creature that you touch"})]}}
      :modifiers [(mod/modifier ?paladin-aura (if (< (?class-level :paladin) 18) 10 30))
                  (mod5e/action
                   {:name "Divine Sense"
                    :page 84
                    :frequency (units5e/long-rests
                                (inc (?ability-bonuses ::char5e/cha)))
-                   :summary "within 60 ft., detect presense of undead, celestial, or fiend. Also detect consecrated or desecrated object or place"})
+                   :summary "The presence of strong evil registers on your senses like a noxious odor, and powerful good rings like heavenly music in your ears. As an action, you can open your awareness to detect such forces. Until the end of your next turn, you know the location of any celestial, fiend, or undead within 60 feet of you that is not behind total cover. You know the type (celestial, fiend, or undead) of any being whose presence you sense, but not its identity (the vampire Count Strahd von Zarovich, for instance). Within the same radius, you also detect the presence of any place or object that has been consecrated or desecrated, as with the Hallow spell"})
                  (mod5e/action
                   {:name "Lay on Hands"
                    :page 84
                    :frequency (units5e/long-rests
                                 (* 5 (?class-level :paladin)))
-                   :summary (str "you have a healing pool of " (* 5 (?class-level :paladin)) " HPs, with it you can heal a creature or expend 5 points to cure disease or neutralize poison")})
+                   :summary (str "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you take a long rest. With that pool, you can restore a total number of hit points equal to your paladin level x 5 (" (* 5 (?class-level :paladin)) ")."
+                                 "\n\nAs an action, you can touch a creature and draw power from the pool to restore a number of hit points to that creature, up to the maximum amount remaining in your pool."
+                                 "\n\nAlternatively, you can expend 5 hit points from your pool of healing to cure the target of one disease or neutralize one poison affecting it. You can cure multiple diseases and neutralize multiple poisons with a single use of Lay on Hands, expending hit points separately for each one."
+                                 "\n\nThis feature has no effect on undead and constructs.")})
                  (mod5e/dependent-trait
                   {:name "Channel Divinity"
                    :page 85
                    :level 3
                    :frequency units5e/rests-1
-                   :summary "your oath provides specific options"})]
+                   :summary "Your oath allows you to channel divine energy to fuel magical effects. Each Channel Divinity option provided by your oath explains how to use it"})]
      :selections [(opt5e/new-starting-equipment-selection
                    :paladin
                    {:name "Weapons"
@@ -2174,11 +2175,11 @@
      :traits [{:name "Divine Smite"
                :level 2
                :page 85
-               :summary "when you hit with melee weapon attack, you can expend 1 X-th level spell slot to deal extra (X+1)d8 radiant damage, up to 5d8. Additional d8 on fiend or undead."}
+               :summary "when you hit a creature with a melee weapon attack, you can expend one spell slot to deal radiant damage to the target, in addition to the weapon's damage. The extra damage is 2d8 for a 1st-level spell slot, plus 1d8 for each spell level higher than 1st, to a maximum of 5d8. The damage increases by 1d8 if the target is an undead or a fiend, to a maximum of 6d8"}
               {:name "Improved Divine Smite"
                :level 11
                :page 85
-               :summary "whenever you hit with melee weapon, you deal an extra d8 radiant damage"}]
+               :summary "you are so suffused with righteous might that all your melee weapon strikes carry divine power with them. Whenever you hit a creature with a melee weapon, the creature takes an extra 1d8 radiant damage"}]
      :subclass-level 3
      :subclass-title "Sacred Oath"
      :subclasses [{:name "Oath of Devotion"
@@ -2196,26 +2197,30 @@
                                 {:name "Channel Divinity: Sacred Weapon"
                                  :page 86
                                  :duration units5e/minutes-1
-                                 :summary (str "make a weapon magical, with a " (common/bonus-str (max 1 (?ability-bonuses ::char5e/cha))) " attack bonus and magical light (20 ft./20 ft.)")})
+                                 :summary (str "As an action, you can imbue one weapon that you are holding with positive energy, using your Channel Divinity. For 1 minute, you add your Charisma modifier to attack rolls made with that weapon (with a minimum bonus of +1). The weapon also emits bright light in a 20-foot radius and dim light 20 feet beyond that. If the weapon is not already magical, it becomes magical for the duration."
+                                               "\n\nYou can end this effect on your turn as part of any other action. If you are no longer holding or carrying this weapon, or if you fall unconscious, this effect ends")})
                                (mod5e/action
                                 {:name "Channel Divinity: Turn the Unholy"
                                  :page 86
                                  :duration units5e/minutes-1
-                                 :summary (str "each undead or fiend within 30 ft. must make a DC " (?spell-save-dc ::char5e/cha) " WIS save or be turned for 1 min.")})]
+                                 :summary (str "As an action, you present your holy symbol and speak a prayer censuring fiends and undead, using your Channel Divinity. Each fiend or undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. If the creature fails its saving throw, it is turned for 1 minute or until it takes damage."
+                                               "\n\nA turned creature must spend its turns trying to move as far away from you as it can, and it can't willingly move to a space within 30 feet of you. It also can't take reactions. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there's nowhere to move, the creature can use the Dodge action")})]
                    :levels {7 {:modifiers [(mod5e/dependent-trait
                                             {:name "Aura of Devotion"
                                              :page 86
-                                             :summary (str "you and friendly creatures within " ?paladin-aura " ft. can't be charmed")})]}
+                                             :summary (str "you and friendly creatures within " ?paladin-aura " feet of you can't be charmed while you are conscious")})]}
                             20 {:modifiers [(mod5e/action
                                              {:name "Holy Nimbus"
                                               :page 86
                                               :frequency units5e/long-rests-1
                                               :duration units5e/minutes-1
-                                              :summary "you emanate a bright light with 30 ft radius, an enemy that starts its turn there takes 10 radiant damage. You also have advantage on saves against spells cast by fiends and undead"})]}}
+                                              :summary (str "as an action, you can emanate an aura of sunlight. For 1 minute, bright light shines from you in a 30-foot radius, and dim light shines 30 feet beyond that."
+                                                            "\n\nWhenever an enemy creature starts its turn in the bright light, the creature takes 10 radiant damage."
+                                                            "\n\nIn addition, for the duration, you have advantage on saving throws against spells cast by fiends or undead")})]}}
                    :traits [{:name "Purity of Spirit"
                              :level 15
                              :page 86
-                             :summary "always under effects of protection from evil and good spell"}]}
+                             :summary "you are always under the effects of a Protection from Evil and Good spell"}]}
                   {:name "Oathbreaker"
                    :modifiers [(opt5e/paladin-spell 1 :hellish-rebuke)
                                (opt5e/paladin-spell 1 :inflict-wounds)
@@ -2230,25 +2235,23 @@
                                (mod5e/action
                                 {:name "Channel Divinity: Control Undead"
                                  :duration (units5e/hours 24)
-                                 :summary (str "Target an undead creature you can see within 30 ft. It must make a DC " (?spell-save-dc ::char5e/cha) " WIS save, obeying your commands for 24 hours or until you use this again. Undead with CR " (?class-level :paladin) " or above are immune")})
+                                 :summary "As an action, you target one undead creature you can see within 30 feet of you. The target must make a Wisdom saving throw. On a failed save, the target must obey your commands for the next 24 hours, or until you use this Channel Divinity option again. An undead whose challenge rating is equal to or greater than your paladin level is immune to this effect"})
                                (mod5e/action
                                 {:name "Channel Divinity: Dreadful Aspect"
                                  :duration units5e/minutes-1
-                                 :summary (str "Each creature of your choice within 30 ft. must make a DC " (?spell-save-dc ::char5e/cha) " WIS save if it can see you or be frightened of you for 1 min. A creature who ends its turn more than 30 ft. away from you can repeat the save")})]
+                                 :summary "As an action, you channel the darkest emotions and focus them into a burst of magical menace. Each creature of your choice within 30 feet of you must make a Wisdom saving throw if it can see you. On a failed save, the target is frightened of you for 1 minute. If a creature frightened by this effect ends its turn more than 30 feet away from you, it can attempt another Wisdom saving throw to end the effect on it"})]
                    :levels {7 {:modifiers [(mod5e/dependent-trait
                                             {:name "Aura of Hate"
-                                             :summary (str "You and fiends and undead within " ?paladin-aura " ft. gain a " (common/bonus-str (max 1 (?ability-bonuses ::char5e/cha))) " bonus to melee weapon damage. A creature can only benefit from this once")})]}
+                                             :summary (str "you, as well any fiends and undead within " ?paladin-aura " feet of you, gain a bonus to melee weapon damage rolls equal to your Charisma modifier (minimum of +1). A creature can benefit from this feature from only one paladin at a time")})]}
                             20 {:modifiers [(mod5e/action
                                              {:name "Dread Lord"
                                               :frequency units5e/long-rests-1
                                               :duration units5e/minutes-1
-                                              :summary "You create an aura of gloom with 30 ft. radius. Within the aura, bright light becomes dim, enemies starting their turn frightened by you take 4d10 psychic damage, and attacks against chosen creatures have disadvantage."})
-                                            (mod5e/bonus-action
-                                             {:name "Dread Lord Attack"
-                                              :summary (str "While within your Dread Lord aura, make a melee spell attack against a target, dealing 3d10+" (?ability-bonuses ::char5e/cha) " necrotic damage on a hit")})]}}
+                                              :summary (str "you can, as an action, surround yourself with an aura of gloom that lasts for 1 minute. The aura reduces any bright light in a 30-foot radius around you to dim light. Whenever an enemy that is frightened by you starts its turn in the aura, it takes 4d10 psychic damage. Additionally, you and any creatures of your choosing in the aura are draped in deeper shadow. Creatures that rely on sight have disadvantage on attack rolls against creatures draped in this shadow."
+                                                            "\n\nWhile the aura lasts, you can use a bonus action on your turn to cause the shadows in the aura to attack one creature. Make a melee spell attack against the target. If the attack hits, the target takes necrotic damage equal to 3d10 + your Charisma modifier")})]}}
                    :traits [{:name "Supernatural Resistance"
                              :level 15
-                             :summary "You gain resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons"}]}
+                             :summary "you gain resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons"}]}
                   {:name "Oath of the Crown"
                    :modifiers [(opt5e/paladin-spell 1 :command)
                                (opt5e/paladin-spell 1 :compelled-duel)
@@ -2262,27 +2265,27 @@
                                (opt5e/paladin-spell 5 :geas)
                                (mod5e/bonus-action
                                 {:name "Channel Divinity: Champion Challenge"
-                                 :summary (str "Each creature of your choice that you can see within 30 ft. must make a DC " (?spell-save-dc ::char5e/wis) " WIS save or become unable to move more than 30 ft. away from you. Ends on a creature if you're incapacitated or if it's more than 30 ft. away from you")})
+                                 :summary "As a bonus action, you issue a challenge that compels other creatures to do battle with you. Each creature of your choice that you can see within 30 feet of you must make a Wisdom saving throw. On a failed save, a creature can't willingly move more than 30 feet away from you. This effect ends on the creature if you are incapacitated or die or if the creature is more than 30 feet away from you"})
                                (mod5e/bonus-action
                                 {:name "Channel Divinity: Turn the Tide"
-                                 :summary (str "Each creature of your choice that can hear you within 30 ft. regains 1d6+" (?ability-bonuses ::char5e/cha) " HP if it has no more than half its HP")})]
+                                 :summary "As a bonus action, you can bolster injured creatures with your Channel Divinity. Each creature of your choice that can hear you within 30 feet of you regains hit points equal to 1d6 + your Charisma modifier (minimum of 1) if it has no more than half of its hit points"})]
                    :levels {7 {:modifiers [(mod5e/reaction
                                             {:name "Divine Allegiance"
-                                             :summary "When a creature within 5 ft. takes damage, take that damage instead of them. This damage can't be reduced or prevented in any way"})]}
+                                             :summary "when a creature within 5 feet of you takes damage, you can use your reaction to magically substitute your own health for that of the target creature, causing that creature not to take the damage. Instead, you take the damage. This damage to you can't be reduced or prevented in any way"})]}
                             15 {:modifiers [(mod5e/trait-cfg
                                              {:name "Unyielding Saint"
-                                              :summary "Advantage on saves against becoming paralyzed or stunned"})
+                                              :summary "you have advantage on saving throws to avoid becoming paralyzed or stunned"})
                                             (mod5e/saving-throw-advantage [:paralyzed])
                                             (mod5e/saving-throw-advantage [:stunned])]}
                             20 {:modifiers [(mod5e/action
                                              {:name "Exalted Champion"
                                               :duration units5e/hours-1
                                               :frequency units5e/long-rests-1
-                                              :summary (str "Gain the following benefits:"
-                                                            "\n• Resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons"
-                                                            "\n• Allies within 30 ft. have advantage on death saves"
-                                                            "\n• You and your allies within 30 ft. have advantage on WIS saves"
-                                                            "\nEnds early if your are incapacitated or die")})]}}}
+                                              :summary (str "your presence on the field of battle is an inspiration to those dedicated to your cause. You can use your action to gain the following benefits for 1 hour:"
+                                                            "\n\u2022 You have resistance to bludgeoning, piercing, and slashing damage from nonmagical weapons."
+                                                            "\n\u2022 Your allies have advantage on death saving throws while within 30 feet of you."
+                                                            "\n\u2022 You have advantage on Wisdom saving throws, as do your allies within 30 feet of you."
+                                                            "\nThis effect ends early if you are incapacitated or die")})]}}}
                   #_{:name "Oath of the Ancients"
                      :modifiers [(opt5e/paladin-spell 1 :ensnaring-strike 3)
                                  (opt5e/paladin-spell 1 :speak-with-animals 3)
@@ -2375,28 +2378,28 @@
                                   {:name "Channel Divinity: Watcher's Will"
                                    :level 3
                                    :duration units5e/minutes-1
-                                   :summary (str "up to " (max 1 (?ability-bonuses ::char5e/cha)) " creatures you can see within 30 ft. gain advantage on INT, WIS, and CHA Saves")})
+                                   :summary "You can use your Channel Divinity to invest your presence with the warding power of your faith. As an action, you can choose a number of creatures you can see within 30 feet of you, up to a number equal to your Charisma modifier (minimum of one creature). For 1 minute, you and the chosen creatures have advantage on Intelligence, Wisdom, and Charisma saving throws"})
                                  (mod5e/action
                                   {:name "Channel Divinity: Abjure the Extraplanar"
                                    :level 3
                                    :duration units5e/minutes-1
-                                   :summary (str "each aberration, celestial, elemental, fey, or fiend within 30 ft. that can hear you must make a DC " (?spell-save-dc ::char5e/cha) " WIS Save or take be turned until it takes damage")})]
+                                   :summary "You can use your Channel Divinity to castigate unworldly beings. As an action, you present your holy symbol and each aberration, celestial, elemental, fey, or fiend within 30 feet of you that can hear you must make a Wisdom saving throw. On a failed save, the creature is turned for 1 minute or until it takes damage"})]
                      :levels {7 {:modifiers [(mod5e/dependent-trait
                                               {:name "Aura of the Sentinel"
                                                :level 7
-                                               :summary (str "unless incapacitated, when you and any creatures of your choice within 10 ft. of you roll initiative, you all gain a +" ?prof-bonus " bonus to initiative")})]}
+                                               :summary (str "you emit an aura of alertness while you aren't incapacitated. When you and any creatures of your choice within " ?paladin-aura " feet of you roll initiative, you all gain a bonus to initiative equal to your proficiency bonus")})]}
                               15 {:modifiers [(mod5e/reaction
                                                {:name "Vigilant Rebuke"
                                                 :level 15
-                                                :summary (str "when you or a creature you can see within 30 ft. succeeds on a INT, WIS, or CHA Save, deal 2d8 + " (?ability-bonuses ::char5e/cha) " force damage to the creature who forced the save")})]}
+                                                :summary "you've learned how to chastise anyone who dares wield beguilements against you and your wards. Whenever you or a creature you can see within 30 feet of you succeeds on an Intelligence, a Wisdom, or a Charisma saving throw, you can use your reaction to deal 2d8 + your Charisma modifier force damage to the creature that forced the saving throw"})]}
                               20 {:modifiers [(mod5e/bonus-action
                                                {:name "Mortal Bulwark"
                                                 :level 20
-                                                :duration units5e/minutes-1
-                                                :frequency units5e/long-rests-1
-                                                :summary (str "- Gain 120 ft. truesight"
-                                                              "- Gain advantage on attack rolls against aberrations, celestials, elementals, fey, and fiends"
-                                                              "- When you hit a creature with an attack roll and deal damage to it, force it to make a DC " (?spell-save-dc ::char5e/cha) " CHA Save or magically banish it to its native plane of existence if currently not there. On a successful save, the creature can't be banished by this feature for 24 hours. Expend lvl 5 spell slot to use again")})]}}}]})))
+                                                :summary (str "you manifest a spark of divine power in defense of the mortal realms. As a bonus action, you gain the following benefits for 1 minute:"
+                                                              "\n\u2022 You gain truesight with a range of 120 feet."
+                                                              "\n\u2022 You have advantage on attack rolls against aberrations, celestials, elementals, fey, and fiends."
+                                                              "\n\u2022 When you hit a creature with an attack roll and deal damage to it, you can also force it to make a Charisma saving throw against your spell save DC. On a failed save, the creature is magically banished to its native plane of existence if it's currently not there. On a successful save, the creature can't be banished by this feature for 24 hours."
+                                                              "\nOnce you use this bonus action, you can't use it again until you finish a long rest, unless you expend a 5th-level spell slot to use it again")})]}}}]})))
 
 (defn favored-enemy-option [language-map [enemy-type info]]
   (let [vec-info? (sequential? info)
