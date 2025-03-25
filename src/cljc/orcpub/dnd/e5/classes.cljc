@@ -1788,29 +1788,38 @@
                  (mod5e/bonus-action
                   {:name "Martial Arts"
                    :page 78
-                   :summary "Make an extra unarmed strike when you take Attack action"})]
+                   :summary "When you use the Attack action with an unarmed strike or a monk weapon on your turn, you can make one unarmed strike as a bonus action. For example, if you take the Attack action and attack with a quarterstaff, you can also make an unarmed strike as a bonus action, assuming you haven't already taken a bonus action this turn"})]
      :levels {2 {:modifiers [(mod5e/unarmored-speed-bonus 10)
                              (mod5e/dependent-trait
                               {:name "Ki"
                                :page 78
                                :level 2
-                               :summary (str "You have " (+ 3 (?class-level :monk)) " ki points")})
+                               :summary (str "your training allows you to harness the mystic energy of ki. Your access to this energy is represented by a number of ki points. Your monk level determines the number of points you have, as shown in the Ki Points column of the Monk table."
+                                             "\n\nWhen you spend a ki point, it is unavailable until you finish a short or long rest, at the end of which you draw all of your expended ki back into yourself. You must spend at least 30 minutes of the rest meditating to regain your ki points")})
                              (mod5e/bonus-action
                               {:name "Flurry of Blows"
                                :page 78
                                :level 2
-                               :summary "After you take Attack action, spend 1 ki to make 2 unarmed strikes"})
+                               :summary "Immediately after you take the Attack action on your turn, you can spend 1 ki point to make two unarmed strikes as a bonus action"})
                              (mod5e/bonus-action
                               {:name "Patient Defense"
                                :page 78
-                               :summary "Spend 1 ki point to take the Dodge action"})
+                               :summary "You can spend 1 ki point to take the Dodge action as a bonus action on your turn"})
                              (mod5e/bonus-action
                               {:name "Step of the Wind"
                                :page 78
-                               :summary "Spend 1 ki point to take the Disengage or Dash action and jump distance is doubled for the turn"})
+                               :summary "You can spend 1 ki point to take the Disengage or Dash action as a bonus action on your turn, and your jump distance is doubled for the turn"})
                              (mod5e/trait-cfg
                               {:name "Dedicated Weapon"
-                               :summary "During a rest, can touch a weapon to count it as a monk weapon. Criteria: simple or martial, proficient, lacks heavy and special properties"})]
+                               :summary (str "you train yourself to use a variety of weapons as monk weapons, not just simple melee weapons and shortswords. Whenever you finish a short or long rest, you can touch one weapon, focus your ki on it, and then count that weapon as a monk weapon until you use this feature again. The chosen weapon must meet these criteria:"
+                                             "\n\u2022 The weapon must be a simple or martial weapon."
+                                             "\n\u2022 You must be proficient with it."
+                                             "\n\u2022 It must lack the heavy and special properties.")})
+                             (mod5e/dependent-trait
+                               {:name "Unarmored Movement"
+                                :summary (str "your speed increases by 10 feet while you are not wearing armor or wielding a shield. This bonus increases when you reach certain monk levels, as shown in the Monk table"
+                                              (if (>= (?class-level :monk) 5)
+                                              "\n\nAt 9th level, you gain the ability to move along vertical surfaces and across liquids on your turn without falling during the move"))})]
                  :selections [(t/selection-cfg
                               {:name "Dedicated Weapon"
                                 :tags #{:equipment}
@@ -1818,32 +1827,32 @@
               3 {:modifiers [(mod5e/reaction
                               {:name "Deflect Missiles"
                                :page 78
-                               :summary (str "When hit by a ranged attack, reduce the damage by 1d10 " (common/mod-str (+ (?ability-bonuses ::char5e/dex) (?class-level :monk))) ". If you reduce it to 0, you can catch the missile (if you have a free hand and it's small enough to hold) and use it in a ranged attack with proficiency, as a monk weapon, for 1 ki point with range 20/60")})
+                               :summary (str "you can use your reaction to deflect or catch the missile when you are hit by a ranged weapon attack. When you do so, the damage you take from the attack is reduced by 1d10 + your Dexterity modifier + your monk level (" (+ (?ability-bonuses ::char5e/dex) (?class-level :monk)) "). If you reduce the damage to 0, you can catch the missile if it is small enough for you to hold in one hand and you have at least one hand free. If you catch a missile in this way, you can spend 1 ki point to make a ranged attack with a range of 20/60 using the weapon or piece of ammunition you just caught, as part of the same reaction. You make this attack with proficiency, regardless of your weapon proficiencies, and the missile counts as a monk weapon for the attack")})
                              (mod5e/bonus-action
                               {:name "Ki-Fueled Attack"
-                               :summary "If spent 1 or more ki as part of your action, make one attack with an unarmed strike or a monk weapon"})]}
+                               :summary "if you spend 1 ki point or more as part of your action on your turn, you can make one attack with an unarmed strike or a monk weapon as a bonus action before the end of the turn"})]}
               4 {:modifiers [(mod5e/reaction
                               {:name "Slow Fall"
                                :page 78
                                :level 4
-                               :summary (str "reduce falling damage by " (* 5  (?class-level :monk)))})
+                               :summary (str "you can use your reaction when you fall to reduce any falling damage you take by an amount equal to five times your monk level (" (* 5  (?class-level :monk)) ")")})
                              (mod5e/action
                               {:name "Quickened Healing"
-                               :summary (str "Spend 2 ki to regain 1d" ?martial-arts-die "+" ?prof-bonus " HP")})]}
+                               :summary (str "as an action, you can spend 2 ki points and roll a Martial Arts die. You regain a number of hit points equal to the number rolled plus your proficiency bonus (d" ?martial-arts-die "+" ?prof-bonus ")")})]}
               5 {:modifiers [(mod5e/num-attacks 2)
                              (mod5e/dependent-trait
                               {:name "Stunning Strike"
                                :page 79
                                :level 5
-                               :summary (str "when you hit a creature with melee attack, spend 1 ki point to stun the creature if it fails a DC " (?spell-save-dc ::char5e/wis) " CON save")})
+                               :summary "you can interfere with the flow of ki in an opponent's body. When you hit another creature with a melee weapon attack, you can spend 1 ki point to attempt a stunning strike. The target must succeed on a Constitution saving throw or be stunned until the end of your next turn"})
                              (mod5e/action
                               {:name "Focused Aim"
-                               :summary "When you miss with an attack roll, spend 1 to 3 ki to increase the roll by 2 for each ki point spent"})]}
+                               :summary "when you miss with an attack roll, you can spend 1 to 3 ki points to increase your attack roll by 2 for each of these ki points you spend, potentially turning the miss into a hit"})]}
               6 {:modifiers [(mod5e/unarmored-speed-bonus 5)]}
               7 {:modifiers [(mod5e/action
                               {:name "Stillness of Mind"
                                :page 79
-                               :summary "end one effect causing you to be charmed or frightened"})]}
+                               :summary "you can use your action to end one effect on yourself that is causing you to be charmed or frightened"})]}
               10 {:modifiers [(mod5e/damage-immunity :poison)
                               (mod5e/immunity :disease)
                               (mod5e/unarmored-speed-bonus 5)]}
@@ -1859,152 +1868,160 @@
                                 :level 18
                                 :page 79
                                 :duration units5e/minutes-1
-                                :summary "spend 4 ki points to become invisible and have resistance to all damage but force damage"})
+                                :summary "you can use your action to spend 4 ki points to become invisible for 1 minute. During that time, you also have resistance to all damage but force damage"})
                               (mod5e/action
                                {:name "Empty Body: Astral Projection"
                                 :page 79
                                 :level 18
-                                :summary "use 8 ki points to cast the astral projection spell"})]}}
+                                :summary "you can spend 8 ki points to cast the astral projection spell, without needing material components. When you do so, you can't take any other creatures with you"})]}}
      :weapons {:dart 10}
      :traits [{:name "Ki-Empowered Strikes"
                :page 79
                :level 6
-               :summary "your unarmed strikes count as magical"}
+               :summary "your unarmed strikes count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage"}
               (opt5e/evasion 7 79)
               {:name "Tongue of the Sun and Moon"
                :page 79
                :level 13
-               :summary "you understand all languages and can communicate with any creature that can understand a language"}
+               :summary "you learn to touch the ki of other minds so that you understand all spoken languages. Moreover, any creature that can understand a language can understand what you say"}
               {:name "Diamond Soul"
                :level 14
                :page 79
-               :summary "you are proficient in all saves. You can spend 1 ki point to reroll failed saves."}
+               :summary "your mastery of ki grants you proficiency in all saving throws. Additionally, whenever you make a saving throw and fail, you can spend 1 ki point to reroll it and take the second result"}
               {:name "Timeless Body"
                :page 79
                :level 15
-               :summary "you can't be aged magically and you need no food or water"}
-
+               :summary "your ki sustains you so that you suffer none of the frailty of old age, and you can't be aged magically. You can still die of old age, however. In addition, you no longer need food or water"}
               {:name "Perfect Self"
                :page 79
                :level 20
-               :summary "regain 4 ki when you have none and roll initiative"}]
+               :summary "when you roll for initiative and have no ki points remaining, you regain 4 ki points"}]
      :subclasses [{:name "Way of the Astral Self"
                    :modifiers [(mod5e/bonus-action
                                 {:name "Arms of the Astral Self"
-                                 :summary (str "Spend 1 ki point to summon the arms of your astral self. Each creature of your choice that you can see within 10 ft. of you must succeed on a DEX Save or take 2d" ?martial-arts-die " force damage."
-                                              "\nThese spectral arms last for 10 minutes or until you are incapacitated or die, during which you gain the following benefits:"
-                                              "\n- You can use your Wisdom modifier in place of your Strength modifier when making Strength checks and Strength saving throws."
-                                              "\n- You can use the spectral arms to make unarmed strikes."
-                                              "\n- When you make an unarmed strike with the arms on your turn, your reach for it is 5 ft. greater than normal."
-                                              "\n- The unarmed strikes you make with the arms can use your WIS mod in place of your STR or DEX mod for the attack and damage rolls, and their damage type is force.")})]
+                                 :summary (str "your mastery of your ki allows you to summon a portion of your astral self. As a bonus action, you can spend 1 ki point to summon the arms of your astral self. When you do so, each creature of your choice that you can see within 10 feet of you must succeed on a Dexterity saving throw or take force damage equal to two rolls of your Martial Arts die."
+                                              "For 10 minutes, these spectral arms hover near your shoulders or surround your arms (your choice). You determine the arms' appearance, and they vanish early if you are incapacitated or die. While the spectral arms are present, you gain the following benefits:"
+                                              "\n\u2022 You can use your Wisdom modifier in place of your Strength modifier when making Strength checks and Strength saving throws."
+                                              "\n\u2022 You can use the spectral arms to make unarmed strikes."
+                                              "\n\u2022 When you make an unarmed strike with the arms on your turn, your reach for it is 5 feet greater than normal."
+                                              "\n\u2022 The unarmed strikes you make with the arms can use your Wisdom modifier in place of your Strength or Dexterity modifier for the attack and damage rolls, and their damage type is force.")})]
                    :levels {6 {:modifiers [(mod5e/bonus-action
                                             {:name "Visage of the Astral Self"
-                                             :summary (str "As a bonus action, or as part of the bonus action you take to activate Arms of the Astral Self, you can spend 1 ki point to summon this visage for 10 minutes. It vanishes early if you are incapacitated or die."
-                                                           "\nWhile the spectral visage is present, you gain the following benefits."
+                                             :summary (str "you can summon the visage of your astral self. As a bonus action, or as part of the bonus action you take to activate Arms of the Astral Self, you can spend 1 ki point to summon this visage for 10 minutes. It vanishes early if you are incapacitated or die."
+                                                           "\n\nThe spectral visage covers your face like a helmet or mask. You determine its appearance. While the spectral visage is present, you gain the following benefits."
                                                            "\nAstral Sight. You can see normally in darkness, both magical and nonmagical, to a distance of 120 feet."
-                                                           "\nWisdom of the Spirit. You have advantage on Insight and Intimidation checks."
+                                                           "\nWisdom of the Spirit. You have advantage on Wisdom (Insight) and Charisma (Intimidation) checks."
                                                            "\nWord of the Spirit. When you speak, you can direct your words to a creature of your choice that you can see within 60 feet of you, making it so only that creature can hear you. Alternatively, you can amplify your voice so that all creatures within 600 feet can hear you.")})]}
                             11 {:modifiers [(mod5e/dependent-trait
                                              {:name "Body of the Astral Self"
-                                              :summary (str "When you have both your astral arms and visage summoned, you can cause the body of your astral self to appear."
-                                                            "\nWhile the spectral body is present, you gain the following benefits."
-                                                            "\nDeflect Energy. When you take acid, cold, fire, force, lightning, or thunder damage, you can use your reaction to reduce the damage by 1d10 + " (max 1 (?ability-bonuses ::char5e/wis)) "."
-                                                            "\nEmpowered Arms. Once on each of your turns when you hit a target with the Arms of the Astral Self, you can deal 1d" ?martial-arts-die " extra damage.")})]}
+                                              :summary (str "when you have both your astral arms and visage summoned, you can cause the body of your astral self to appear (no action required). This spectral body covers your physical form like a suit of armor, connecting with the arms and visage. You determine its appearance."
+                                                            "\n\nWhile the spectral body is present, you gain the following benefits."
+                                                            "\nDeflect Energy. When you take acid, cold, fire, force, lightning, or thunder damage, you can use your reaction to deflect it. When you do so, the damage you take is reduced by 1d10 + your Wisdom modifier (minimum reduction of 1)."
+                                                            "\nEmpowered Arms. Once on each of your turns when you hit a target with the Arms of the Astral Self, you can deal extra damage to the target equal to your Martial Arts die.")})]}
                             17 {:modifiers [(mod5e/bonus-action
                                              {:name "Awakened Astral Self"
-                                              :summary (str "You can spend 5 ki points to summon the arms, visage, and body of your astral self and awaken it for 10 minutes, ending early if you are incapacitated or die."
-                                                            "\nWhile your astral self is awakened, you gain the following benefits."
+                                              :summary (str "your connection to your astral self is complete, allowing you to unleash its full potential. As a bonus action, you can spend 5 ki points to summon the arms, visage, and body of your astral self and awaken it for 10 minutes. This awakening ends early if you are incapacitated or die."
+                                                            "\n\nWhile your astral self is awakened, you gain the following benefits."
                                                             "\nArmor of the Spirit. You gain a +2 bonus to Armor Class."
                                                             "\nAstral Barrage. Whenever you use the Extra Attack feature to attack twice, you can instead attack three times if all the attacks are made with your astral arms.")})]}}}
                   {:name "Way of the Open Hand"
                    :modifiers [(mod5e/dependent-trait
                                 {:name "Open Hand Technique"
                                  :page 79
-                                 :summary (str "when you hit with Flurry of Blows, you impose one of the effects on the target: 1) must make a DC " (?spell-save-dc ::char5e/wis) " DEX save or be knocked prone. 2) make a DC " (?spell-save-dc ::char5e/wis) " STR save or be pushed 15 ft. 3) can't take reactions until end of your next turn")})]
+                                 :summary (str "you can manipulate your enemy's ki when you harness your own. Whenever you hit a creature with one of the attacks granted by your Flurry of Blows, you can impose one of the following effects on that target:"
+                                               "\n\u2022 It must succeed on a Dexterity saving throw or be knocked prone."
+                                               "\n\u2022 It must make a Strength saving throw. If it fails, you can push it up to 15 feet away from you."
+                                               "\n\u2022 It can't take reactions until the end of your next turn.")})]
                    :levels {6 {:modifiers [(mod5e/action
                                             {:name "Wholeness of Body"
                                              :page 79
                                              :level 6
                                              :frequency units5e/long-rests-1
-                                             :summary (str "heal yourself " (* 3 (?class-level :monk)) " HPs")})]}
+                                             :summary (str "you gain the ability to heal yourself. As an action, you can regain hit points equal to three times your monk level ("
+                                                           (* 3 (?class-level :monk)) "). You must finish a long rest before you can use this feature again")})]}
                             11 {:modifiers [(mod5e/dependent-trait
                                              {:name "Tranquility"
                                               :page 80
                                               :level 11
-                                              :summary (str "gain effects of sanctuary spell (save DC " (?spell-save-dc ::char5e/wis) ") between rests")})]}
+                                              :summary "you can enter a special meditation that surrounds you with an aura of peace. At the end of a long rest, you gain the effect of a Sanctuary spell that lasts until the start of your next long rest (the spell can end early as normal). The saving throw DC for the spell equals 8 + your Wisdom modifier + your proficiency bonus"})]}
                             17 {:modifiers [(mod5e/dependent-trait
                                              {:name "Quivering Palm"
                                               :level 17
                                               :page 80
-                                              :summary (str "when you hit a creature with unarmed strike, spend 3 ki to set up vibrations that last " (?class-level :monk) " days. Use an action to end the vibrations if on the same plane, reducing the target to 0 HPs on failed DC " (?spell-save-dc ::char5e/wis) " CON save. It takes 10d10 necrotic damage on successful save.\n\nCan only affect one creature at a time, and can end it harmlessly")})]}}}
+                                              :summary (str "you gain the ability to set up lethal vibrations in someone's body. When you hit a creature with an unarmed strike, you can spend 3 ki points to start these imperceptible vibrations, which last for a number of days equal to your monk level. The vibrations are harmless unless you use your action to end them. To do so, you and the target must be on the same plane of existence. When you use this action, the creature must make a Constitution saving throw. If it fails, it is reduced to 0 hit points. If it succeeds, it takes 10d10 necrotic damage."
+                                                            "\n\nYou can have only one creature under the effect of this feature at a time. You can choose to end the vibrations harmlessly without using an action")})]}}}
                   {:name "Way of the Kensei"
                    :modifiers [
                                (mod5e/bonus-action
                                 {:name "Kensei's Shot"
-                                 :summary "Any target you hit with a ranged attack using a kensei weapon takes an extra 1d4 damage of the weapon’s type for this turn"})]
+                                 :summary "You can use a bonus action on your turn to make your ranged attacks with a kensei weapon more deadly. When you do so, any target you hit with a ranged attack using a kensei weapon takes an extra 1d4 damage of the weapon’s type. You retain this benefit until the end of the current turn"})]
                    :selections [(opt5e/tool-selection [:calligraphers-supplies :painters-supplies] 1)]
                    :levels {6 {:modifiers [(mod5e/trait-cfg
                                             {:name "Magic Kensei Weapons"
-                                             :summary "Attacks with kensei weapons count as magical"})
+                                             :summary "Your attacks with your kensei weapons count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage"})
                                            (mod5e/dependent-trait
                                             {:name "Deft Strike"
                                             :frequency units5e/turns-1
-                                            :summary (str "When you hit a target with a kensei weapon, spend 1 ki to deal 1d" ?martial-arts-die " extra damage")})]}
+                                            :summary (str "When you hit a target with a kensei weapon, you can spend 1 ki point to cause the weapon to deal extra damage to the target equal to your Martial Arts die. You can use this feature only once on each of your turns")})]}
                             11 {:modifiers [(mod5e/bonus-action
                                              {:name "Sharpen the Blade"
                                               :duration units5e/minutes-1
-                                              :summary "Expend up to 3 ki points to grant one kensei weapon you touch a bonus to attack and damage rolls when you attack with it. The bonus equals the number of ki points you spent. Has no effect on a magic weapon that already has a bonus to attack and damage rolls. Ends if you use this again"})]}
+                                              :summary "you gain the ability to augment your weapons further with your ki. As a bonus action, you can expend up to 3 ki points to grant one kensei weapon you touch a bonus to attack and damage rolls when you attack with it. The bonus equals the number of ki points you spent. This bonus lasts for 1 minute or until you use this feature again. This feature has no effect on a magic weapon that already has a bonus to attack and damage rolls"})]}
                             17 {:modifiers [(mod5e/dependent-trait
                                              {:name "Unerring Accuracy"
                                               :frequency units5e/turns-1
-                                              :summary "If you miss with an attack roll using a monk weapon on your turn, you can reroll it"})]}}
+                                              :summary "your mastery of weapons grants you extraordinary accuracy. If you miss with an attack roll using a monk weapon on your turn, you can reroll it. You can use this feature only once on each of your turns"})]}}
                    :traits [{:name "Agile Parry"
-                             :summary "If you make an unarmed strike as part of the Attack action on your turn and are holding a kensei weapon, gain +2 AC until your next turn, while the weapon is in your hand and you aren’t incapacitated."}]}
+                             :summary "If you make an unarmed strike as part of the Attack action on your turn and are holding a kensei weapon, you can use it to defend yourself if it is a melee weapon. You gain a +2 bonus to AC until the start of your next turn, while the weapon is in your hand and you aren’t incapacitated"}]}
                   {:name "Way of the Long Death"
                    :modifiers [(mod5e/dependent-trait
                                 {:name "Touch of Death"
-                                 :summary (str "When you reduce a creature within 5 ft. of you to 0 HP, you gain " (max 1 (+ (?ability-bonuses ::char5e/wis) (?class-level :monk))) " temp HP.")})]
+                                 :summary (str "your study of death allows you to extract vitality from another creature as it nears its demise. When you reduce a creature within 5 feet of you to 0 hit points, you gain temporary hit points equal to your Wisdom modifier + your monk level (minimum of 1 temporary hit point) (" (max 1 (+ (?ability-bonuses ::char5e/wis) (?class-level :monk))) ")")})]
                    :levels {6 {:modifiers [(mod5e/action
                                             {:name "Hour of Reaping"
-                                             :summary "Each creature within 30 ft. of you that can see you must succeed on a WIS Save or be frightened of you until the end of your next turn."})]}
+                                             :summary "you gain the ability to unsettle or terrify those around you as an action, for your soul has been touched by the shadow of death. When you take this action, each creature within 30 feet of you that can see you must succeed on a Wisdom saving throw or be frightened of you until the end of your next turn"})]}
                             11 {:modifiers [(mod5e/trait-cfg
                                              {:name "Mastery of Death"
-                                              :summary "When you are reduced to 0 HP, you can expend 1 ki to have 1 HP instead."})]}
+                                              :summary "you use your familiarity with death to escape its grasp. When you are reduced to 0 hit points, you can expend 1 ki point (no action required) to have 1 hit point instead"})]}
                             17 {:modifiers [(mod5e/action
                                              {:name "Touch of the Long Death"
-                                              :summary "You touch one creature within 5 ft. of you, and expend 1 to 10 ki. The target must make a CON Save, and it takes 2d10 necrotic damage per ki spent on a failed save, or half as much on a successful one."})]}}}
+                                              :summary "your touch can channel the energy of death into a creature. As an action, you touch one creature within 5 feet of you, and you expend 1 to 10 ki points. The target must make a Constitution saving throw, and it takes 2d10 necrotic damage per ki point spent on a failed save, or half as much damage on a successful one"})]}}}
                   {:name "Way of the Ascendant Dragon"
                    :modifiers [(mod5e/reaction
                                 {:name "Draconic Disciple: Draconic Presence"
-                                 :summary "Reroll a failed Intimidation or Persuasion check. Once failure turns into success, you can't use it again until a long rest"})
+                                 :summary "If you fail a Charisma (Intimidation) or Charisma (Persuasion) check, you can use your reaction to reroll the check, as you tap into the mighty presence of dragons. Once this feature turns a failure into a success, you can’t use it again until you finish a long rest"})
                                (mod5e/trait-cfg
                                 {:name "Draconic Disciple: Draconic Strike"
-                                 :summary "Change the damage type of an unarmed strike to acid, cold, fire, lightning, or poison"})
+                                 :summary "When you damage a target with an unarmed strike, you can change the damage type to acid, cold, fire, lightning, or poison"})
                                (mod5e/dependent-trait
                                 {:name "Breath of the Dragon"
                                  :frequency (units5e/long-rests ?prof-bonus)
-                                 :summary (str "Replace an attack from the Attack Action with an exhalation of craconic energy in either a 20-foot cone or 30-foot line that is 5 ft. wide, dealing " (mod5e/level-val (?class-level :monk) {11 3 :default 2}) "d" ?martial-arts-die " acid, cold, fire, lightning, or poison damage on a failed DC " (?spell-save-dc ::char5e/wis) " DEX save, half if successful. You can spend 2 ki points if you have no uses left")})]
+                                 :summary (str "you can channel destructive waves of energy, like those created by the dragons you emulate. When you take the Attack action on your turn, you can replace one of the attacks with an exhalation of draconic energy in either a 20-foot cone or a 30-foot line that is 5 feet wide (your choice). Choose a damage type: acid, cold, fire, lightning, or poison. Each creature in that area must make a Dexterity saving throw against your ki save DC, taking damage of the chosen type equal to "
+                                               (if (>= (?class-level :monk) 5) 
+                                                 "three"
+                                                 "two")
+                                               " rolls of your Martial Arts die on a failed save, or half as much damage on a successful one."
+                                               "\n\nYou can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest. While you have no uses available, you can spend 2 ki points to use this feature again")})]
                    :selections [(opt5e/language-selection-aux (vals language-map) 1)]
                    :levels {6 {:modifiers [(mod5e/dependent-trait
                                             {:name "Wings Unfurled"
                                              :frequency (units5e/long-rests ?prof-bonus)
-                                             :summary "When you use Step of the WInd, you can unfurl spectral draconic wings that vanish at the end of your turn, giving you a flying speed equal to your walking speed"})]}
+                                             :summary "when you use your Step of the Wind, you can unfurl spectral draconic wings from your back that vanish at the end of your turn. While the wings exist, you have a flying speed equal to your walking speed"})]}
                             11 {:modifiers [(mod5e/bonus-action
                                              {:name "Aspect of the Wyrm"
-                                              :frequency units5e/long-rests-1
-                                              :summary (str "Active a 10 ft. radius aura that lasts 1 minute and choose one of the following effects:"
-                                                        "\n• Frightful Presence. When you create the aura and as a bonus action on subsequent turns, choose a creature within the aura. The creature must succeed on a DC " (?spell-save-dc ::char5e/wis) " WIS save or become frightened of you for 1 minute, repeating the save at the end of its turns."
-                                                        "\n• Resistance. You and your allies within the aura are resistant to acid, cold, fire, lightning, or poison damage."
-                                                        "You can exoend 3 ki points to create it again if you have no uses left")})]}
+                                              :summary (str "the power of your draconic spirit now radiates from you, warding your allies or inspiring fear in your enemies. As a bonus action, you can create an aura of draconic power that radiates 10 feet from you for 1 minute. For the duration, you gain one of the following effects of your choice:"
+                                                        "\n\u2022 Frightful Presence. When you create this aura, and as a bonus action on subsequent turns, you can choose a creature within the aura. The target must succeed on a Wisdom saving throw against your ki save DC or become frightened of you for 1 minute. The target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a successful save."
+                                                        "\n\u2022 Resistance. Choose a damage type when you activate this aura: acid, cold, fire, lightning, or poison. You and your allies within the aura have resistance to that damage."
+                                                        "\nOnce you create this aura, you can’t create it again until you finish a long rest, unless you expend 3 ki points to create it again")})]}
                             17 {:modifiers [(mod5e/dependent-trait
                                              {:name "Ascendant Aspect: Augment Breath"
-                                              :summary (str "When you use Breath of the Dragon, spend 1 ki point to change the shape to either a 60-foot cone or a 90-foot line that is 5 ft. wide, and each creature takes 4d" ?martial-arts-die " damage on a failed save, half if successful")})
+                                              :summary "When you use your Breath of the Dragon, you can spend 1 ki point to augment its shape and power. The exhalation of draconic energy becomes either a 60-foot cone or a 90-foot line that is 5 feet wide (your choice), and each creature in that area takes damage equal to four rolls of your Martial Arts die on a failed save, or half as much damage on a successful one"})
                                              (mod5e/trait-cfg
                                               {:name "Ascendant Aspect: Blindsight"
-                                               :summary "You gain 10 ft. blindsight. Within that range, you can effectively see anything that isn’t behind total cover, even if you’re blinded or in darkness. Moreover, you can see an invisible creature within that range, unless the creature successfully hides from you"})
+                                               :summary "You gain blindsight out to 10 feet. Within that range, you can effectively see anything that isn’t behind total cover, even if you’re blinded or in darkness. Moreover, you can see an invisible creature within that range, unless the creature successfully hides from you"})
                                              (mod5e/dependent-trait
                                               {:name "Ascendant Aspect: Explosive Fury"
-                                               :summary (str "When you activate Aspect of the Wyrm, any creature you choose in the aura must make a DC " (?spell-save-dc ::char5e/wis) " DEX save or take 3d10 acid, cold, fire, lightning, or poison damage")})]}}}
+                                               :summary (str "When you activate Aspect of the Wyrm, any creature you choose in the aura must make a DC " (?spell-save-dc ::char5e/wis) "When you activate your Aspect of the Wyrm, draconic fury explodes from you. Choose any number of creatures you can see in your aura. Each of those creatures must succeed on a Dexterity saving throw against your ki save DC or take 3d10 acid, cold, fire, lightning, or poison damage (your choice)")})]}}}
                   #_{:name "Way of the Four Elements"
                    :modifiers [(mod5e/dependent-trait
                                   {:name "Disciple of the Elements"

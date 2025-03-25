@@ -3602,7 +3602,7 @@
   {:name "Evasion"
    :page page
    :level level
-   :summary "when you succeed on a DEX save to take half damage, you take none, if you fail, you take half"})
+   :summary "your instinctive agility lets you dodge out of the way of certain area effects, such as a blue dragon's lightning breath or a fireball spell. When you are subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw, and only half damage if you fail"})
 
 (defn uncanny-dodge-modifier [page]
   (modifiers/reaction
