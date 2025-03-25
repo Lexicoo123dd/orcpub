@@ -1340,7 +1340,13 @@
 (def eldritch-knight-cfg
     {:name "Eldritch Knight"
      :spellcasting {:level-factor 3}
-     :modifiers [(mod5e/bonus-action
+     :modifiers [(mod5e/trait-cfg
+                   {:name "Weapon Bond"
+                    :page 75
+                    :summary (str "you learn a ritual that creates a magical bond between yourself and one weapon. You perform the ritual over the course of 1 hour, which can be done during a short rest. The weapon must be within your reach throughout the ritual, at the conclusion of which you touch the weapon and forge the bond."
+                                  "\n\nOnce you have bonded a weapon to yourself, you can't be disarmed of that weapon unless you are incapacitated. If it is on the same plane of existence, you can summon that weapon as a bonus action on your turn, causing it to teleport instantly to your hand."
+                                  "\n\nYou can have up to two bonded weapons, but can summon only one at a time with your bonus action. If you attempt to bond with a third weapon, you must break the bond with one of the other two.")})
+                 (mod5e/bonus-action
                   {:name "Summon Bonded Weapon"
                    :page 75
                    :summary "If on the same plane of existence, instantly teleport a bonded weapon into your hand"})]
@@ -1352,7 +1358,7 @@
                  :modifiers [(mod5e/bonus-action
                               {:name "War Magic"
                                :page 75
-                               :summary "make a weapon attack if you used your action to cast a cantrip"})]}
+                               :summary "when you use your action to cast a cantrip, you can make one weapon attack as a bonus action"})]}
               8 {:selections [(eldritch-knight-any-spell-selection 1 [1 2])]}
               10 {:selections [(eldritch-knight-cantrip 1)
                                (eldritch-knight-spell-selection 1 [1 2])]}
@@ -1363,21 +1369,17 @@
               18 {:modifiers [(mod5e/bonus-action
                                {:name "Improved War Magic"
                                 :page 75
-                                :summary "make a weapon attack if you used your action to cast a spell"})]}
+                                :summary "when you use your action to cast a spell, you can make one weapon attack as a bonus action"})]}
               19 {:selections [(eldritch-knight-spell-selection 1 [1 2 3 4])]}
               20 {:selections [(eldritch-knight-any-spell-selection 1 [1 2 3 4])]}}
-     :traits [{:name "Weapon Bond"
-               :level 3
-               :page 75
-               :summary "Perform a 1 hour ritual to bond with a weapon, up to two. You can't be disarmed of them unless incapacitated"}
-              {:name "Eldritch Strike"
+     :traits [{:name "Eldritch Strike"
                :page 75
                :level 10
-               :summary "a creature has disadvantage on next saving throw against a spell you cast before the end of your next turn if you hit it with a weapon attack"}
+               :summary "you learn how to make your weapon strikes undercut a creature's resistance to your spells. When you hit a creature with a weapon attack, that creature has disadvantage on the next saving throw it makes against a spell you cast before the end of your next turn"}
               {:name "Arcane Charge"
                :level 15
                :page 75
-               :summary "teleport up to 30 ft. when you use Action Surge. Can be before or after the additional action"}]})
+               :summary "you gain the ability to teleport up to 30 feet to an unoccupied space you can see when you use your Action Surge. You can teleport before or after the additional action"}]})
 
 (defn martial-maneuvers-selection [num]
     (t/selection-cfg
@@ -1416,9 +1418,9 @@
                  {:name "Second Wind"
                   :page 72
                   :frequency units5e/rests-1
-                  :summary (str "regain 1d10 "
+                  :summary (str "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level ("
                                 (common/mod-str (?class-level :fighter))
-                                " HPs")})]
+                                ")")})]
     :levels {2 {:modifiers [(mod5e/action
                              {:level 2
                               :name "Action Surge"
@@ -1426,7 +1428,7 @@
                               :frequency (units5e/rests (if (>= (?class-level :fighter) 17)
                                                           2
                                                           1))
-                              :summary "take an extra action"})]}
+                              :summary "you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action"})]}
              3 {:modifiers [(mod5e/critical 19)]}
              4 {:modifiers [(mod5e/trait-cfg
                              {:name "Martial Versatility"
@@ -1442,7 +1444,7 @@
                                            {13 2
                                             17 3
                                             :default 1}))
-                              :summary "reroll a save if you fail"})]}
+                              :summary "you can reroll a saving throw that you fail. If you do so, you must use the new roll"})]}
              11 {:modifiers [(mod5e/num-attacks 3)]}
              13 {:modifiers [(mod5e/critical 18)]}
              20 {:modifiers [(mod5e/num-attacks 4)]}}
@@ -1540,13 +1542,16 @@
                                                    15 [9 6 10]
                                                    18 [9 6 12]
                                                    :default [3 4 8]})]
-                                             (str "You know "
+                                             (str "Maneuvers. You learn "
                                                   num-maneuvers
-                                                  " martial maneuvers, have "
+                                                  " maneuvers of your choice. Many maneuvers enhance an attack in some way. You can use only one maneuver per attack."
+                                                  "\nSuperiority Dice. You have "
                                                   num-dice
-                                                  " superiority dice (d"
+                                                  " superiority dice, which are d"
                                                   die
-                                                  "s), and maneuver save DC of "
+                                                  "s. A superiority die is expended when you use it. You regain all of your expended superiority dice when you finish a short or long rest."
+                                                  "\nSaving Throws. Some of your maneuvers require your target to make a saving throw to resist the maneuver's effects. The saving throw DC is calculated as follows:"
+                                                  "\nManeuver save DC = 8 + your proficiency bonus + your Strength or Dexterity modifier (your choice) = "
                                                   ?maneuver-save-dc))})]
                     :levels {7 {:selections [(martial-maneuvers-selection 2)]}
                              10 {:selections [(martial-maneuvers-selection 2)]}
@@ -1555,12 +1560,19 @@
                               :level 7
                               :page 73
                               :class-key :fighter
-                              :summary "Study a creature outside combat for 1 min. to learn if it is superior, inferior, or equal in STR, DEX, CON, AC, current HP, total levels, fighter levels"}
+                              :summary (str "if you spend at least 1 minute observing or interacting with another creature outside combat, you can learn certain information about its capabilities compared to your own. The DM tells you if the creature is your equal, superior, or inferior in regard to two of the following characteristics of your choice:"
+                                            "\n\u2022 Strength score"
+                                            "\n\u2022 Dexterity score"
+                                            "\n\u2022 Constitution score"
+                                            "\n\u2022 Armor Class"
+                                            "\n\u2022 Current hit points"
+                                            "\n\u2022 Total class levels, if any"
+                                            "\n\u2022 Fighter class levels, if any")}
                              {:name "Relentless"
                               :level 15
                               :page 74
                               :class-key :fighter
-                              :summary "you regain 1 superiority die when you roll iniative and have no remaining superiority dice"}]}
+                              :summary "when you roll initiative and have no superiority dice remaining, you regain 1 superiority die"}]}
                  {:name "Cavalier"
                   :selections [(t/selection-cfg
                                 {:name "Proficiency"
@@ -1575,81 +1587,87 @@
                   :modifiers [(mod5e/dependent-trait
                                {:name "Unwavering Mark"
                                 :class-key :fighter
-                                :frequency (units5e/long-rests (if (< (?ability-bonuses ::char5e/str) 1) 1 (?ability-bonuses ::char5e/str)))
-                                :summary (str "Mark a creature you hit until the end of your next turn. Ends early if you are incapacitated, die, or if someone else marks the creature.\n"
-                                              "\nThe marked creature: has disadvantage on any attack roll that doesn't target you while within 5 ft.\n"
-                                              "                       If it deals damage to any creature other than you, you can make a melee weapon attack against it as a bonus action on your next turn with advantage, dealing " (int (/ (?class-level :fighter) 2)) " extra damage.")})]
+                                :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/str)))
+                                :summary (str "you can menace your foes, foiling their attacks and punishing them for harming others. When you hit a creature with a melee weapon attack, you can mark the creature until the end of your next turn. This effect ends early if you are incapacitated or you die, or if someone else marks the creature."
+                                              "\n\nWhile it is within 5 feet of you, a creature marked by you has disadvantage on any attack roll that doesn't target you."
+                                              "\n\nIn addition, if a creature marked by you deals damage to anyone other than you, you can make a special melee weapon attack against the marked creature as a bonus action on your next turn. You have advantage on the attack roll, and if it hits, the attack's weapon deals extra damage to the target equal to half your fighter level (" (int (/ (?class-level :fighter) 2)) ")."
+                                              "\n\nRegardless of the number of creatures you mark, you can make this special attack a number of times equal to your Strength modifier (a minimum of once), and you regain all expended uses of it when you finish a long rest")})]
                   :traits [{:name "Born to the Saddle"
                             :class-key :fighter
-                            :summary "Advantage on saving throws made to avoid falling off your mount. If you fall off and fall 10 ft. or less, you can land on your feet if not incapacitated"}
-                           ]
+                            :summary (str "Advantage on saving throws made to avoid falling off your mount. If you fall off and fall 10 ft. or less, you can land on your feet if not incapacitated."
+                                          "\n\nFinally, mounting or dismounting a creature costs you only 5 feet of movement, rather than half your speed")}]
                   :levels {7 {:modifiers [(mod5e/reaction
                                            {:name "Warding Maneuver"
-                                            :frequency (units5e/long-rests (if (< (?ability-bonuses ::char5e/con) 1) 1 (?ability-bonuses ::char5e/con)))
-                                            :summary "If you or a creature you can see within 5 ft. of you is hit by an attack, you can roll 1d8 if you're wielding a melee weapon or a shield. Add the number rolled to the target's AC against that attack. If the attack still hits, the target has resistance against the attack's damage."})]}
+                                            :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/con)))
+                                            :summary "you learn to fend off strikes directed at you, your mount, or other creatures nearby. If you or a creature you can see within 5 feet of you is hit by an attack, you can roll 1d8 as a reaction if you're wielding a melee weapon or a shield. Roll the die, and add the number rolled to the target's AC against that attack. If the attack still hits, the target has resistance against the attack's damage"})]}
                            10 {:modifiers [(mod5e/trait-cfg
                                             {:name "Hold the Line"
-                                            :summary "Creatures provoke an opportunity attack from you when they move 5 feet or more while within your reach, and if you hit a creature with an opportunity attack, the target's speed is reduced to 0 until the end of the current turn."})]}
+                                            :summary "you become a master of locking down your enemies. Creatures provoke an opportunity attack from you when they move 5 feet or more while within your reach, and if you hit a creature with an opportunity attack, the target's speed is reduced to 0 until the end of the current turn"})]}
                            15 {:modifiers [(mod5e/dependent-trait
                                             {:name "Ferocious Charger"
                                              :frequency units5e/rounds-1
-                                             :summary (str "If you move at least 10 ft. in a straight line right before attacking a creature and you hit it with the attack, that target must succeed on a DC " (?spell-save-dc ::char5e/con) " STR save or be knocked prone.")})]}
+                                             :summary (str "you can run down your foes, whether you're mounted or not. If you move at least 10 feet in a straight line right before attacking a creature and you hit it with the attack, that target must succeed on a Strength saving throw (DC 8 + your proficiency bonus + your Strength modifier = " (?spell-save-dc ::char5e/con) ") or be knocked prone. You can use this feature only once on each of your turns")})]}
                            18 {:modifiers [(mod5e/reaction
                                             {:name "Vigilant Defender"
-                                             :summary "You can take a special reaction once on every creature's turn, except your own. Can only be used to make an opportunity attack, and can't be used on the same turn as your normal reaction."})]}}}
+                                             :summary "you respond to danger with extraordinary vigilance. In combat, you get a special reaction that you can take once on every creature's turn, except your turn. You can use this special reaction only to make an opportunity attack, and you can't use it on the same turn that you take your normal reaction"})]}}}
                  {:name "Echo Knight"
                   :levels {3 {:modifiers [(mod5e/bonus-action
                                            {:name "Manifest Echo"
-                                            :summary (str "Magically manifest an echo of yourself in an unoccupied space you can see within 15 feet of you. This echo is a magical, translucent, gray image of you that lasts until it is destroyed, until you dismiss it as a bonus action, until you manifest another echo, or until you're incapacitated.\n"
-                                                          "\nYour echo has AC " (+ 14 ?prof-bonus) ", 1 hit point, and immunity to all conditions. If it has to make a saving throw, it uses your saving throw bonus for the roll. It is the same size as you, and it occupies its space. On your turn, you can mentally command the echo to move up to 30 feet in any direction (no action required). If your echo is ever more than 30 feet from you at the end of your turn, it is destroyed.\n"
-                                                          "\n- As a bonus action, you can teleport, magically swapping places with your echo at a cost of 15 feet of your movement, regardless of the distance between the two of you.\n"
-                                                          "- When you take the Attack action on your turn, any attack you make with that action can originate from your space or the echo's space.\n"
-                                                          "- When a creature that you can see within 5 feet of your echo moves at least 5 feet away from it, you can use your reaction to make an opportunity attack against that creature as if you were in the echo's space.")})
+                                            :summary (str "you can use a bonus action to magically manifest an echo of yourself in an unoccupied space you can see within 15 feet of you. This echo is a magical, translucent, gray image of you that lasts until it is destroyed, until you dismiss it as a bonus action, until you manifest another echo, or until you're incapacitated."
+                                                          "\n\nYour echo has AC 14 + your proficiency bonus (" (+ 14 ?prof-bonus) "), 1 hit point, and immunity to all conditions. If it has to make a saving throw, it uses your saving throw bonus for the roll. It is the same size as you, and it occupies its space. On your turn, you can mentally command the echo to move up to 30 feet in any direction (no action required). If your echo is ever more than 30 feet from you at the end of your turn, it is destroyed."
+                                                          "\n\u2022 As a bonus action, you can teleport, magically swapping places with your echo at a cost of 15 feet of your movement, regardless of the distance between the two of you."
+                                                          "\n\u2022 When you take the Attack action on your turn, any attack you make with that action can originate from your space or the echo's space. You make this choice for each attack."
+                                                          "\n\u2022 When a creature that you can see within 5 feet of your echo moves at least 5 feet away from it, you can use your reaction to make an opportunity attack against that creature as if you were in the echo's space.")})
                                           (mod5e/dependent-trait
                                            {:name "Unleash Incarnation"
-                                            :frequency (units5e/long-rests (if (< (?ability-bonuses ::char5e/con) 1) 1 (?ability-bonuses ::char5e/con)))
-                                            :summary "Whenever you take the Attack action, you can make one additional melee attack from the echo's position."})]}
+                                            :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/con)))
+                                            :summary "you can heighten your echo's fury. Whenever you take the Attack action, you can make one additional melee attack from the echo's position"})]}
                            7 {:modifiers [(mod5e/action
                                            {:name "Echo Avatar"
-                                            :summary "You can temporarily transfer your consciousness to your echo. As an action, you can see through your echo's eyes and hear through its ears. During this time, you are deafened and blinded. You can sustain this effect for up to 10 minutes, and you can end it at any time (requires no action). While your echo is being used in this way, it can be up to 1,000 feet away from you without being destroyed."})]}
+                                            :summary "you can temporarily transfer your consciousness to your echo. As an action, you can see through your echo's eyes and hear through its ears. During this time, you are deafened and blinded. You can sustain this effect for up to 10 minutes, and you can end it at any time (requires no action). While your echo is being used in this way, it can be up to 1,000 feet away from you without being destroyed"})]}
                            10 {:modifiers [(mod5e/reaction
                                             {:name "Shadow Martyr"
-                                             :frequency units5e/long-rests-1
-                                             :summary "You can make your echo throw itself in front of an attack directed at another creature that you can see. Before the attack roll is made, you can use your reaction to teleport the echo to an unoccupied space within 5 feet of the targeted creature. The attack roll that triggered the reaction is instead made against your echo."})]}
+                                             :frequency units5e/rests-1
+                                             :summary "you can make your echo throw itself in front of an attack directed at another creature that you can see. Before the attack roll is made, you can use your reaction to teleport the echo to an unoccupied space within 5 feet of the targeted creature. The attack roll that triggered the reaction is instead made against your echo"})]}
                            15 {:modifiers [(mod5e/dependent-trait
                                             {:name "Reclaim Potential"
-                                             :frequency (units5e/long-rests (if (< (?ability-bonuses ::char5e/con) 1) 1 (?ability-bonuses ::char5e/con)))
-                                             :summary (str "When an echo of yours is destroyed by taking damage, you can gain 2d6+" (?ability-bonuses ::char5e/con) " temp HP, provided you don't already have temporary hit points.")})]}
+                                             :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/con)))
+                                             :summary "you've learned to absorb the fleeting magic of your echo. When an echo of yours is destroyed by taking damage, you can gain a number of temporary hit points equal to 2d6 + your Constitution modifier, provided you don't already have temporary hit points"})]}
                            18 {:modifiers [(mod5e/bonus-action
                                             {:name "Legion of One"
-                                             :summary "Create two echos that can co-exist. If you try to create a third echo, the previous two echoes are destroyed.\n\nWhen you roll initiative and have no uses of Unleash Incarnation left, regain one use."})]}}}
+                                             :summary (str "you can use a bonus action to create two echos with your Manifest Echo feature, and these echoes can co-exist. If you try to create a third echo, the previous two echoes are destroyed. Anything you can do from one echo's position can be done from the other's instead"
+                                                           "\n\nIn addition, when you roll initiative and have no uses of your Unleash Incarnation feature left, you regain one use of that feature")})]}}}
                  eldritch-knight-cfg
                  {:name "Rune Knight"
                   :modifiers [(mod5e/bonus-action
                                {:name "Giant Might"
                                 :duration units5e/minutes-1
                                 :frequency (units5e/long-rests ?prof-bonus)
-                                :summary (str "- If there's enough room, become Large, along with anything you're wearing.\n\n- Advantage on Strength checks and saves.\n\n- Once on each of your turns, deal 1d" (condp <= (?class-level :fighter) 18 10  10 8  6) " extra damage from a melee weapon attack.\n")})
+                                :summary (str "you have learned how to imbue yourself with the might of giants. As a bonus action, you magically gain the following benefits, which last for 1 minute:"
+                                              "\n\u2022 If you are smaller than Large, you become Large, along with anything you are wearing. If you lack the room to become Large, your size doesn't change."
+                                              "\n\u2022 You have advantage on Strength checks and Strength saving throws."
+                                              "\n\u2022 Once on each of your turns, one of your attacks with a weapon or an unarmed strike can deal an extra 1d6 damage to a target on a hit."
+                                              "\n")})
                               (mod5e/trait-cfg
                                {:name "Rune Carver"
-                                :summary "Whenever you gain a fighter level, you can replace a rune. After a long rest, you can inscribe the runes you know onto different objects that you can wear or hold in a hand. Con is your save DC"})]
+                                :summary "Whenever you finish a long rest, you can touch a number of objects equal to the number of runes you know, and you inscribe a different rune onto each of the objects. To be eligible, an object must be a weapon, a suit of armor, a shield, a piece of jewelry, or something else you can wear or hold in a hand. Your rune remains on an object until you finish a long rest, and an object can bear only one of your runes at a time."})]
                   :selections [(opt5e/rune-selection 2 1 (opt5e/total-levels-option-prereq 7 :fighter))]
                   :levels {7 {:selections [(opt5e/rune-selection 1 2 (opt5e/total-levels-option-prereq 7 :fighter))]
                               :modifiers [(mod5e/reaction
                                            {:name "Runic Shield"
                                             :frequency (units5e/long-rests ?prof-bonus)
-                                            :summary "When another creature you can see within 60 feet of you is hit by an attack roll, force the attacker to reroll the d20 and use the new roll"})]}
+                                            :summary "you learn to invoke your rune magic to protect your allies. When another creature you can see within 60 feet of you is hit by an attack roll, you can use your reaction to force the attacker to reroll the d20 and use the new roll"})]}
                            10 {:selections [(opt5e/rune-selection 1 3 (opt5e/total-levels-option-prereq 7 :fighter))]
                                :modifiers [(mod5e/trait-cfg
                                             {:name "Great Stature"
-                                             :summary "You grow 3d6 inches taller"})]}
+                                             :summary "the magic of your runes permanently alters you. When you gain this feature, roll 3d4. You grow a number of inches in height equal to the roll"})]}
                            15 {:selections [(opt5e/rune-selection 1 4 (opt5e/total-levels-option-prereq 7 :fighter))]
                                :modifiers [(mod5e/trait-cfg
                                             {:name "Master of Runes"
-                                             :summary "You can invoke each rune twice instead of once per rest"})]}
+                                             :summary "you can invoke each rune you know from your Rune Carver feature twice, rather than once, and you regain all expended uses when you finish a short or long rest"})]}
                            18 {:modifiers [(mod5e/trait-cfg
                                             {:name "Runic Juggernaut"
-                                             :summary "Your size can increase to Huge when using Giant's Might. While Huge, your range increases by 5 ft"})]}}}
+                                             :summary "you learn how to amplify your rune-powered transformation. As a result, the extra damage you deal with the Giant's Might feature increases to 1d10. Moreover, when you use that feature, your size can increase to Huge, and while you are that size, your reach increases by 5 feet"})]}}}
                  {:name "Samurai"
                   :selections [(t/selection-cfg
                                 {:name "Proficiency"
@@ -1664,22 +1682,23 @@
                   :modifiers [(mod5e/bonus-action
                                {:name "Fighting Spirit"
                                 :frequency (units5e/long-rests 3)
-                                :summary (str "Give yourself advantage on all weapon attack rolls until the end of the current turn, and gain " (condp <= (?class-level :fighter) 15 15  10 10  5) " temp HP")})]
+                                :summary "your intensity in battle can shield you and help you strike true. As a bonus action on your turn, you can give yourself advantage on all weapon attack rolls until the end of the current turn. When you do so, you also gain 5 temporary hit points. The number of hit points increases when you reach certain levels in this class, increasing to 10 at 10th level and 15 at 15th level"})]
                   :levels {7 {:modifiers [(mod5e/saving-throws nil ::char5e/wis)
                                           (mod5e/dependent-trait
                                            {:name "Elegant Courtier"
-                                            :summary (str "You gain a " (?ability-bonuses ::char5e/wis) " bonus to Persuasion checks and gain proficiency in Wis Saves, Cha or Int of you already have Wis")})]}
+                                            :summary (str "your discipline and attention to detail allow you to excel in social situations. Whenever you make a Charisma (Persuasion) check, you gain a bonus to the check equal to your Wisdom modifier."
+                                                          "\n\nYour self-control also causes you to gain proficiency in Wisdom saving throws. If you already have this proficiency, you instead gain proficiency in Intelligence or Charisma saving throws (your choice).")})]}
                            10 {:modifiers [(mod5e/trait-cfg
                                             {:name "Tireless Spirit"
-                                             :summary "When you roll initiative and have no uses of Fighting Spirit remaining, regain one use"})]}                  
+                                             :summary "when you roll initiative and have no uses of Fighting Spirit remaining, you regain one use"})]}
                            15 {:modifiers [(mod5e/trait-cfg
                                             {:name "Rapid Strike"
                                              :frequency units5e/turns-1
-                                             :summary "If you take the Attack action on your turn and have advantage on an attack roll against against one of the targets, you can forgo the advantage for that roll to make an additional weapon attack against that target, as part of the same action"})]}
+                                             :summary "you learn to trade accuracy for swift strikes. If you take the Attack action on your turn and have advantage on an attack roll against one of the targets, you can forgo the advantage for that roll to make an additional weapon attack against that target, as part of the same action. You can do so no more than once per turn"})]}
                           18 {:modifiers [(mod5e/reaction
                                            {:name "Strength Before Death"
                                             :frequency units5e/long-rests-1
-                                            :summary "Immediately take an extra turn if you are reduced to 0 HP"})]}}}]}))
+                                            :summary "your fighting spirit can delay the grasp of death. If you take damage that reduces you to 0 hit points, you can use your reaction to delay falling unconscious, and you can immediately take an extra turn. While you have 0 hit points during that extra turn, taking damage causes death saving throw failures as normal, and three death saving throw failures can still kill you. When the extra turn ends, you fall unconscious if you still have 0 hit points"})]}}}]}))
 
 (defn monk-weapon? [{:keys [key ::weapon5e/type ::weapon5e/melee? ::weapon5e/heavy? ::weapon5e/two-handed?]}]
   (or (= key :shortsword)
