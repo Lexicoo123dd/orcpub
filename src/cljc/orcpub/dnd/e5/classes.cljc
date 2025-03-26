@@ -2574,14 +2574,18 @@
                                 :modifiers [(mod5e/dependent-trait
                                              {:name "Favored Enemy"
                                               :page 91
-                                              :summary (str "You have advantage on survival checks to track " (common/list-print (map #(common/kw-to-name % false) ?ranger-favored-enemies)) " creatures and on INT checks to recall info about them")})]})
+                                              :summary (str "your favored enemies are " (common/list-print (map #(common/kw-to-name % false) ?ranger-favored-enemies))"."
+                                                            "\n\nYou have advantage on Wisdom (Survival) checks to track your favored enemies, as well as on Intelligence checks to recall information about them."
+                                                            "\n\nWhen you gain this feature, you also learn one language of your choice that is spoken by your favored enemies, if they speak one at all.")})]})
                               (t/option-cfg
                                {:name "Favored Foe"
                                 :order 2
                                 :modifiers [(mod5e/action
                                              {:name "Favored Foe"
                                               :frequency (units5e/long-rests ?prof-bonus)
-                                              :summary (str "When you hit a creature with an attack roll, mark the target for 1 minute or until you lose concentration.\n\nFirst time you hit the target on each of your turns and deal damage, add 1d" (condp <= (?class-level :ranger) 14 8  6 6  4) " damage")})]})]})
+                                              :summary (str "When you hit a creature with an attack roll, you can call on your mystical bond with nature to mark the target as your favored enemy for 1 minute or until you lose your concentration (as if you were concentrating on a spell)."
+                                                            "\n\nThe first time on each of your turns that you hit the favored enemy and deal damage to it, including when you mark it, you increase that damage by 1d"
+                                                            (condp <= (?class-level :ranger) 14 8  6 6  4) ".")})]})]})
                   (t/selection-cfg
                    {:name "Explorer Selection"
                     :tags #{:class}
@@ -2597,13 +2601,14 @@
                                               :page 91
                                               :summary (let [favored-terrain ?ranger-favored-terrain
                                                              one-terrain? (= 1 (count favored-terrain))]
-                                                        (str "your favored terrain " (if one-terrain? "type is" "types are") " " (if (seq favored-terrain) (common/list-print (map #(common/kw-to-name % false) ?ranger-favored-terrain)) "not selected") ". When you make an Intelligence or Wisdom check related to your favored terrain, your proficiency bonus is doubled if you are using a skill that you're proficient in.\n\nWhile traveling for an hour or more in your favored terrain, you gain the following benefits:"
-                                                             "\n - Difficult terrain doesn’t slow your group’s travel."
-                                                             "\n - Your group can’t become lost except by magical means."
-                                                             "\n - Even when you are engaged in another activity while traveling (such as foraging, navigating, or tracking), you remain alert to danger."
-                                                             "\n - If you are traveling alone, you can move stealthily at a normal pace."
-                                                             "\n - When you forage, you find twice as much food as you normally would."
-                                                             "\n - While tracking other creatures, you also learn their exact number, their sizes, and how long ago they passed through the area."))})]})
+                                                        (str "your favored terrain " (if one-terrain? "type is" "types are") " " (if (seq favored-terrain) (common/list-print (map #(common/kw-to-name % false) ?ranger-favored-terrain)) "not selected") ". When you make an Intelligence or Wisdom check related to your favored terrain, your proficiency bonus is doubled if you are using a skill that you’re proficient in."
+                                                             "\n\nWhile traveling for an hour or more in your favored terrain, you gain the following benefits:"
+                                                             "\n\u2022 Difficult terrain doesn’t slow your group’s travel."
+                                                             "\n\u2022 Your group can’t become lost except by magical means."
+                                                             "\n\u2022 Even when you are engaged in another activity while traveling (such as foraging, navigating, or tracking), you remain alert to danger."
+                                                             "\n\u2022 If you are traveling alone, you can move stealthily at a normal pace."
+                                                             "\n\u2022 When you forage, you find twice as much food as you normally would."
+                                                             "\n\u2022 While tracking other creatures, you also learn their exact number, their sizes, and how long ago they passed through the area."))})]})
                               (t/option-cfg
                                {:name "Deft Explorer"
                                 :order 2
@@ -2619,12 +2624,12 @@
                                             (mod5e/trait-cfg
                                              {:name "Tireless"
                                               :level 10
-                                              :summary "Whenever you finish a short rest, your exhaustion level, if any, is decreased by 1."})
+                                              :summary "whenever you finish a short rest, your exhaustion level, if any, is decreased by 1"})
                                             (mod5e/action
                                              {:name "Tireless"
                                               :level 10
                                               :frequency (units5e/long-rests ?prof-bonus)
-                                              :summary (str "As an action, you can give yourself a number of temporary hit points equal to 1d8 + your Wisdom modifier (" (common/bonus-str (?ability-bonuses ::char5e/wis)) ") (minimum of 1 temporary hit point).")})]})]})]
+                                              :summary "As an action, you can give yourself a number of temporary hit points equal to 1d8 + your Wisdom modifier (minimum of 1 temporary hit point)"})]})]})]
      :levels {2 {:selections [(opt5e/fighting-style-selection :ranger #{:archery :blind-fighting :defense :druidic-warrior :dueling :thrown-weapon-fighting :two-weapon-fighting})]}
               3 {:selections [(t/selection-cfg
                                {:name "Awareness"
@@ -2636,7 +2641,7 @@
                                                           {:name "Primeval Awareness"
                                                           :level 3
                                                           :page 92
-                                                          :summary (str "you can use your action and expend one ranger spell slot to focus your awareness on the region around you. For 1 minute per level of the spell slot you expend, you can sense whether the following types of creatures are present within 1 mile of you" (if (seq ?ranger-favored-terrain) (str "(or within up to 6 miles if you are in your favored terrain)")) ": aberrations, celestials, dragons, elementals, fey, fiends, and undead. This feature doesn't reveal the creatures' location or number.")})]})
+                                                          :summary "you can use your action and expend one ranger spell slot to focus your awareness on the region around you. For 1 minute per level of the spell slot you expend, you can sense whether the following types of creatures are present within 1 mile of you (or within up to 6 miles if you are in your favored terrain): aberrations, celestials, dragons, elementals, fey, fiends, and undead. This feature doesn’t reveal the creatures’ location or number"})]})
                                             (t/option-cfg
                                              {:name "Primal Awareness"
                                               :order 2
@@ -2647,7 +2652,7 @@
                                                           (mod5e/spells-known 5 :commune-with-nature ::char5e/wis "Ranger (Primal Awareness)" 17)
                                                           (mod5e/dependent-trait
                                                            {:name "Primal Awareness"
-                                                            :summary (str "You know the spell" (if (>= (?class-level :ranger) 5) "s")
+                                                            :summary (str "You learn the spell" (if (>= (?class-level :ranger) 5) "s")
                                                                       (common/list-print
                                                                         (let [lvl (?class-level :ranger)]
                                                                           (cond-> []
@@ -2667,7 +2672,8 @@
                                              :modifiers [(mod5e/trait-cfg
                                                           {:name "Hide in Plain Sight"
                                                            :page 92
-                                                           :summary "You can spend 1 minute camouflaging yourself. You must have access to fresh mud, dirt, plants, soot, and other naturally occurring materials with which to create your camouflage.\n\n While camouflaged, you can hide by pressing yourself up against a solid surface, such as a tree or wall, that is at least as tall and wide as you. You gain a +10 bonus to Stealth checks as long as you remain there without moving or taking actions. Once you move or take an action or a reaction, you must camouflage yourself again to gain this benefit."})]})
+                                                           :summary (str "you can spend 1 minute creating camouflage for yourself. You must have access to fresh mud, dirt, plants, soot, and other naturally occurring materials with which to create your camouflage"
+                                                                         "\n\nOnce you are camouflaged in this way, you can try to hide by pressing yourself up against a solid surface, such as a tree or wall, that is at least as tall and wide as you are. You gain a +10 bonus to Dexterity (Stealth) checks as long as you remain there without moving or taking actions. Once you move or take an action or a reaction, you must camouflage yourself again to gain this benefit")})]})
                                            (t/option-cfg
                                             {:name "Nature's Veil"
                                              :order 2
@@ -2678,13 +2684,13 @@
               14 {:modifiers [(mod5e/bonus-action
                                {:name "Vanish"
                                 :page 92
-                                :summary "You can use the Hide action as a bonus action on your turn. Also, you can't be tracked by nonmagical means, unless you choose to leave a trail."})]}
+                                :summary "you can use the Hide action as a bonus action on your turn. Also, you can't be tracked by nonmagical means, unless you choose to leave a trail"})]}
               20 {:modifiers [(mod5e/dependent-trait
                                {:name "Foe Slayer"
                                 :frequency units5e/turns-1
                                 :level 20
                                 :page 92
-                                :summary (str "you become an unparalleled hunter of your enemies. Once on each of your turns, you can add your Wisdom modifier (" (common/bonus-str (?ability-bonuses ::char5e/wis)) ") to the attack roll or the damage roll of an attack you make against one of your favored enemies. You can choose to use this feature before or after the roll, but before any effects of the roll are applied")})]}}
+                                :summary "you become an unparalleled hunter of your enemies. Once on each of your turns, you can add your Wisdom modifier to the attack roll or the damage roll of an attack you make against one of your favored enemies. You can choose to use this feature before or after the roll, but before any effects of the roll are applied"})]}}
      :traits [{:name "Spellcasting Focus"
                :level 2
                :summary "You can use a druidic focus as a spellcasting focus for your ranger spells. A druidic focus might be a sprig of mistletoe or holly, a wand or rod made of yew or another special wood, a staff drawn whole from a living tree, or an object incorporating feathers, fur, bones, and teeth from sacred animals."}
@@ -2696,7 +2702,7 @@
                :level 18
                :page 92
                :summary (str "you gain preternatural senses that help you fight creatures you can't see. When you attack a creature you can't see, your inability to see it doesn't impose disadvantage on your attack rolls against it."
-                             "\n\nYou are also aware of the location of any invisible creature within 30 feet of you, provided that the creature isn't hidden from you and you aren't blinded or deafened.")}]
+                             "\n\nYou are also aware of the location of any invisible creature within 30 feet of you, provided that the creature isn't hidden from you and you aren't blinded or deafened")}]
      :subclasses [{:name "Hunter"
                    :levels {3 {:selections [(t/selection-cfg
                                              {:name "Hunter's Prey"
@@ -2707,21 +2713,21 @@
                                                                        {:name "Colossus Slayer"
                                                                         :page 93
                                                                         :frequency units5e/turns-1
-                                                                        :summary "Your tenacity can wear down the most potent foes. When you hit a creature with a weapon attack, the creature takes an extra 1d8 damage if it’s below its hit point maximum. You can deal this extra damage only once per turn."})]})
+                                                                        :summary "Your tenacity can wear down the most potent foes. When you hit a creature with a weapon attack, the creature takes an extra 1d8 damage if it’s below its hit point maximum. You can deal this extra damage only once per turn"})]})
                                                         (t/option-cfg
                                                          {:name "Giant Killer"
                                                           :modifiers [(mod5e/reaction
                                                                        {:name "Giant Killer"
                                                                         :page 93
                                                                         :frequency units5e/turns-1
-                                                                        :summary "When a Large or larger creature within 5 feet of you hits or misses you with an attack, you can use your reaction to attack that creature immediately after its attack, provided that you can see the creature."})]})
+                                                                        :summary "When a Large or larger creature within 5 feet of you hits or misses you with an attack, you can use your reaction to attack that creature immediately after its attack, provided that you can see the creature"})]})
                                                         (t/option-cfg
                                                          {:name "Horde Breaker"
                                                           :modifiers [(mod5e/trait-cfg
                                                                        {:name "Horde Breaker"
                                                                         :page 93
                                                                         :frequency units5e/turns-1
-                                                                        :summary "Once on each of your turns when you make a weapon attack, you can make another attack with the same weapon against a different creature that is within 5 feet of the original target and within range of your weapon."})]})]})]}
+                                                                        :summary "Once on each of your turns when you make a weapon attack, you can make another attack with the same weapon against a different creature that is within 5 feet of the original target and within range of your weapon"})]})]})]}
                             7 {:selections [(t/selection-cfg
                                              {:name "Defensive Tactics"
                                               :tags #{:class}
@@ -2731,21 +2737,21 @@
                                                                        {:name "Escape the Horde"
                                                                         :frequency units5e/turns-1
                                                                         :page 93
-                                                                        :summary "Opportunity attacks against you are made with disadvantage."})]})
+                                                                        :summary "Opportunity attacks against you are made with disadvantage"})]})
                                                         (t/option-cfg
                                                          {:name "Multiattack Defense"
                                                           :modifiers [(mod5e/trait-cfg
                                                                        {:name "Multiattack Defense"
                                                                         :frequency units5e/turns-1
                                                                         :page 93
-                                                                        :summary "When a creature hits you with an attack, you gain a +4 bonus to AC against all subsequent attacks made by that creature for the rest of the turn."})]})
+                                                                        :summary "When a creature hits you with an attack, you gain a +4 bonus to AC against all subsequent attacks made by that creature for the rest of the turn"})]})
                                                         (t/option-cfg
                                                          {:name "Steel Will"
                                                           :modifiers [(mod5e/saving-throw-advantage [:frightened])
                                                                       (mod5e/trait-cfg
                                                                        {:name "Steel Will"
                                                                         :page 93
-                                                                        :summary "You have advantage on saving throws against being frightened."})]})]})]}
+                                                                        :summary "You have advantage on saving throws against being frightened"})]})]})]}
                             11 {:selections [(t/selection-cfg
                                               {:name "Multiattack"
                                                :tags #{:class}
@@ -2754,13 +2760,13 @@
                                                            :modifiers [(mod5e/action
                                                                         {:name "Volley"
                                                                          :page 93
-                                                                         :summary "You can use your action to make a ranged attack against any number of creatures within 10 feet of a point you can see within your weapon’s range. You must have ammunition for each target, as normal, and you make a separate attack roll for each target."})]})
+                                                                         :summary "You can use your action to make a ranged attack against any number of creatures within 10 feet of a point you can see within your weapon’s range. You must have ammunition for each target, as normal, and you make a separate attack roll for each target"})]})
                                                          (t/option-cfg
                                                           {:name "Whirlwind Attack"
                                                            :modifiers [(mod5e/action
                                                                         {:name "Whirlwind Attack"
                                                                          :page 93
-                                                                         :summary "You can use your action to make a melee attack against any number of creatures within 5 feet of you, with a separate attack roll for each target."})]})]})]}
+                                                                         :summary "You can use your action to make melee attacks against any number of creatures within 5 feet of you, with a separate attack roll for each target"})]})]})]}
                             15 {:selections [(t/selection-cfg
                                               {:name "Superior Hunter's Defense"
                                                :tags #{:class}
@@ -2769,30 +2775,37 @@
                                                            :modifiers [(opt5e/evasion 15 93)
                                                                        (mod5e/trait-cfg
                                                                         {:page 93
-                                                                         :summary "When you are subjected to an effect, such as a red dragon’s fiery breath or a lightning bolt spell, that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw, and only half damage if you fail."})]})
+                                                                         :summary "When you are subjected to an effect, such as a red dragon’s fiery breath or a lightning bolt spell, that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on a saving throw, and only half damage if you fail"})]})
                                                          (t/option-cfg
                                                           {:name "Stand Against the Tide"
                                                            :modifiers  [(mod5e/reaction
                                                                          {:name "Stand Against the Tide"
                                                                           :page 93
-                                                                          :summary "When a hostile creature misses you with a melee attack, you can use your reaction to force that creature to repeat the same attack against another creature (other than itself) of your choice."})]})
+                                                                          :summary "When a hostile creature misses you with a melee attack, you can use your reaction to force that creature to repeat the same attack against another creature (other than itself) of your choice"})]})
                                                          (t/option-cfg
                                                           {:name "Uncanny Dodge"
                                                            :modifiers [(opt5e/uncanny-dodge-modifier 93)
                                                                        (mod5e/trait-cfg {:name "Uncanny Dodge"
                                                                                          :page 93
-                                                                                         :summary "When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack’s damage against you."})]})]})]}}}
+                                                                                         :summary "When an attacker that you can see hits you with an attack, you can use your reaction to halve the attack’s damage against you"})]})]})]}}}
                   {:name "Drakewarden"
                    :modifiers [(mod5e/spells-known 0 :thaumaturgy ::char5e/wis "Drakewarden")
                                (mod5e/language :draconic)
-                               (mod5e/action
+                               (mod5e/dependent-trait
+                                 {:name "Drake Companion"
+                                  :summary (str "as an action, you can magically summon the drake that is bound to you. It appears in an unoccupied space of your choice within 30 feet of you."
+                                                "\n\nThe drake is friendly to you and your companions, and it obeys your commands. Whenever you summon the drake, choose a damage type listed in its Draconic Essence trait."
+                                                "\n\nIn combat, the drake shares your initiative count, but it takes its turn immediately after yours. It can move and use its reaction on its own, but the only action it takes on its turn is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. If you are incapacitated, the drake can take any action of its choice, not just Dodge."
+                                                "\n\nThe drake remains until it is reduced to 0 hit points, until you use this feature to summon the drake again, or until you die. Anything the drake was wearing or carrying is left behind when the drake vanishes."
+                                                "\n\nOnce you summon the drake, you can’t do so again until you finish a long rest, unless you expend a spell slot of 1st level or higher to summon it.")})
+                               #_(mod5e/action
                                 {:name "Summon Drake"
                                  :frequency units5e/long-rests-1
                                  :summary "Magically summon the bounded drake in an unoccupied space within 30 ft., and choose a Draconic Essence damage type. Can expend a spell splot to summon it again"})
-                               (mod5e/bonus-action
+                               #_(mod5e/bonus-action
                                 {:name "Command Drake"
                                  :summary "Command the drake to take an action other than dodge"})
-                               (mod5e/dependent-trait
+                               #_(mod5e/dependent-trait
                                 {:name "Drake Companion"
                                  :summary "The drake is friendly to you and your companions, and it obeys your commands.\n\nIn combat, the drake shares your initiative count, but it takes its turn immediately after yours. It can move and use its reaction on its own, but the only action it takes on its turn is the Dodge action. If you are incapacitated, the drake can take any action of its choice, not just Dodge.\n\nThe drake remains until it is reduced to 0 hit points, until you use this feature to summon the drake again, or until you die. Anything the drake was wearing or carrying is left behind when the drake vanishes."})
                                (mod5e/dependent-trait
@@ -2801,8 +2814,8 @@
                                            "Armor Class: " (+ 14 ?prof-bonus)
                                            "\nHit Points: " (+ 5 (* 5 (?class-level :ranger))) ", " (?class-level :ranger) "d10 hit dice"
                                            "\nSpeed: 40 ft.\n"
-                                           "\nStr: 16 (+3)  Dex: 12 (+1)  Con: 15 (+2)  Int: 8 (-1)   Wis: 14 (+2)  Cha: 8 (-1)\n"
-                                           "Saving Throws: Dex: +" (+ 1 ?prof-bonus) "  Wis: +" (+ 2 ?prof-bonus)
+                                           "\nStr: 16 (+3)  Dex: 12 (+1)  Con: 15 (+2)  Int: 8 (-1)   Wis: 14 (+2)  Cha: 8 (-1)"
+                                           "\nSaving Throws: Dex: +" (+ 1 ?prof-bonus) "  Wis: +" (+ 2 ?prof-bonus)
                                            "\nDamage Immunities: Draconic Essence trait"
                                            "\nSenses: darkvision 60ft., passive Perception 12"
                                            "\nLanguages: Draconic"
@@ -2812,18 +2825,23 @@
                    :selections [(opt5e/language-selection-aux (vals language-map) 1)]
                    :levels {7 {:modifiers [(mod5e/trait-cfg
                                             {:name "Bond of Fang and Scale"
-                                             :summary "Your drake gains a flying speed equal to its walking speed.\n\nIt grows to medium size, and you can use it as a mount if medium or smaller, but it can't fly while mounted.\n\nThe drake's bite attack deals an additional 1d6 damage of the Draconic Essence damage type.\n\nYou gain resistance to the Draconic Essence damage type"})]}
+                                             :summary (str "the bond you share with your drake intensifies, protecting you and stoking the drake’s fury. When you summon your drake, it grows wings on its back and gains a flying speed equal to its walking speed."
+                                                           "\n\nIn addition, while your drake is summoned, you and the drake gain the following benefits:"
+                                                           "\nDrake Mount. The drake grows to Medium size. Reflecting your special bond, you can use the drake as a mount if your size is Medium or smaller. While you are riding your drake, it can’t use the flying speed of this feature."
+                                                           "\nMagic Fang. The drake’s Bite attack deals an extra 1d6 damage of the type chosen for the drake’s Draconic Essence."
+                                                           "\nResistance. You gain resistance to the damage type chosen for the drake’s Draconic Essence.")})]}
                             11 {:modifiers [(mod5e/action
                                              {:name "Drake's Breath"
-                                              :frequency units5e/long-rests-1
-                                              :summary (str "You or your drake exhale a 30-foot cone of acid, cold, fire, lightning, or poison damage. Each creature must make a DC " (?spell-save-dc ::char5e/wis) " DEX save or take " (condp <= (?class-level :ranger) 15 "10d6"  "8d6") " damage, half on success. Can expend a 3rd level or higher spell slot to use again")})]}
+                                              :summary (str "as an action, you can exhale a 30-foot cone of damaging breath or cause your drake to exhale it. Choose acid, cold, fire, lightning, or poison damage (your choice doesn’t have to match your drake’s Draconic Essence). Each creature in the cone must make a Dexterity saving throw against your spell save DC, taking " (condp <= (?class-level :ranger) 15 "10d6"  "8d6") " damage on a failed save, or half as much damage on a successful one."
+                                                            "\n\nOnce you use this feature, you can’t do so again until you finish a long rest, unless you expend a spell slot of 3rd level or higher to use it again")})]}
                             15 {:modifiers [(mod5e/trait-cfg
                                              {:name "Perfected Bond"
-                                              :summary "The drake's bite attack deals an additional 1d6 damage of it's Draconic Essence\n\nThe drake grows to large size and can fly while mounted"})
+                                              :summary (str "Empowered Bite. The drake’s Bite attack deals an extra 1d6 damage of the type chosen for its Draconic Essence (for a total of 2d6 extra damage)."
+                                                            "\nLarge Drake. The drake grows to Large size. When you ride your drake, it is no longer prohibited from using the flying speed of Bond of Fang and Scale.")})
                                             (mod5e/reaction
                                              {:name "Reflexive Resistance"
                                               :frequency (units5e/long-rests ?prof-bonus)
-                                              :summary "When either you or the drake takes damage while within 30 ft. of each other, give yourself or the drake resistance to that instance of damage"})]}}}
+                                              :summary "When either you or the drake takes damage while you’re within 30 feet of each other, you can use your reaction to give yourself or the drake resistance to that instance of damage"})]}}}
                   ;; (condp <= (?class-level :ranger) 15 "Large"  7 "Medium"  "Small") " dragon\n"
                   ;;                          "Armor Class: " (+ 14 ?prof-bonus)
                                           ;;  "\nHit Points: " (+ 5 (* 5 (?class-level :ranger))) ", " (?class-level :ranger) "d10 hit dice"
@@ -2868,7 +2886,7 @@
                                               {:name "Exceptional Training"
                                                :page 93
                                                :level 7
-                                               :summary "on any of your turns when your beast companion doesn't attack, you can use a bonus action to command the beast to take the Dash, Disengage, or Help action on its turn. In addition, the beas's attacks now count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage"})]}}
+                                               :summary "on any of your turns when your beast companion doesn’t attack, you can use a bonus action to command the beast to take the Dash, Disengage, or Help action on its turn. In addition, the beast’s attacks now count as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage"})]}}
                      :traits [{:name "Bestial Fury"
                                :level 11
                                :page 93
