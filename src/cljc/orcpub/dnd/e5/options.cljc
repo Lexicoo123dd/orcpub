@@ -3608,7 +3608,7 @@
   (modifiers/reaction
    {:name "Uncanny Dodge"
     :page page
-    :summary "halve the damage from an attacker you can see that hits you"}))
+    :summary "when an attacker that you can see hits you with an attack, you can use your reaction to halve the attack's damage against you"}))
 
 (defn divine-strike [damage-desc page & [source]]
   (modifiers/dependent-trait

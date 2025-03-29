@@ -2973,18 +2973,19 @@
                  {:name "Sneak Attack"
                   :page 96
                   :frequency units5e/turns-1
-                  :summary (str (common/round-up (/ (?class-level :rogue) 2)) "d6 extra damage on attack where you have advantage or another enemy of creature is within 5 ft.")
-                  })
-                (mod5e/bonus-action
-                 {:name "Steady Aim"
-                  :summary "Give yourself advantage on an attack if you don't move during the turn."
+                  :summary (str "you know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra " (common/round-up (/ (?class-level :rogue) 2)) "d6 damage to one creature you hit with an attack if you have advantage on the attack roll. The attack must use a finesse or a ranged weapon."
+                                "\n\nYou don't need advantage on the attack roll if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll")
                   })]
     :levels {2 {:modifiers [(mod5e/bonus-action
                              {:level 2
                               :name "Cunning Action"
                               :page 96
                               :frequency units5e/turns-1
-                              :summary "as a bonus action you can Dash, Disengage or Hide"
+                              :summary "your quick thinking and agility allow you to move and act quickly. You can take a bonus action on each of your turns in combat. This action can be used only to take the Dash, Disengage, or Hide action"
+                              })]}
+             3 {:modifiers [(mod5e/bonus-action
+                             {:name "Steady Aim"
+                              :summary "as a bonus action, you give yourself advantage on your next attack roll on the current turn. You can use this bonus action only if you haven't moved during this turn, and after you use the bonus action, your speed is 0 until the end of the current turn"
                               })]}
              5 {:modifiers [(opt5e/uncanny-dodge-modifier 96)]}
              6 {:selections [(assoc
@@ -3009,29 +3010,30 @@
                   1)]
     :traits [{:name "Thieves' Cant"
               :page 96
-              :summary "convey secret messages hidden in normal conversation"
+              :summary (str "During your rogue training you learned thieves' cant, a secret mix of dialect, jargon, and code that allows you to hide messages in seemingly normal conversation. Only another creature that knows thieves' cant understands such messages. It takes four times longer to convey such a message than it does to speak the same idea plainly."
+                            "\n\nIn addition, you understand a set of secret signs and symbols used to convey short, simple messages, such as whether an area is dangerous or the territory of a thieves' guild, whether loot is nearby, or whether the people in an area are easy marks or will provide a safe house for thieves on the run")
               }
              (opt5e/evasion 7 96)
              {:level 11
               :name "Reliable Talent"
               :page 96
-              :summary "when you make an ability check with proficiency, treat a roll less than 10 as a 10"
+              :summary "you have refined your chosen skills until they approach perfection. Whenever you make an ability check that lets you add your proficiency bonus, you can treat a d20 roll of 9 or lower as a 10"
               }
              {:level 14
               :name "Blindsense"
               :page 96
-              :summary "know location of hidden or invisible creatures within 10 ft."
+              :summary "if you are able to hear, you are aware of the location of any hidden or invisible creature within 10 feet of you"
               }
              {:level 18
               :name "Elusive"
               :page 96
-              :summary "no attack roll has advantage against you while you aren’t incapacitated."
+              :summary "you are so evasive that attackers rarely gain the upper hand against you. No attack roll has advantage against you while you aren't incapacitated"
               }
              {:level 20
               :name "Stroke of Luck"
               :page 97
               :frequency units5e/rests-1
-              :summary "turn missed attack into a hit or a failed ability check roll as 20"
+              :summary "you have an uncanny knack for succeeding when you need to. If your attack misses a target within range, you can turn the miss into a hit. Alternatively, if you fail an ability check, you can treat the d20 roll as a 20"
               }]
     :subclass-level 3
     :subclass-title "Roguish Archetype"
@@ -3040,26 +3042,27 @@
                                {:level 3
                                 :name "Fast Hands"
                                 :page 96
-                                :summary "use your Cunning Action to make Sleight of Hand checks, use thieves' tools, or take Use and Object action"
+                                :summary "you can use the bonus action granted by your Cunning Action to make a Dexterity (Sleight of Hand) check, use your thieves' tools to disarm a trap or open a lock, or take the Use an Object action"
                                 })
                               (mod5e/dependent-trait
                                {:level 3
                                 :name "Second-Story Work"
                                 :page 97
-                                :summary (str "climbing costs no extra movement, your running jump distance increases by " (?ability-bonuses ::char5e/dex) " ft.")
+                                :summary (str "you gain the ability to climb faster than normal; climbing no longer costs you extra movement."
+                                              "\n\nIn addition, when you make a running jump, the distance you cover increases by a number of feet equal to your Dexterity modifier")
                                 })]
                   :traits [{:level 9
                             :name "Supreme Sneak"
                             :page 97
-                            :summary "advantage on Stealth checks if you move no more than half your speed"}
+                            :summary "you have advantage on a Dexterity (Stealth) check if you move no more than half your speed on the same turn"}
                            {:level 13
                             :name "Use Magic Device"
                             :page 97
-                            :summary "ignore race, class, level requirements to use magic items"}
+                            :summary "you have learned enough about the workings of magic that you can improvise the use of items even when they are not intended for you. You ignore all class, race, and level requirements on the use of magic items"}
                            {:level 17
                             :name "Thief's Reflexes"
                             :page 97
-                            :summary "when not surprised, take 2 turns in first round of combat, one at your normal initiative and the next at your initiative minus 10"}]}
+                            :summary "you have become adept at laying ambushes and quickly escaping danger. You can take two turns during the first round of any combat. You take your first turn at your normal initiative and your second turn at your initiative minus 10. You can't use this feature when you are surprised"}]}
                  {:name "Assassin"
                     :profs {:tool {:disguise-kit true :poisoners-kit true}}
                     :levels {9 {:modifiers [(mod5e/tool-expertise :poisoners-kit)]} ;;homebrew
@@ -3067,22 +3070,24 @@
                                               {:name "Death Strike"
                                                :level 17
                                                :page 97
-                                               :summary (str "double damage against a surpised creature if it fails a DC " (?spell-save-dc ::char5e/dex) " CON save")})]}}
+                                               :summary (str "you become a master of instant death. When you attack and hit a creature that is surprised, it must make a Constitution saving throw (DC 8 + your Dexterity modifier + your proficiency bonus = " (?spell-save-dc ::char5e/dex) "). On a failed save, double the damage of your attack against the creature")})]}}
                     :traits [{:name "Assassinate"
                               :level 3
                               :page 97
-                              :summary "advantage on attack against creatures that haven't taken a turn yet. Hits against surprised creatures are critical"}
+                              :summary "you are at your deadliest when you get the drop on your enemies. You have advantage on attack rolls against any creature that hasn't taken a turn in the combat yet. In addition, any hit you score against a creature that is surprised is a critical hit"}
                              {:name "Infiltration Expertise"
                               :level 9
                               :page 97
-                              :summary "spend 25 gp and 7 days to establish a false identity, which can't be someone else"}
+                              :summary (str "you can unfailingly create false identities for yourself. You must spend seven days and 25 gp to establish the history, profession, and affiliations for an identity. You can't establish an identity that belongs to someone else. For example, you might acquire appropriate clothing, letters of introduction, and official- looking certification to establish yourself as a member of a trading house from a remote city so you can insinuate yourself into the company of other wealthy merchants."
+                                            "\n\nThereafter, if you adopt the new identity as a disguise, other creatures believe you to be that person until given an obvious reason not to.")}
                              {:name "Impostor"
                               :level 13
                               :page 97
-                              :summary "spend 3 hours studying to accurately mimic the behavior, speech, and writing of another person. Advantage on Deception checks to avoid detection of this"}
+                              :summary (str "you gain the ability to unerringly mimic another person's speech, writing, and behavior. You must spend at least three hours studying these three components of the person's behavior, listening to speech, examining handwriting, and observing mannerisms."
+                                            "\n\nYour ruse is indiscernible to the casual observer. If a wary creature suspects something is amiss, you have advantage on any Charisma (Deception) check you make to avoid detection")}
                              {:name "Poison Expert"
                               :level 13
-                              :summary "When extracting or making poison, treat any roll lower than 10 as a 10"}]}
+                              :summary "when extracting or making poison, you can treat a d20 roll of 9 or lower as a 10"}]}
                  {:name "Arcane Trickster"
                     :spellcasting {:level-factor 3}
                     :modifiers [(mod5e/spells-known 0 :mage-hand ::char5e/int "Arcane Trickster")]
@@ -3100,7 +3105,7 @@
                                               {:name "Versatile Trickster"
                                                :level 13
                                                :page 98
-                                               :summary "use mage hand to gain advantage on attack rolls against a creature within 5 ft. of the hand"})]}
+                                               :summary "you gain the ability to distract targets with your Mage Hand. As a bonus action on your turn, you can designate a creature within 5 feet of the spectral hand created by the spell. Doing so gives you advantage on attack rolls against that creature until the end of the turn"})]}
                              14 {:selections [(arcane-trickster-any-spell-selection 1 [1 2 3])]}
                              16 {:selections [(arcane-trickster-spell-selection 1 [1 2 3])]}
                              17 {:modifiers [(mod5e/reaction
@@ -3108,38 +3113,45 @@
                                                :level 17
                                                :page 98
                                                :frequency units5e/long-rests-1
-                                               :summary (str "Negate a spells effect against you if the spellcaster fails a DC " (?spell-save-dc ::char5e/int) " save with its spellcasting ability. Steal the spell if it's a 1st level or higher, letting you cast it using your spell slots for 8 hours. The creature can't cast that spell again until the 8 hours have passed")})]}
+                                               :summary (str "you gain the ability to magically steal the knowledge of how to cast a spell from another spellcaster."
+                                                             "\n\nImmediately after a creature casts a spell that targets you or includes you in its area of effect, you can use your reaction to force the creature to make a saving throw with its spellcasting ability modifier. The DC equals your spell save DC. On a failed save, you negate the spell's effect against you, and you steal the knowledge of the spell if it is at least 1st level and of a level you can cast (it doesn't need to be a wizard spell). For the next 8 hours, you know the spell and can cast it using your spell slots. The creature can't cast that spell until the 8 hours have passed")})]}
                              19 {:selections [(arcane-trickster-spell-selection 1 [1 2 3 4])]}
                              20 {:selections [(arcane-trickster-any-spell-selection 1 [1 2 3 4])]}}
                     :traits [{:name "Mage Hand Legerdemain"
                               :level 3
                               :page 98
-                              :summary "when you cast mage hand, you can make it invisible and perform Sleight of Hand tasks, and can control it using your Cunning Action bonus action"}
+                              :summary (str "when you cast Mage Hand, you can make the spectral hand invisible, and you can perform the following additional tasks with it:"
+                                            "\n\u2022 You can stow one object the hand is holding in a container worn or carried by another creature."
+                                            "\n\u2022 You can retrieve an object in a container worn or carried by another creature."
+                                            "\n\u2022 You can use thieves' tools to pick locks and disarm traps at range."
+                                            "\nYou can perform one of these tasks without being noticed by a creature if you succeed on a Dexterity (Sleight of Hand) check contested by the creature's Wisdom (Perception) check."
+                                            "\n\nIn addition, you can use the bonus action granted by your Cunning Action to control the hand")}
                              {:name "Magical Ambush"
                               :level 9
                               :page 98
-                              :summary "creatures have disadvantage on saves against your spells (only on the turn you cast them) if you are hidden from them"}]}
+                              :summary "if you are hidden from a creature when you cast a spell on it, the creature has disadvantage on any saving throw it makes against the spell this turn"}]}
                  {:name "Inquisitive"
                   :modifiers [(mod5e/bonus-action
                                {:name "Eye for Detail"
-                                :summary "Make a Perception check to stop a hidden creature or object or an Investigation check to uncover or decipher clues"})
+                                :summary "you can use a bonus action to make a Wisdom (Perception) check to spot a hidden creature or object or to make an Intelligence (Investigation) check to uncover or decipher clues"})
                               (mod5e/bonus-action
                                {:name "Insightful Fighting"
                                 :duration units5e/minutes-1
-                                :summary "Make an Insight check against a creature you can see that isn't incapacitated, contested by the target's Deception check. If you succeed, you can use your Sneak Attack against that target even if you don't have advantage on the attack roll, but not if you have disadvantage on it. Ends if you successfully target another creature"})]
+                                :summary (str "you gain the ability to decipher an opponent's tactics and develop a counter to them. As a bonus action, you make a Wisdom (Insight) check against a creature you can see that isn't incapacitated, contested by the target's Charisma (Deception) check. If you succeed, you can use your Sneak Attack against that target even if you don't have advantage on the attack roll, but not if you have disadvantage on it."
+                                              "\n\nThis benefit lasts for 1 minute or until you successfully use this feature against a different target")})]
                   :levels {13 {:modifiers [(mod5e/action
                                             {:name "Unerring Eye"
                                              :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/wis)))
-                                             :summary "You sense the presence of illusions, shapechangers not in their original form, and other magic designed to deceive the senses within 30 ft., provided you aren't blinded or deafened. You sense that an effect is attempting to trick you, but you gain no insight into what is hidden or into its true nature"})]}
+                                             :summary "your senses are almost impossible to foil. As an action, you sense the presence of illusions, shapechangers not in their original form, and other magic designed to deceive the senses within 30 feet of you, provided you aren't blinded or deafened. You sense that an effect is attempting to trick you, but you gain no insight into what is hidden or into its true nature"})]}
                            17 {:modifiers [(mod5e/trait-cfg
                                             {:name "Eye for Weakness"
-                                             :summary "Sneak Attack damage increases by 3d6 while your Insightful Fighting feature is applied"})]}}
+                                             :summary "you learn to exploit a creature's weaknesses by carefully studying its tactics and movement. While your Insightful Fighting feature applies to a creature, your Sneak Attack damage against that creature increases by 3d6"})]}}
                   :traits [{:name "Ear for Deceit"
                             :level 3
-                            :summary "When making Insight checks to determine whether a creature is lying, treat a roll of 7 or lower on the d20 as an 8"}
+                            :summary "you develop a keen ear for picking out lies. Whenever you make a Wisdom (Insight) check to determine whether a creature is lying, treat a roll of 7 or lower on the d20 as an 8"}
                            {:name "Steady Eye"
                             :level 9
-                            :summary "Advantage on Perception and Investigation checks if moving no more than half your speed on the turn"}]}
+                            :summary "you gain advantage on any Wisdom (Perception) or Intelligence (Investigation) check if you move no more than half your speed on the same turn"}]}
                  {:name "Mastermind"
                   :modifiers [(mod5e/tool-proficiency :disguise-kit)
                               (mod5e/tool-proficiency :forgery-kit)]
@@ -3147,20 +3159,26 @@
                                (opt5e/language-selection-aux (vals language-map) 2)]
                   :levels {3 {:modifiers [(mod5e/bonus-action
                                            {:name "Master of Tactics"
-                                            :summary "You can use the help action as a bonus action. When you use the Help action to aid an ally in attacking a creature, the target of that attack can be within 30 ft. of you, rather than 5 ft., if the target can see or hear you"})]}
+                                            :summary "you can use the Help action as a bonus action. Additionally, when you use the Help action to aid an ally in attacking a creature, the target of that attack can be within 30 feet of you, rather than 5 feet of you, if the target can see or hear you"})]}
                            13 {:modifiers [(mod5e/reaction
                                             {:name "Misdirection"
-                                             :summary "When targeted by an attack while a creature within 5 ft. is ganting cover against it, have the attack target that creature instead"})]}}
+                                             :summary "you can sometimes cause another creature to suffer an attack meant for you. When you are targeted by an attack while a creature within 5 feet of you is granting you cover against that attack, you can use your reaction to have the attack target that creature instead of you"})]}}
                   :traits [{:name "Master of Intrigue"
                             :level 3
-                            :summary "You can unerringly mimic the speech patterns and accent of a creature that you hear speak for at least 1 minute, enabling you to pass yourself off as a native speaker of a particular land, provided that you know the language"}
+                            :summary "you can unerringly mimic the speech patterns and accent of a creature that you hear speak for at least 1 minute, enabling you to pass yourself off as a native speaker of a particular land, provided that you know the language"}
                            {:name "Insightful Manipulator"
                             :level 9
-                            :summary "If you spend at least 1 minute observing or interacting with a creature outside combat, you can learn if it is equal, superior, or inferior in regard to two characteristics: int, wis, cha, class levels. DM might also tell you a piece of their history or one pf its personality traits"}
+                            :summary (str "if you spend at least 1 minute observing or interacting with another creature outside combat, you can learn certain information about its capabilities compared to your own. The DM tells you if the creature is your equal, superior, or inferior in regard to two of the following characteristics of your choice:"
+                                          "\n\u2022 Intelligence score"
+                                          "\n\u2022 Wisdom Score"
+                                          "\n\u2022 Charisma score"
+                                          "\n\u2022 Class levels (if any)"
+                                          "\nAt the DM's option, you might also realize you know a piece of the creature's history or one of its personality traits, if it has any"
+                                          )}
                            {:name "Soul of Deceit"
                             :level 17
-                            :summary (str "Your thoughts can't be read by telepathy or other means, unless you allow it. You can present false thoughts by making a Deception check contested by the mind reader's Insight check.\n"
-                                      "\nNo matter what you say, magic that would determine if you are telling the truth indicates you are being truthful if you so choose, and you can't be compelled to tell the truth by magic")}]}
+                            :summary (str "your thoughts can't be read by telepathy or other means, unless you allow it. You can present false thoughts by making a Charisma (Deception) check contested by the mind reader's Wisdom (Insight) check."
+                                      "\n\nAdditionally, no matter what you say, magic that would determine if you are telling the truth indicates you are being truthful if you so choose, and you can't be compelled to tell the truth by magic")}]}
                  {:name "Scout"
                   :modifiers [(mod5e/skill-proficiency :nature)
                               (mod5e/skill-proficiency :survival)
@@ -3168,37 +3186,37 @@
                               (mod5e/skill-expertise :survival)
                               (mod5e/reaction
                                {:name "Skirmisher"
-                                :summary "Move up to half your speed when an enemy ends its turn within 5 ft. of you, without provoking opportunity attacks"})]
+                                :summary "you are difficult to pin down during a fight. You can move up to half your speed as a reaction when an enemy ends its turn within 5 feet of you. This movement doesn’t provoke opportunity attacks"})]
                   :levels {9 {:modifiers [(mod5e/speed 10)
                                           (mod5e/climbing-speed 10) ;;should be only if has climbing/swimming speed
                                           (mod5e/swimming-speed 10)]}
                            17 {:modifiers [(mod5e/bonus-action
                                             {:name "Sudden Strike"
-                                             :summary "Make one additional attack if you take the Attack action on your turn, which can benefit from sneak attack even if you've already used it, but can't be used against the same target"})]}}
+                                             :summary "you can strike with deadly speed. If you take the Attack action on your turn, you can make one additional attack as a bonus action. This attack can benefit from your Sneak Attack even if you have already used it this turn, but you can't use your Sneak Attack against the same target more than once in a turn"})]}}
                   :traits [{:name "Ambush Master"
                             :level 13
-                            :summary "You have advantage on initiative. Attack rolls against the first creature you hit on the first round of combat have advantage until the start of your next turn"}]
+                            :summary "you excel at leading ambushes and acting first in a fight. You have advantage on initiative rolls. In addition, the first creature you hit during the first round of a combat becomes easier for you and others to strike; attack rolls against that target have advantage until the start of your next turn"}]
                   }
                  {:name "Swashbuckler"
                   :modifiers [(mod5e/dependent-trait
                                {:name "Rakish Audacity"
-                                :summary (str "You can give yourself a " (common/bonus-str (?ability-bonuses ::char5e/cha)) " bonus to your initiative rolls.\n"
-                                          "\nYou don't need advantage on the attack roll to use your Sneak Attack against a creature if you are within 5 ft. of it, no other creatures are within 5 feet of you, and you don't have disadvantage on the attack roll")})]
+                                :summary (str "your confidence propels you into battle. You can give yourself a bonus to your initiative rolls equal to your Charisma modifier."
+                                              "\n\nYou also gain an additional way to use your Sneak Attack; you don't need advantage on the attack roll to use your Sneak Attack against a creature if you are within 5 feet of it, no other creatures are within 5 feet of you, and you don't have disadvantage on the attack roll. All the other rules for Sneak Attack still apply to you")})]
                   :levels {9 {:modifiers [(mod5e/action
                                            {:name "Panache"
-                                            :summary (str "Make a Persuasion check contested by a creature's Insight check that can hear you and share's a language.\n"
-                                                      "\nIf the creature is hostile to you, it has disadvantage on attack rolls against targets other than you and can't make opportunity attacks against targets other than you. Lasts for 1 minute, until one of your companions attacks it or affects it with a spell, or until you are more than 60 ft. apart.\n"
-                                                      "\nIf the creature is isn't hostile to you, it is charmed for 1 minute. While charmed, it regards you as a friendly acquaintance. Ends immediately if you or your companions do anything harmful to it.")})]}
+                                            :summary (str "your charm becomes extraordinarily beguiling. As an action, you can make a Charisma (Persuasion) check contested by a creature's Wisdom (Insight) check. The creature must be able to hear you, and the two of you must share a language."
+                                                      "\n\nIf you succeed on the check and the creature is hostile to you, it has disadvantage on attack rolls against targets other than you and can't make opportunity attacks against targets other than you. This effect lasts for 1 minute, until one of your companions attacks the target or affects it with a spell, or until you and the target are more than 60 feet apart."
+                                                      "\n\nIf you succeed on the check and the creature isn't hostile to you, it is charmed by you for 1 minute. While charmed, it regards you as a friendly acquaintance. This effect ends immediately if you or your companions do anything harmful to it")})]}
                            13 {:modifiers [(mod5e/bonus-action
                                             {:name "Elegant Maneuver"
-                                             :summary "Gain advantage on the next Acrobatics or Athletics check you make during the same turn"})]}
+                                             :summary "you can use a bonus action on your turn to gain advantage on the next Dexterity (Acrobatics) or Strength (Athletics) check you make during the same turn"})]}
                            17 {:modifiers [(mod5e/trait-cfg
                                             {:name "Master Duelist"
                                              :frequency units5e/rests-1
-                                             :summary "If you miss with an attack roll, you can roll it again with advantage"})]}}
+                                             :summary "your mastery of the blade lets you turn failure into success in combat. If you miss with an attack roll, you can roll it again with advantage"})]}}
                   :traits [{:name "Fancy Footwork"
                             :level 3
-                            :summary "During your turn, if you make a melee attack against a creature, that creature can't make opportunity attacks against you for the rest of your turn."}]}
+                            :summary "you learn how to land a strike and then slip away without reprisal. During your turn, if you make a melee attack against a creature, that creature can't make opportunity attacks against you for the rest of your turn"}]}
                  ]}))
 
 (defn metamagic-selection [num]
