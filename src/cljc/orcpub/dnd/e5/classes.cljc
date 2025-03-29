@@ -1160,12 +1160,14 @@
                   :levels {2 {:modifiers [(mod5e/language :sylvan)
                                           (mod5e/bonus-action
                                            {:name "Spirit Totem"
+                                            :frequency units5e/rests-1
                                             :summary (str "As a bonus action, you can magically summon an incorporeal spirit to a point you can see within 60 feet of you. The spirit creates an aura in a 30-foot radius around that point. It counts as neither a creature nor an object, though it has the spectral appearance of the creature it represents. As a bonus action, you can move the spirit up to 60 feet to a point you can see."
                                                           "\n\nThe spirit persists for 1 minute. Once you use this feature, you can’t use it again until you finish a short or long rest."
                                                           "\n\nThe effect of the spirit’s aura depends on the type of spirit you summon from the options below."
                                                           "\n\nBear Spirit. The bear spirit grants you and your allies its might and endurance. Each creature of your choice in the aura when the spirit appears gains temporary hit points equal to 5 + your druid level (" (+ 5 (?class-level :druid)) "). In addition, you and your allies gain advantage on Strength checks and Strength saving throws while in the aura."
                                                           "\n\nHawk Spirit. The hawk spirit is a consummate hunter, aiding you and your allies with its keen sight. When a creature makes an attack roll against a target in the spirit’s aura, you can use your reaction to grant advantage to that attack roll. In addition, you and your allies have advantage on Wisdom (Perception) checks while in the aura."
-                                                          "\n\nUnicorn Spirit. The unicorn spirit lends its protection to those nearby. You and your allies gain advantage on all ability checks made to detect creatures in the spirit’s aura. In addition, if you cast a spell using a spell slot that restores hit points to any creature inside or outside the aura, each creature of your choice in the aura also regains hit points equal to your druid level.")})]}
+                                                          "\n\nUnicorn Spirit. The unicorn spirit lends its protection to those nearby. You and your allies gain advantage on all ability checks made to detect creatures in the spirit’s aura. In addition, if you cast a spell using a spell slot that restores hit points to any creature inside or outside the aura, each creature of your choice in the aura also regains hit points equal to your druid level."
+                                                          "\n")})]}
                            10 {:modifiers [(mod5e/dependent-trait
                                            {:name "Guardian Spirit"
                                             :summary "your Spirit Totem safeguards the beasts and fey that you call forth with your magic. When a beast or fey that you summoned or created with a spell ends its turn in your Spirit Totem aura, that creature regains a number of hit points equal to half your druid level"})]}
@@ -1249,7 +1251,7 @@
                                             :summary (str "you learn to use your star map to divine the will of the cosmos. Whenever you finish a long rest, you can consult your Star Map for omens. When you do so, roll a die. Until you finish your next long rest, you gain access to a special reaction based on whether you rolled an even or an odd number on the die:"
                                                           "\nWeal (even). Whenever a creature you can see within 30 ft. is about to make an attack roll, a save, or an ability check, add a d6 to the total.Whenever a creature you can see within 30 feet of you is about to make an attack roll, a saving throw, or an ability check, you can use your reaction to roll a d6 and add the number rolled to the total."
                                                           "\nWoe (odd). Whenever a creature you can see within 30 feet of you is about to make an attack roll, a saving throw, or an ability check, you can use your reaction to roll a d6 and subtract the number rolled from the total."
-                                                          "\nYou can use this reaction a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest")})]}
+                                                          "\n")})]}
                            10 {:modifiers [(mod5e/dependent-trait
                                             {:name "Twinkling Constellations"
                                              :summary (str "the constellations of your Starry Form improve. The 1d8 of the Archer and the Chalice becomes 2d8, and while the Dragon is active, you have a flying speed of 20 feet and can hover."
@@ -1989,6 +1991,7 @@
                   {:name "Way of the Ascendant Dragon"
                    :modifiers [(mod5e/reaction
                                 {:name "Draconic Disciple: Draconic Presence"
+                                 :frequency units5e/long-rests-1
                                  :summary "If you fail a Charisma (Intimidation) or Charisma (Persuasion) check, you can use your reaction to reroll the check, as you tap into the mighty presence of dragons. Once this feature turns a failure into a success, you can’t use it again until you finish a long rest"})
                                (mod5e/trait-cfg
                                 {:name "Draconic Disciple: Draconic Strike"
@@ -2009,6 +2012,7 @@
                                              :summary "when you use your Step of the Wind, you can unfurl spectral draconic wings from your back that vanish at the end of your turn. While the wings exist, you have a flying speed equal to your walking speed"})]}
                             11 {:modifiers [(mod5e/bonus-action
                                              {:name "Aspect of the Wyrm"
+                                              :frequency units5e/long-rests-1
                                               :summary (str "the power of your draconic spirit now radiates from you, warding your allies or inspiring fear in your enemies. As a bonus action, you can create an aura of draconic power that radiates 10 feet from you for 1 minute. For the duration, you gain one of the following effects of your choice:"
                                                         "\n\u2022 Frightful Presence. When you create this aura, and as a bonus action on subsequent turns, you can choose a creature within the aura. The target must succeed on a Wisdom saving throw against your ki save DC or become frightened of you for 1 minute. The target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a successful save."
                                                         "\n\u2022 Resistance. Choose a damage type when you activate this aura: acid, cold, fire, lightning, or poison. You and your allies within the aura have resistance to that damage."
@@ -2395,6 +2399,7 @@
                               20 {:modifiers [(mod5e/bonus-action
                                                {:name "Mortal Bulwark"
                                                 :level 20
+                                                :frequency units5e/long-rests-1
                                                 :summary (str "you manifest a spark of divine power in defense of the mortal realms. As a bonus action, you gain the following benefits for 1 minute:"
                                                               "\n\u2022 You gain truesight with a range of 120 feet."
                                                               "\n\u2022 You have advantage on attack rolls against aberrations, celestials, elementals, fey, and fiends."
@@ -2793,6 +2798,7 @@
                                (mod5e/language :draconic)
                                (mod5e/dependent-trait
                                  {:name "Drake Companion"
+                                  :frequency units5e/long-rests-1
                                   :summary (str "as an action, you can magically summon the drake that is bound to you. It appears in an unoccupied space of your choice within 30 feet of you."
                                                 "\n\nThe drake is friendly to you and your companions, and it obeys your commands. Whenever you summon the drake, choose a damage type listed in its Draconic Essence trait."
                                                 "\n\nIn combat, the drake shares your initiative count, but it takes its turn immediately after yours. It can move and use its reaction on its own, but the only action it takes on its turn is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. If you are incapacitated, the drake can take any action of its choice, not just Dodge."
@@ -2832,6 +2838,7 @@
                                                            "\nResistance. You gain resistance to the damage type chosen for the drake’s Draconic Essence.")})]}
                             11 {:modifiers [(mod5e/action
                                              {:name "Drake's Breath"
+                                              :frequency units5e/long-rests-1
                                               :summary (str "as an action, you can exhale a 30-foot cone of damaging breath or cause your drake to exhale it. Choose acid, cold, fire, lightning, or poison damage (your choice doesn’t have to match your drake’s Draconic Essence). Each creature in the cone must make a Dexterity saving throw against your spell save DC, taking " (condp <= (?class-level :ranger) 15 "10d6"  "8d6") " damage on a failed save, or half as much damage on a successful one."
                                                             "\n\nOnce you use this feature, you can’t do so again until you finish a long rest, unless you expend a spell slot of 3rd level or higher to use it again")})]}
                             15 {:modifiers [(mod5e/trait-cfg
@@ -3406,6 +3413,7 @@
                   :modifiers [(mod5e/darkvision 120 1)
                               (mod5e/dependent-trait
                                {:name "Strength of the Grave"
+                                :frequency units5e/long-rests-1
                                 :summary (str "your existence in a twilight state between life and death makes you difficult to defeat. When damage reduces you to 0 hit points, you can make a Charisma saving throw (DC 5 + the damage taken). On a success, you instead drop to 1 hit point. You can't use this feature if you are reduced to 0 hit points by radiant damage or by a critical hit."
                                               "\n\nAfter the saving throw succeeds, you can't use this feature again until you finish a long rest")})]
                   :levels {3 {:modifiers [(mod5e/trait-cfg
@@ -3568,6 +3576,7 @@
                  :modifiers [(mod5e/dependent-trait
                               {:name "Signature Spells"
                                :page 115
+                               :frequency (units5e/rests 2)
                                :summary (str "you gain mastery over two powerful spells and can cast them with little effort. "
                                              (if (seq ?signature-spells)
                                                (str "Your signature spells are " (common/list-print ?signature-spells))
@@ -3631,6 +3640,7 @@
                                           "\nThis quill disappears if you create another one or if you die.")})]
                   :levels {6 {:modifiers [(mod5e/bonus-action
                                            {:name "Manifest Mind"
+                                            :frequency units5e/long-rests-1
                                             :summary (str "you can conjure forth the mind of your Awakened Spellbook. As a bonus action while the book is on your person, you can cause the mind to manifest as a Tiny spectral object, hovering in an unoccupied space of your choice within 60 feet of you. The spectral mind is intangible and doesn't occupy its space, and it sheds dim light in a 10-foot radius. It looks like a ghostly tome, a cascade of text, or a scholar from the past (your choice)."
                                                           "\n\nWhile manifested, the spectral mind can hear and see, and it has darkvision with a range of 60 feet. The mind can telepathically share with you what it sees and hears (no action required)."
                                                           "\n\nWhenever you cast a wizard spell on your turn, you can cast it as if you were in the spectral mind's space, instead of your own, using its senses. You can do so a number of times per day equal to your proficiency bonus, and you regain all expended uses when you finish a long rest."
@@ -3643,7 +3653,6 @@
                                            (mod5e/reaction
                                             {:level 14
                                               :name "One with the Word"
-                                              :frequency units5e/long-rests-1
                                               :summary (str "if you take damage while your spellbook's mind is manifested, you can prevent all of that damage to you by using your reaction to dismiss the spectral mind, using its magic to save yourself. Then roll 3d6. The spellbook temporarily loses spells of your choice that have a combined spell level equal to that roll or higher. For example, if the roll's total is 9, spells vanish from the book that have a combined level of at least 9, which could mean one 9th-level spell, three 3rd-level spells, or some other combination. If there aren't enough spells in the book to cover this cost, you drop to 0 hit points."
                                                             "\n\nUntil you finish 1d6 long rests, you are incapable of casting the lost spells, even if you find them on a scroll or in another spellbook. After you finish the required number of rests, the spells reappear in the spell book")})]}}
                   :traits [{:level 2
@@ -3663,9 +3672,10 @@
                     :modifiers [(mod5e/dependent-trait
                                  {:name "Arcane Ward"
                                   :page 115
+                                  :frequency units5e/long-rests-1
                                   :summary (str "you can weave magic around yourself for protection. When you cast an abjuration spell of 1st level or higher, you can simultaneously use a strand of the spell's magic to create a magical ward on yourself that lasts until you finish a long rest. The ward has hit points equal to twice your wizard level + your Intelligence modifier. Whenever you take damage, the ward takes the damage instead. If this damage reduces the ward to 0 hit points, you take any remaining damage."
                                                 "\n\nWhile the ward has 0 hit points, it can't absorb damage, but its magic remains. Whenever you cast an abjuration spell of 1st level or higher, the ward regains a number of hit points equal to twice the level of the spell."
-                                                "\n\nOnce you create the ward, you can't create it again until you finish a long rest.")})]
+                                                "\n\nOnce you create the ward, you can't create it again until you finish a long rest")})]
                     :levels {6 {:modifiers [(mod5e/reaction
                                              {:name "Projected Ward"
                                               :page 115
