@@ -3860,13 +3860,18 @@
                  (mod5e/trait-cfg
                   {:name opt5e/pact-of-the-chain-name
                    :page 107
-                   :summary "Can cast find familiar as a ritual, use your attack action to give your familiar an attack as a reaction"})]})
+                   :summary (str "\u2022 You learn the find familiar spell and can cast it as a ritual. The spell doesn't count against your number of spells known."
+                                 "\n\u2022 When you cast the spell, you can choose one of the normal forms for your familiar or one of the following special forms: imp, pseudodragon, quasit, or sprite."
+                                 "\n\u2022 Additionally, when you take the Attack action, you can forgo one of your own attacks to allow your familiar to make one attack with its reaction.")})]})
    (t/option-cfg
     {:name "Pact of the Blade"
      :modifiers [(mod5e/trait-cfg
                   {:name opt5e/pact-of-the-blade-name
                    :page 107
-                   :summary "summon a magical weapon"})]})
+                   :summary (str "\u2022 You can use your action to create a pact weapon in your empty hand. You can choose the form that this melee weapon takes each time you create it. You are proficient with it while you wield it. This weapon counts as magical for the purpose of overcoming resistance and immunity to nonmagical attacks and damage."
+                                 "\n\u2022 Your pact weapon disappears if it is more than 5 feet away from you for 1 minute or more. It also disappears if you use this feature again, if you dismiss the weapon (no action required), or if you die."
+                                 "\n\u2022 You can transform one magic weapon into your pact weapon by performing a special ritual while you hold the weapon. You perform the ritual over the course of 1 hour, which can be done during a short rest."
+                                 "\n\u2022 You can then dismiss the weapon, shunting it into an extradimensional space, and it appears whenever you create your pact weapon thereafter. You can't affect an artifact or a sentient weapon in this way. The weapon ceases being your pact weapon if you die, if you perform the 1-hour ritual on a different weapon, or if you use a 1-hour ritual to break your bond to it. The weapon appears at your feet if it is in the extradimensional space when the bond breaks.")})]})
    (t/option-cfg
     {:name "Pact of the Tome"
      :selections [(t/selection-cfg
@@ -3888,7 +3893,8 @@
      :modifiers [(mod5e/trait-cfg
                   {:name opt5e/pact-of-the-tome-name
                    :page 108
-                   :summary "you have a spellbook with 3 extra cantrips"})]})]))
+                   :summary (str "\u2022 Your patron gives you a grimoire called a Book of Shadows. When you gain this feature, choose three cantrips from any class's spell list (the three needn't be from the same list). While the book is on your person, you can cast those cantrips at will. They don't count against your number of cantrips known. If they don't appear on the warlock spell list, they are nonetheless warlock spells for you."
+                                 "\n\u2022 If you lose your Book of Shadows, you can perform a 1-hour ceremony to receive a replacement from your patron. This ceremony can be performed during a short or long rest, and it destroys the previous book. The book turns to ash when you die.")})]})]))
 
 
 (defn eldritch-invocation-options [plugin-invocations spell-lists spells-map ?ability]
@@ -4461,14 +4467,17 @@
                               {:name "Mystic Arcanum"
                                :level 11
                                :page 108
-                               :summary "You gain a 6th level spell you can cast without expending a slot, more at higher levels"
-                               :frequency (units5e/long-rests
-                                           (mod5e/level-val
-                                            (?class-level :class-kw)
-                                            {13 2
-                                             15 3
-                                             17 4
-                                             :default 1}))})]}
+                               :summary (str "your patron bestows upon you a magical secret called an arcanum. Choose one 6th-level spell from the warlock spell list as this arcanum."
+                                             "\n\nYou can cast your arcanum spell once without expending a spell slot. You must finish a long rest before you can do so again."
+                                             "\n\nAt higher levels, you gain more warlock spells of your choice that can be cast in this way: one 7th-level spell at 13th level, one 8th-level spell at 15th level, and one 9th-level spell at 17th level. You regain all uses of your Mystic Arcanum when you finish a long rest.")
+                               ;;:frequency (units5e/long-rests
+                               ;;            (mod5e/level-val
+                               ;;             (?class-level :class-kw)
+                               ;;             {13 2
+                               ;;              15 3
+                               ;;              17 4
+                               ;;              :default 1}))
+                               })]}
              12 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)]}
              13 {:selections [(mystic-arcanum-selection spells-map 7 ?ability class-kw)]}
              15 {:selections [(eldritch-invocation-selection invocations spell-lists spells-map ?ability class-kw)
@@ -4478,7 +4487,7 @@
     :traits [{:name "Eldrich Master"
               :level 20
               :page 108
-              :summary "Regain all Pact Magic spell slots"
+              :summary "you can draw on your inner reserve of mystical power while entreating your patron to regain expended spell slots. You can spend 1 minute entreating your patron for aid to regain all your expended spell slots from your Pact Magic feature"
               :frequency units5e/long-rests-1}
              {:name "Eldritch  Versatility"
               :level 4
@@ -4489,22 +4498,23 @@
                   :traits [{:name "Dark One's Own Luck"
                             :level 6
                             :page 109
-                            :summary "add d10 to an ability check or save roll"
+                            :summary "you can call on your patron to alter fate in your favor. When you make an ability check or a saving throw, you can use this feature to add a d10 to your roll. You can do so after seeing the initial roll but before any of the roll's effects occur"
                             :frequency units5e/rests-1}
                            {:name "Fiendish Resilience"
                             :level 10
                             :page 109
-                            :summary "resistance to a chosen damage type"}
+                            :summary "you can choose one damage type when you finish a short or long rest. You gain resistance to that damage type until you choose a different one with this feature. Damage from magical weapons or silver weapons ignores this resistance"}
                            {:name "Hurl Through Hell"
                             :level 14
                             :page 109
-                            :summary "deal 10d10 psychic damage when you hit with an attack"
+                            :summary (str "when you hit a creature with an attack, you can use this feature to instantly transport the target through the lower planes. The creature disappears and hurtles through a nightmare landscape."
+                                          "\n\nAt the end of your next turn, the target returns to the space it previously occupied, or the nearest unoccupied space. If the target is not a fiend, it takes 10d10 psychic damage as it reels from its horrific experience.")
                             :frequency units5e/rests-1}]
                   :levels {1 {:modifiers [(mod5e/dependent-trait
                                            {:name "Dark One's Blessing"
                                             :page 109
-                                            :summary (str "gain " (+ (?class-level :class-kw)
-                                                                     (?ability-bonuses ?warlock-ability)) " temp HPs when you reduce a hostile creature to 0 HPs")})]
+                                            :summary (str "when you reduce a hostile creature to 0 hit points, you gain temporary hit points equal to your " (str ?ability-name) " modifier + your warlock level (minimum of 1) ("
+                                                          (+ (?class-level :class-kw) (?ability-bonuses ?warlock-ability)) ")")})]
                               :selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:burning-hands :command])]}
                            3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:blindness-deafness :scorching-ray])]}
                            5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:fireball :stinking-cloud])]}
@@ -4514,7 +4524,7 @@
                     :modifiers [(mod5e/action
                                  {:name "Fey Presence"
                                   :page 109
-                                  :summary (str "As an action, you can cause each creature in a 10-foot cube originating from you to make a Wisdom saving throw against your warlock spell save DC. The creatures that fail their saving throws are all charmed or frightened by you (your choice) until the end of your next turn.")
+                                  :summary (str "your patron bestows upon you the ability to project the beguiling and fearsome presence of the fey. As an action, you can cause each creature in a 10-foot cube originating from you to make a Wisdom saving throw against your warlock spell save DC. The creatures that fail their saving throws are all charmed or frightened by you (your choice) until the end of your next turn")
                                   :duration units5e/turns-1
                                   :frequency units5e/rests-1})]
                     :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:faerie-fire :sleep])]}
@@ -4525,7 +4535,7 @@
                                               :page 109
                                               :frequency units5e/rests-1
                                               :duration units5e/rounds-1
-                                              :summary "When you take damage, you can use your reaction to turn invisible and teleport up to 60 feet to an unoccupied space you can see. You remain invisible until the start of your next turn or until you attack or cast a spell."})]}
+                                              :summary "you can vanish in a puff of mist in response to harm. When you take damage, you can use your reaction to turn invisible and teleport up to 60 feet to an unoccupied space you can see. You remain invisible until the start of your next turn or until you attack or cast a spell"})]}
                              7 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:dominate-beast :greater-invisibility])]}
                              9 {:selections [(opt5e/warlock-subclass-spell-selection class-kw ?ability [:dominate-person :seeming])]}
                              10 {:modifiers [(mod5e/condition-immunity :charmed)
@@ -4533,11 +4543,11 @@
                                               {:name "Beguiling Defenses"
                                                :page 109
                                                :duration units5e/minutes-1
-                                               :summary (str "You are immune to being charmed, and when another creature attempts to charm you, you can use your reaction to attempt to turn the charm back on that creature. The creature must succeed on a Wisdom saving throw against your warlock spell save DC or be charmed by you for 1 minute or until the creature takes any damage.")})]}
+                                               :summary "your patron teaches you how to turn the mind-affecting magic of your enemies against them. You are immune to being charmed, and when another creature attempts to charm you, you can use your reaction to attempt to turn the charm back on that creature. The creature must succeed on a Wisdom saving throw against your warlock spell save DC or be charmed by you for 1 minute or until the creature takes any damage"})]}
                              14 {:modifiers [(mod5e/action
                                               {:name "Dark Delerium"
                                                :page 109
-                                               :summary (str "As an action, choose a creature that you can see within 60 feet of you. It must make a Wisdom saving throw against your warlock spell save DC. On a failed save, it is charmed or frightened by you (your choice) for 1 minute or until your concentration is broken (as if you are concentrating on a spell). This effect ends early if the creature takes any damage."
+                                               :summary (str "you can plunge a creature into an illusory realm. As an action, choose a creature that you can see within 60 feet of you. It must make a Wisdom saving throw against your warlock spell save DC. On a failed save, it is charmed or frightened by you (your choice) for 1 minute or until your concentration is broken (as if you are concentrating on a spell). This effect ends early if the creature takes any damage."
                                                              "\n\nUntil this illusion ends, the creature thinks it is lost in a misty realm, the appearance of which you choose. The creature can see and hear only itself, you, and the illusion.")
                                                :frequency units5e/rests-1})]}}}
                  {:name "The Celestial"
@@ -4547,23 +4557,27 @@
                               :modifiers [(mod5e/bonus-action
                                            {:name "Healing Light"
                                             :frequency (units5e/long-rests (+ 1 (?class-level :class-kw)))
-                                            :summary (str "Heal a creature within 60 ft. from a " (+ 1 (?class-level class-kw)) "d6 dice pool, spending at max " (max 1 (?ability-bonuses ?warlock-ability)) " dice at once")})]}
+                                            :summary (str "you gain the ability to channel celestial energy to heal wounds. You have a pool of d6s that you spend to fuel this healing. The number of dice in the pool equals 1 + your warlock level (" (+ 1 (?class-level class-kw)) ")."
+                                                          "\n\nAs a bonus action, you can heal one creature you can see within 60 feet of you, spending dice from the pool. The maximum number of dice you can spend at once equals your " (str ?ability-name) " modifier (minimum of one die). Roll the dice you spend, add them together, and restore a number of hit points equal to the total.")})]}
                            3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:flaming-sphere :lesser-restoration])]}
                            5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:daylight :revivify])]}
                            6 {:modifiers [(mod5e/damage-resistance :radiant)
                                           (mod5e/dependent-trait
                                            {:name "Radiant Soul"
                                             :level 6
-                                            :summary (str "When you cast a spell that deals radiant or fire damage, add " (common/bonus-str (?ability-bonuses ?warlock-ability)) " to the damage against one target")})]}
+                                            :summary "your link to the Celestial allows you to serve as a conduit for radiant energy. You have resistance to radiant damage, and when you cast a spell that deals radiant or fire damage, you add your " (str ?ability-name) " modifier to one radiant or fire damage roll of that spell against one of its targets"})]}
                            7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:guardian-of-faith :wall-of-fire])]}
                            9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:flame-strike :greater-restoration])]}
                            10 {:modifiers [(mod5e/dependent-trait
                                             {:name "Celestial Resistance"
-                                             :summary (str "Gain " (+ (?class-level :class-kw) (?ability-bonuses ?warlock-ability)) " temp HP at the end of a rest. Choose up to 5 creatures that each gain " (+ (int (/ (?class-level :class-kw) 2)) (?ability-bonuses ?warlock-ability)) " temp HP")})]}
+                                             :summary (str "you gain temporary hit points whenever you finish a short or long rest. These temporary hit points equal your warlock level + your " (str ?ability-name) " modifier ("
+                                                            (+ (?class-level :class-kw) (?ability-bonuses ?warlock-ability))
+                                                            "). Additionally, choose up to five creatures you can see at the end of the rest. Those creatures each gain temporary hit points equal to half your warlock level + your Charisma modifier ("
+                                                            (+ (int (/ (?class-level :class-kw) 2)) (?ability-bonuses ?warlock-ability)) ").")})]}
                            14 {:modifiers [(mod5e/dependent-trait
                                             {:name "Searing Vengeance"
                                              :frequency units5e/long-rests-1
-                                             :summary (str "When you have to make a death saving throw, instead regain " (int (/ ?max-hit-points 2)) " HP, and stand up if you so choose. Each creature of choice within 30 ft. takes 2d8+" (?ability-bonuses ?warlock-ability) " radiant damage, and is blinded until the end the turn")})]}}}
+                                             :summary "the radiant energy you channel allows you to resist death. When you have to make a death saving throw at the start of your turn, you can instead spring back to your feet with a burst of radiant energy. You regain hit points equal to half your hit point maximum, and then you stand up if you so choose. Each creature of your choice that is within 30 feet of you takes radiant damage equal to 2d8 + your " (str ?ability-name) " modifier, and is blinded until the end of the current turn"})]}}}
                  {:name "The Great Old One"
                     :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:dissonant-whispers :hideous-laughter])]}
                              3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:detect-thoughts :phantasmal-force])]}
@@ -4572,23 +4586,24 @@
                                              {:name "Entropic Ward"
                                               :page 110
                                               :frequency units5e/rests-1
-                                              :summary "impose disadvantage on an attack roll against you, if it misses, gain advantage on your next attack roll against the attacker before the end of your next turn"})]}
+                                              :summary "you learn to magically ward yourself against attack and to turn an enemy's failed strike into good luck for yourself. When a creature makes an attack roll against you, you can use your reaction to impose disadvantage on that roll. If the attack misses you, your next attack roll against the creature has advantage if you make it before the end of your next turn"})]}
                              7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:dominate-beast :black-tentacles])]}
                              9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:dominate-person :telekinesis])]}
                              10 {:modifiers [(mod5e/damage-resistance :psychic)]}
                              14 {:modifiers [(mod5e/action
                                               {:name "Create Thrall"
                                                :page 110
-                                               :summary "Touch an incapacitated humanoid to charm it until Remove Curse is cast on it, the charmed condition is removed from it, or you use this feature again.\n\nYou can communicate telepathically with it while on the same plane"})]}}
+                                               :summary (str "you gain the ability to infect a humanoid's mind with the alien magic of your patron. You can use your action to touch an incapacitated humanoid. That creature is then charmed by you until a Remove Curse spell is cast on it, the charmed condition is removed from it, or you use this feature again."
+                                                             "\n\nYou can communicate telepathically with the charmed creature as long as the two of you are on the same plane of existence")})]}}
                     :traits [{:name "Awakened Mind"
                               :level 1
                               :page 110
-                              :summary "speak telepathically to a creature. You don't need to share a language, but the target must be able to understand at least one language"
+                              :summary "your alien knowledge gives you the ability to touch the minds of other creatures. You can telepathically speak to any creature you can see within 30 feet of you. You don't need to share a language with the creature for it to understand your telepathic utterances, but the creature must be able to understand at least one language."
                               :range units5e/ft-30}
                              {:name "Thought Shield"
                               :level 10
                               :page 110
-                              :summary "your thoughts can't be read unless allowed; resistance to psychic damage; when a creature deals psychic damage to you it takes the same amount"}]}
+                              :summary "your thoughts can't be read by telepathy or other means unless you allow it. You also have resistance to psychic damage, and whenever a creature deals psychic damage to you, that creature takes the same amount of damage that you do."}]}
                  {:name "The Hexblade"
                   :profs {:armor {:medium true :shields true}
                           :weapon {:martial true}}
@@ -4596,29 +4611,29 @@
                                 {:name "Hexblade's Curse"
                                 :frequency units5e/rests-1
                                 :duration units5e/minutes-1
-                                :summary (str "Curse a creature you can see within 30 ft. for 1 minute. Ends early if the target dies, you die, or you are incapacitated."
-                                          "\n• Gain a +" ?prof-bonus " bonus to damage rolls against the cursed target."
-                                          "\n• Attacks rolls against the cursed target are critical on 19s and 20s."
-                                          "\n• If the cursed target dies, regain " (max 1 (+ (?class-level class-kw) (?ability-bonuses ?warlock-ability))) " HP.")})
+                                :summary (str "you gain the ability to place a baleful curse on someone. As a bonus action, choose one creature you can see within 30 feet of you. The target is cursed for 1 minute. The curse ends early if the target dies, you die, or you are incapacitated. Until the curse ends, you gain the following benefits:"
+                                          "\n\u2022 You gain a bonus to damage rolls against the cursed target. The bonus equals your proficiency bonus."
+                                          "\n\u2022 Any attack roll you make against the cursed target is a critical hit on a roll of 19 or 20 on the d20."
+                                          "\n\u2022 If the cursed target dies, you regain hit points equal to your warlock level + your " (str ?ability-name) " modifier (minimum of 1 hit point) (" (max 1 (+ (?class-level class-kw) (?ability-bonuses ?warlock-ability))) ").\n")})
                               (mod5e/dependent-trait
                                 {:name "Hex Warrior"
-                                 :summary (str "Touch one proficient, one-handed weapon when you finish a long rest. You can use your " (str ?ability-name) " modifier for attack and damage rolls with it. Lasts until you finish a long rest. Applies to every pact weapon conjured with the pact of the blade feature")})]
+                                 :summary (str "The influence of your patron also allows you to mystically channel your will through a particular weapon. Whenever you finish a long rest, you can touch one weapon that you are proficient with and that lacks the two-handed property. When you attack with that weapon, you can use your " (str ?ability-name) " modifier, instead of Strength or Dexterity, for the attack and damage rolls. This benefit lasts until you finish a long rest. If you later gain the Pact of the Blade feature, this benefit extends to every pact weapon you conjure with that feature, no matter the weapon's type.")})]
                   :levels {1 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:shield :wrathful-smite])]}
                             3 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:blur :branding-smite])]}
                             5 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:blink :elemental-weapon])]}
                             6 {:modifiers [(mod5e/dependent-trait
                                             {:name "Accursed Specter"
                                             :frequency units5e/long-rests-1
-                                            :summary (str "Cause a specter to appear when you slay a humanoid. It has " (int (/ (?class-level class-kw) 2)) " temp HP, its own initiative, obeys verbal commands, and a +" (max 0 (?ability-bonuses ?warlock-ability)) " bonus to its attack rolls."
-                                                      "\nRemains until the end of your next long rest")})]}
+                                            :summary (str "you can curse the soul of a person you slay, temporarily binding it in your service. When you slay a humanoid, you can cause its spirit to rise from its corpse as a specter, the statistics of which are in the Monster Manual. When the specter appears, it gains temporary hit points equal to half your warlock level (" (int (/ (?class-level class-kw) 2)) ").Roll initiative for the specter, which has its own turns. It obeys your verbal commands, and it gains a special bonus to its attack rolls equal to your " (str ?ability-name) "modifier (minimum of +0) (" (max 0 (?ability-bonuses ?warlock-ability)) ")."
+                                                      "\n\nThe specter remains in your service until the end of your next long rest, at which point it vanishes to the afterlife.")})]}
                             7 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:phantasmal-killer :staggering-smite])]}
                             9 {:selections [(opt5e/warlock-subclass-spell-selection spell-lists spells-map class-kw ?ability [:banishing-smite :cone-of-cold])]}
                             10 {:modifiers [(mod5e/reaction
                                             {:name "Armor of Hexes"
-                                              :summary "If the target cursed by your Hexblade’s Curse hits you with an attack roll, roll a d6. On a 4 or higher, the attack instead misses"})]}}
+                                              :summary "your hex grows more powerful. If the target cursed by your Hexblade’s Curse hits you with an attack roll, you can use your reaction to roll a d6. On a 4 or higher, the attack instead misses you, regardless of its roll."})]}}
                   :traits [{:name "Master of Hexes"
                             :level 14
-                            :summary "When the creature cursed by your Hexblade's Curse dies, you can apply the curse to a different creature you can see within 30 ft., provided you aren't incapacitated. You don't regain hit points from the death of the previously cursed creature"}]}]})
+                            :summary "you can spread your Hexblade's Curse from a slain creature to another creature. When the creature cursed by your Hexblade's Curse dies, you can apply the curse to a different creature you can see within 30 feet of you, provided you aren't incapacitated. When you apply the curse in this way, you don't regain hit points from the death of the previously cursed creature."}]}]})
 
 (defn warlock-cha-option [spell-lists spells-map plugin-subclasses-map language-map weapon-map invocations boons]
   (opt5e/class-option
