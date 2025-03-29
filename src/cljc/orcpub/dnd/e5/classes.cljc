@@ -3232,61 +3232,62 @@
                              {:name "Careful Spell"
                               :page 102
                               :class-key :sorcerer
-                              :summary (str "When you cast a spell that requires a save, spend 1 sorcery pt. to allow up to " (?ability-bonuses ::char5e/cha) " creatures to automatically succeed")})]})
+                              :summary "When you cast a spell that forces other creatures to make a saving throw, you can protect some of those creatures from the spell's full force. To do so, you spend 1 sorcery point and choose a number of those creatures up to your Charisma modifier (minimum of one creature). A chosen creature automatically succeeds on its saving throw against the spell"})]})
               (t/option-cfg
                {:name "Distant Spell"
                 :modifiers [(mod5e/trait-cfg
                              {:name "Distant Spell"
                               :page 102
-                              :summary "spend 1 sorcery pt. double the range of a spell with range 5 ft. or greater or make the range of a touch spell 30 ft."})]})
+                              :summary (str "\u2022 When you cast a spell that has a range of 5 feet or greater, you can spend 1 sorcery point to double the range of the spell."
+                                            "\n\u2022 When you cast a spell that has a range of touch, you can spend 1 sorcery point to make the range of the spell 30 feet")})]})
               (t/option-cfg
                {:name "Empowered Spell"
                 :modifiers [(mod5e/dependent-trait
                              {:name "Empowered Spell"
                               :page 102
-                              :summary (str "spend 1 sorcery pt. to reroll up to " (?ability-bonuses ::char5e/cha) " spell damage dice")})]})
+                              :summary "When you roll damage for a spell, you can spend 1 sorcery point to reroll a number of the damage dice up to your Charisma modifier (minimum of one). You must use the new rolls. You can use Empowered Spell even if you have already used a different Metamagic option during the casting of the spell"})]})
               (t/option-cfg
                {:name "Extended Spell"
                 :modifiers [(mod5e/trait-cfg
                              {:name "Extended Spell"
                               :page 102
-                              :summary "spend 1 sorcery pt. to double the duration of a spell to a max 24 hrs."})]})
+                              :summary "When you cast a spell that has a duration of 1 minute or longer, you can spend 1 sorcery point to double its duration, to a maximum duration of 24 hours"})]})
               (t/option-cfg
                {:name "Heightened Spell"
                 :modifiers [(mod5e/trait-cfg
                              {:name "Heightened Spell"
                               :page 102
-                              :summary "when you cast a spell with a save to resist it's effects, spend 3 sorcery pts. to give one target disadvantage on its first save against it"})]})
+                              :summary "When you cast a spell that forces a creature to make a saving throw to resist its effects, you can spend 3 sorcery points to give one target of the spell disadvantage on its first saving throw made against the spell"})]})
               (t/option-cfg
                {:name "Quickened Spell"
                 :modifiers [(mod5e/trait-cfg
                              {:name "Quickened Spell"
                               :page 102
-                              :summary "spend 2 sorcery pts. to convert a casting of a spell with 1 action casting time to 1 bonus-action"})]})
+                              :summary "When you cast a spell that has a casting time of 1 action, you can spend 2 sorcery points to change the casting time to 1 bonus action for this casting"})]})
               (t/option-cfg
                {:name "Seeking Spell"
                 :modifiers [(mod5e/trait-cfg
                              {:name "Seeking Spell"
                               :page 102
-                              :summary "spend 2 sorcery pts. to reroll a spell you miss. You must use the new roll, and you can use Seeking Spell even if you already used a different Metamagic on the spell"})]})
+                              :summary "If you make an attack roll for a spell and miss, you can spend 2 sorcerer points to reroll the d20, and you must use the new roll. You can use Seeking Spell even if you have already used a different Metamagic option during the casting of the spell"})]})
               (t/option-cfg
                {:name "Subtle Spell"
                 :modifiers [(mod5e/trait-cfg
                              {:name "Subtle Spell"
                               :page 102
-                              :summary "spend 1 sorcery pt. to cast a spell without somatic or verbal components"})]})
+                              :summary "When you cast a spell, you can spend 1 sorcery point to cast it without any somatic or verbal components"})]})
               (t/option-cfg
                {:name "Transmuted Spell"
                 :modifiers [(mod5e/trait-cfg
                              {:name "Transmuted Spell"
                               :page 102
-                              :summary "spend 1 sorcery pt. to change the damage type of a spell from one of the following options to another: acid, cold, fire, lightning, poison, thunder"})]})
+                              :summary "When you cast a spell that deals a type of damage from the following list, you can spend 1 sorcery point to change that damage type to one of the other listed types: acid, cold, fire, lightning, poison, thunder"})]})
               (t/option-cfg
                {:name "Twinned Spell"
                 :modifiers [(mod5e/trait-cfg
                              {:name "Twinned Spell"
                               :page 102
-                              :summary "spend X sorcery pts. (min 1) to target two creatures with a single target spell, where X is the spell level"})]})]}))
+                              :summary "When you cast a spell that targets only one creature and doesn't have a range of self, you can spend a number of sorcery points equal to the spell's level to target a second creature in range with the same spell (1 sorcery point if the spell is a cantrip). To be eligible, a spell must be incapable of targeting more than one creature at the spell's current level. For example, magic missile and scorching ray aren't eligible, but ray of frost and chromatic orb are"})]})]}))
 
 (defn sorcerer-option [spells spells-map plugin-subclasses-map language-map weapon-map]
   (opt5e/class-option
@@ -3330,21 +3331,26 @@
                               :page 101
                               :frequency (units5e/long-rests
                                            (?class-level :sorcerer))
-                              :summary (str "You have " (?class-level :sorcerer) " sorcery points")})
+                              :summary (str "You have " (?class-level :sorcerer) " sorcery points. You can never have more sorcery points than your sorcerer level")})
                             (mod5e/bonus-action
                              {:name "Flexible Casting"
                               :level 2
                               :page 101
-                              :summary "you can convert sorcery points into spell slots (level - point cost: 1st - 2, 2nd - 3, 3rd - 5, 4th - 6, 5th - 7). You can also convert spell slots into sorcery points equal to the slot's level"})]}
+                              :summary (str "You can use your sorcery points to gain additional spell slots, or sacrifice spell slots to gain additional sorcery points."
+                                            "\nCreating Spell Slots. You can transform unexpended sorcery points into one spell slot as a bonus action on your turn. The Creating Spell Slots table shows the cost of creating a spell slot of a given level. You can create spell slots no higher in level than 5th. Any spell slot you create with this feature vanishes when you finish a long rest."
+                                            "\nConverting a Spell Slot to Sorcery Points. As a bonus action on your turn, you can expend one spell slot and gain a number of sorcery points equal to the slot's level.")})]}
              3 {:selections [(metamagic-selection 2)]}
              4 {:selections [(mod5e/trait-cfg
                              {:name "Sorcerous Versatility"
                               :summary "When you reach an ASI in sorcerer, you can replace one Metamagic option and one cantrip from the class."})]}
              5 {:selections [(mod5e/trait-cfg
                               {:name "Magical Guidance"
-                               :summary "When you make an ability check that fails, you can spend 1 sorcery point to reroll the d20, and you must use the new roll."})]}
+                               :summary "you can tap into your inner wellspring of magic to try and conjure success from failure. When you make an ability check that fails, you can spend 1 sorcery point to reroll the d20, and you must use the new roll, potentially turning the failure into a success"})]}
              10 {:selections [(metamagic-selection 1)]}
-             17 {:selections [(metamagic-selection 1)]}}
+             17 {:selections [(metamagic-selection 1)]}
+             20 {:modifiers [(mod5e/trait-cfg
+                              {:name "Sorcerous Restoration"
+                               :summary "you regain 4 expended sorcery points whenever you finish a short rest"})]}}
     :equipment-choices [{:name "Equipment Pack"
                          :options {:dungeoneers-pack 1
                                    :explorers-pack 1}}
@@ -3371,79 +3377,79 @@
                                            opt5e/draconic-ancestries)})]
                   :traits [{:name "Draconic Resilience"
                             :page 102
-                            :summary "+1 HP/level, unarmored AC 13 + DEX modifier"}
+                            :summary (str "As magic flows through your body, it causes physical traits of your dragon ancestors to emerge. At 1st level, your hit point maximum increases by 1 and increases by 1 again whenever you gain a level in this class."
+                                          "\n\nAdditionally, parts of your skin are covered by a thin sheen of dragon-like scales. When you aren't wearing armor, your AC equals 13 + your Dexterity modifier")}
                            {:name "Dragon Ancestor"
-                            :summary "Your proficiency bonus is doubled for Charisma checks when interacting with dragons."}]
+                            :summary "whenever you make a Charisma check when interacting with dragons, your proficiency bonus is doubled if it applies to the check."}]
                   :levels {6 {:modifiers [(mod5e/dependent-trait
                                            {:name "Elemental Affinity"
                                             :page 102
-                                            :summary (str "Add CHA mod to one damage roll of a spell that deals "
-                                                          (if ?sorcerer-draconic-ancestry
-                                                            (str (common/safe-name
-                                                                  (get-in
-                                                                   ?sorcerer-draconic-ancestry
-                                                                   [:breath-weapon :damage-type]))
-                                                                 " damage")
-                                                            "damage of type associated with your draconic ancestry")
-                                                          ", you may also spend 1 sorcery pt. to gain resistance to that damage type for an hr.")})]}
+                                            :summary (str "when you cast a spell that deals "
+                                                          ;;(if ?sorcerer-draconic-ancestry
+                                                          ;;  (str (common/safe-name
+                                                          ;;        (get-in
+                                                          ;;         ?sorcerer-draconic-ancestry
+                                                          ;;         [:breath-weapon :damage-type]))
+                                                          ;;       " damage")
+                                                          ;;  "damage of type associated with your draconic ancestry")
+                                                          "damage of the type associated with your draconic ancestry, add your Charisma modifier to one damage roll of that spell. At the same time, you can spend 1 sorcery point to gain resistance to that damage type for 1 hour")})]}
                            14 {:modifiers [(mod5e/bonus-action
                                             {:name "Dragon Wings"
                                              :page 103
-                                             :summary "Sprout wings and gain flying speed equal to current speed"})]}
+                                             :summary (str "you gain the ability to sprout a pair of dragon wings from your back, gaining a flying speed equal to your current speed. You can create these wings as a bonus action on your turn. They last until you dismiss them as a bonus action on your turn."
+                                                           "\n\nYou can't manifest your wings while wearing armor unless the armor is made to accommodate them, and clothing not made to accommodate your wings might be destroyed when you manifest them.")})]}
                            18 {:modifiers [(mod5e/action
                                             {:name "Draconic Presence"
                                              :page 103
-                                             :summary (str "Spend 5 sorcery pts. and create an aura that causes hostile creatures that start their turn within it to be charmed or frightened if they fail a DC " (?spell-save-dc ::char5e/cha) " Wisdom save.")})]}}}
+                                             :summary "you can channel the dread presence of your dragon ancestor, causing those around you to become awestruck or frightened. As an action, you can spend 5 sorcery points to draw on this power and exude an aura of awe or fear (your choice) to a distance of 60 feet. For 1 minute or until you lose your concentration (as if you were casting a concentration spell), each hostile creature that starts its turn in this aura must succeed on a Wisdom saving throw or be charmed (if you chose awe) or frightened (if you chose fear) until the aura ends. A creature that succeeds on this saving throw is immune to your aura for 24 hours."})]}}}
                  {:name "Shadow Magic"
                   :modifiers [(mod5e/darkvision 120 1)
                               (mod5e/dependent-trait
                                {:name "Strength of the Grave"
-                                :frequency units5e/long-rests-1
-                                :summary (str "When damage reduces you to 0 HP, make a CHA Save (DC 5 + damage taken). On a success, you instead drop to 1 HP. You can't use this feature if you are reduced to 0 HP by radiant damage or by a critical hit."
-                                              "\nAfter the saving throw succeeds, you can't use this feature again until you finish a long rest.")})]
+                                :summary (str "your existence in a twilight state between life and death makes you difficult to defeat. When damage reduces you to 0 hit points, you can make a Charisma saving throw (DC 5 + the damage taken). On a success, you instead drop to 1 hit point. You can't use this feature if you are reduced to 0 hit points by radiant damage or by a critical hit."
+                                              "\n\nAfter the saving throw succeeds, you can't use this feature again until you finish a long rest")})]
                   :levels {3 {:modifiers [(mod5e/trait-cfg
                                            {:name "Eyes of the Dark"
-                                            :summary "You know the darkness spell. Can also cast it using 2 sorcery points, in which case you can see through it."})]}
+                                            :summary "you learn the darkness spell, which doesn't count against your number of sorcerer spells known. In addition, you can cast it by spending 2 sorcery points or by expending a spell slot. If you cast it with sorcery points, you can see through the darkness created by the spell"})]}
                            6 {:modifiers [(mod5e/bonus-action
                                             {:name "Hound of Ill Omen"
-                                             :summary (str "Spend 3 sorcery points to summon a hound of ill omen to target one creature you can see within 120 ft. Uses the dire wolf's stats with the following changes:"
-                                                           "\n- The hound is medium and a monstrosity."
-                                                           "\n- Appears with " (/ (?class-level :sorcerer) 2) " temp HP."
-                                                           "\n- Can move through other creatures and objects as if difficult terrain. Takes 5 force damage if it ends its turn inside an object."
-                                                           "\n- At the start of its turn, the hound automatically knows its target's location. If the target was hidden, it is no longer hidden from the hound."
-                                                           "\nThe hound appears within 30 ft. of the target. Roll initiative for the hound. On its turn, it can move only toward its target by the most direct route, and it can use its action only to attack its target. The hound can make opportunity attacks, but only against its target. Additionally, while the hound is within 5 ft. of the target, the target has disadvantage on saves against any spell you cast. Disappears if it is reduced to 0 HP, if its target is reduced to 0 HP, or after 5 min.")})]}
+                                             :summary (str "you gain the ability to call forth a howling creature of darkness to harass your foes. As a bonus action, you can spend 3 sorcery points to summon a hound of ill omen to target one creature you can see within 120 feet of you. The hound uses the dire wolf's statistics, with the following changes:"
+                                                           "\n\u2022 The hound is size Medium, not Large, and it counts as a monstrosity, not a beast."
+                                                           "\n\u2022 It appears with a number of temporary hit points equal to half your sorcerer level."
+                                                           "\n\u2022 It can move through other creatures and objects as if they were difficult terrain. The hound takes 5 force damage if it ends its turn inside an object."
+                                                           "\n\u2022 At the start of its turn, the hound automatically knows its target's location. If the target was hidden, it is no longer hidden from the hound."
+                                                           "\nThe hound appears in an unoccupied space of your choice within 30 feet of the target. Roll initiative for the hound. On its turn, it can move only toward its target by the most direct route, and it can use its action only to attack its target. The hound can make opportunity attacks, but only against its target. Additionally, while the hound is within 5 feet of the target, the target has disadvantage on saving throws against any spell you cast. The hound disappears if it is reduced to 0 hit points, if its target is reduced to 0 hit points, or after 5 minutes.")})]}
                            14 {:modifiers [(mod5e/bonus-action
                                             {:name "Shadow Walk"
-                                             :summary "If in dim light or darkness, teleport up to 120 ft. to a space you can see within dim light or darkness."})]}
+                                             :summary "you gain the ability to step from one shadow into another. When you are in dim light or darkness, as a bonus action, you can teleport up to 120 feet to an unoccupied space you can see that is also in dim light or darkness."})]}
                            18 {:modifiers [(mod5e/bonus-action
                                             {:name "Umbral Form"
-                                             :duration units5e/minutes-1
-                                             :summary "Spend 6 sorcery points to transform into a shadowy form. Gain resistance to all damage except force and radiant, and move through other creatures and objects as if difficult terrain. Take 5 force damage if turn ends inside an object. Ends if incapacitated, you die, or dismissed as bonus action."})]}}}                     
+                                             :summary (str "you can spend 6 sorcery points as a bonus action to transform yourself into a shadowy form. In this form, you have resistance to all damage except force and radiant damage, and you can move through other creatures and objects as if they were difficult terrain. You take 5 force damage if you end your turn inside an object."
+                                                           "\n\nYou remain in this form for 1 minute. It ends early if you are incapacitated, if you die, or if you dismiss it as a bonus action.")})]}}}                     
                  {:name "Wild Magic"
+                  :modifiers [(mod5e/trait-cfg
+                               {:name "Tides of Chaos"
+                                :page 103
+                                :summary (str "you can manipulate the forces of chance and chaos to gain advantage on one attack roll, ability check, or saving throw. Once you do so, you must finish a long rest before you can use this feature again."
+                                              "\n\nAny time before you regain the use of this feature, the DM can have you roll on the Wild Magic Surge table immediately after you cast a sorcerer spell of 1st level or higher. You then regain the use of this feature.")})]
                     :levels {6 {:modifiers [(mod5e/reaction
                                              {:name "Bend Luck"
                                               :level 6
                                               :page 103
-                                              :summary "spend 2 sorcery pts. to add or subtract 1d4 from a creature you can see's attack roll, ability check, or saving throw"})]}}
+                                              :summary "you have the ability to twist fate using your wild magic. When another creature you can see makes an attack roll, an ability check, or a saving throw, you can use your reaction and spend 2 sorcery points to roll 1d4 and apply the number rolled as a bonus or penalty (your choice) to the creature's roll. You can do so after the creature rolls but before any effects of the roll occur"})]}}
                     :traits [{:name "Wild Magic Surge"
                               :level 1
                               :frequency units5e/turns-1
-                              :summary "DM can have you roll a d20 check immediately after casting a leveled sorcerer spell. On a 1, roll on the Wild Magic Surge table"
+                              :summary "your spellcasting can unleash surges of untamed magic. Once per turn, the DM can have you roll a d20 immediately after you cast a sorcerer spell of 1st level or higher. If you roll a 1, roll on the Wild Magic Surge table to create a magical effect. If that effect is a spell, it is too wild to be affected by your Metamagic, and if it normally requires concentration, it doesn't require concentration in this case; the spell lasts for its full duration."
                               :page 103}
-                             {:name "Tides of Chaos"
-                              :level 1
-                              :summary "Gain advantage on an attack roll, ability check, or saving throw. Immediately after casting a leveled sorcerer spell, the DM can have you roll the the Wild Magic Surge table, regaining this feature"
-                              :page 103
-                              :frequency units5e/long-rests-1}
                              {:name "Controlled Chaos"
                               :level 14
-                              :frequency units5e/turns-1
                               :page 103
-                              :summary "When rolling on the Wild Magic Surge table, roll twice and use either roll"}
+                              :summary "you gain a modicum of control over the surges of your wild magic. Whenever you roll on the Wild Magic Surge table, you can roll twice and use either number."}
                              {:name "Spell Bombardment"
                               :level 18
                               :page 103
-                              :summary "When you roll max on a die when rolling for spell damage, roll that die one additional time"
+                              :summary "the harmful energy of your spells intensifies. When you roll damage for a spell and roll the highest number possible on any of the dice, choose one of those dice, roll it again and add that roll to the damage"
                               :frequency units5e/turns-1}]}]}))
 
 (defn spell-school-savant [school page]
