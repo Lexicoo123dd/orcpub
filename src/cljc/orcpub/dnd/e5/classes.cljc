@@ -3549,27 +3549,31 @@
                  {:name "Arcane Recovery"
                   :page 115
                   :frequency units5e/days-1
-                  :summary (str "Once per day when you finish a short rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your wizard level (rounded up) (" (common/round-up (/ ?wizard-level 2)) "), and none of the slots can be 6th level or higher.")})]
+                  :summary "You have learned to regain some of your magical energy by studying your spellbook. Once per day when you finish a short rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your wizard level (rounded up), and none of the slots can be 6th level or higher"})]
     :levels {3 {:modifiers [(mod5e/trait-cfg
                              {:name "Cantrip Formulas"
-                              :summary "You have scribed a set of arcane formulas in your spellbook that you can use to formulate a cantrip in your mind. Whenever you finish a long rest and consult those formulas in your spellbook, you can replace one wizard cantrip you know with another cantrip from the wizard spell list."})]}
+                              :summary "you have scribed a set of arcane formulas in your spellbook that you can use to formulate a cantrip in your mind. Whenever you finish a long rest and consult those formulas in your spellbook, you can replace one wizard cantrip you know with another cantrip from the wizard spell list."})]}
              18 {:selections [(spell-mastery-selection 1)
                               (spell-mastery-selection 2)]
                  :modifiers [(mod5e/dependent-trait
                               {:name "Spell Mastery"
                                :page 115
-                               :summary (str (if (seq ?spell-mastery)
+                               :summary (str "you have achieved such mastery over certain spells that you can cast them at will. "
+                                          (if (seq ?spell-mastery)
                                                (str "Cast " (common/list-print ?spell-mastery))
-                                               "Choose a 1st and 2nd level spell, cast those")
-                                             " at lowest level without expending a slot if you have them prepared")})]}
+                                               "Choose a 1st-level wizard spell and a 2nd-level wizard spell that are in your spellbook. You can cast those spells")
+                                             " at their lowest level without expending a spell slot when you have them prepared. If you want to cast either spell at a higher level, you must expend a spell slot as normal."
+                                             "\n\nBy spending 8 hours in study, you can exchange one or both of the spells you chose for different spells of the same levels.")})]}
              20 {:selections [(signature-spells-selection)]
                  :modifiers [(mod5e/dependent-trait
                               {:name "Signature Spells"
                                :page 115
-                               :summary (str (if (seq ?signature-spells)
+                               :summary (str "you gain mastery over two powerful spells and can cast them with little effort. "
+                                             (if (seq ?signature-spells)
                                                (str "Your signature spells are " (common/list-print ?signature-spells))
-                                               "Choose two 3rd level spells")
-                                             ", you always have them prepared and can cast them once without expending a slot")})]}}
+                                               "Choose two 3rd-level wizard spells in your spellbook as your signature spells")
+                                             ". You always have these spells prepared, they don't count against the number of spells you have prepared, and you can cast each of them once at 3rd level without expending a spell slot. When you do so, you can't do so again until you finish a short or long rest."
+                                             "\n\nIf you want to cast either spell at a higher level, you must expend a spell slot as normal.")})]}}
     :subclass-level 2
     :subclass-title "Arcane Tradition"
     :subclasses [{:name "School of Bladesinging"
@@ -3577,76 +3581,100 @@
                   :modifiers [(mod5e/skill-proficiency :performance)
                               (mod5e/bonus-action
                                {:name "Bladesong"
-                                :frequency (units5e/long-rests ?prof-bonus)
                                 :duration units5e/minutes-1
-                                :summary (str "Invoke an elven magic called the Bladesong, provided that you aren't wearing medium or heavy armor or using a shield.
-                                          \nThe bladesong lasts for 1 minute, and ends early if you are incapacitated, if you don medium or heavy armor or a shield, or if you use two hands to make an attack with a weapon. You can also dismiss the Bladesong at any time (no action required).
-                                          \nWhile your Bladesong is active, you gain the following benefits:
-                                          \n• You gain a +" (max 1 (?ability-bonuses ::char5e/int)) " bonus to your AC.
-                                          \n• Your walking speed increases by 10 ft.
-                                          \n• You have advantage on Acrobatics checks.
-                                          \n• You gain a +" (max 1 (?ability-bonuses ::char5e/int)) " bonus to any CON save you make to maintain your concentration on a spell.")})]
+                                :summary (str "you can invoke an elven magic called the Bladesong, provided that you aren't wearing medium or heavy armor or using a shield. It graces you with supernatural speed, agility, and focus."
+                                              "\n\nYou can use a bonus action to start the Bladesong, which lasts for 1 minute. It ends early if you are incapacitated, if you don medium or heavy armor or a shield, or if you use two hands to make an attack with a weapon. You can also dismiss the Bladesong at any time (no action required)."
+                                              "\n\nWhile your Bladesong is active, you gain the following benefits:"
+                                              "\n\u2022 You gain a bonus to your AC equal to your Intelligence modifier (minimum of +1)"
+                                              "\n\u2022 Your walking speed increases by 10 feet."
+                                              "\n\u2022 You have advantage on Dexterity (Acrobatics) checks."
+                                              "\n\u2022 You gain a bonus to any Constitution saving throw you make to maintain your concentration on a spell. The bonus equals your Intelligence modifier (minimum of +1)."
+                                              "\nYou can use this feature a number of times equal to your proficiency bonus, and you regain all expended uses of it when you finish a long rest")})]
                   :selections [(bladesinging-weapon-prof-selection weapon-map)]
                   :levels {6 {:modifiers [(mod5e/num-attacks 2)
                                           (mod5e/trait-cfg
                                            {:name "Extra Attack"
-                                             :summary "Attack twice when taking the Attack action. Can cast a cantrip in place of one attack"})]}
+                                             :summary "you can attack twice, instead of once, whenever you take the Attack action on your turn. Moreover, you can cast one of your cantrips in place of one of those attacks."})]}
                            10 {:modifiers [(mod5e/reaction
                                             {:name "Song of Defense"
-                                             :summary "When you take damage, expend one spell slot to reduce that damage to you by an amount equal to five times the spell slot's level"})]}
+                                             :summary "you can direct your magic to absorb damage while your Bladesong is active. When you take damage, you can use your reaction to expend one spell slot and reduce that damage to you by an amount equal to five times the spell slot's level."})]}
                            14 {:modifiers [(mod5e/dependent-trait
                                             {:name "Song of Victory"
-                                             :summary (str "Add +" (max 1 (?ability-bonuses ::char5e/int) " to the damage of your melee weapon attacks while bladesong is active"))})]}}}
+                                             :summary "you can add your Intelligence modifier (minimum of +1) to the damage of your melee weapon attacks while your Bladesong is active."})]}}}
                  {:name "School of Evocation"
                   :levels {10 {:modifiers [(mod5e/dependent-trait
                                             {:level 10
                                              :name "Empowered Evocation"
                                              :page 117
-                                             :summary (str "add your INT mod (" (?ability-bonuses ::char5e/int) ") to one damage roll of evocation spell you cast")})]}}
+                                             :summary "you can add your Intelligence modifier (minimum of +1) to one damage roll of any wizard evocation spell that you cast"})]}
+                           14 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Overchannel"
+                                             :page 118
+                                             :summary (str "you can increase the power of your simpler spells. When you cast a wizard spell of 1st through 5th level that deals damage, you can deal maximum damage with that spell."
+                                                           "\n\nThe first time you do so, you suffer no adverse effect. If you use this feature again before you finish a long rest, you take 2d12 necrotic damage for each level of the spell, immediately after you cast it. Each time you use this feature again before finishing a long rest, the necrotic damage per spell level increases by 1d12. This damage ignores resistance and immunity.")})]}}
                   :traits [(spell-school-savant "evocation" 117)
                            {:level 2
                             :name "Sculpt Spells"
                             :page 117
-                            :summary "When you cast an evocation spell that affects other creatures that you can see, you can choose a number of them equal to 1 + the spell’s level. The chosen creatures automatically succeed on their saving throws against the spell, and they take no damage if they would normally take half damage on a successful save."}
+                            :summary "you can create pockets of relative safety within the effects of your evocation spells. When you cast an evocation spell that affects other creatures that you can see, you can choose a number of them equal to 1 + the spell's level. The chosen creatures automatically succeed on their saving throws against the spell, and they take no damage if they would normally take half damage on a successful save"}
                            {:level 6
                             :name "Potent Cantrip"
                             :page 117
-                            :summary "creature take half damage on sucessful saves against your cantrips"}
-                           {:level 14
-                            :name "Overchannel"
-                            :page 118
-                            :summary "deal max damage with evocation spells 1st-5th level. You take necrotic damage if you use this feature more than once per long rest"}]}
+                            :summary "your damaging cantrips affect even creatures that avoid the brunt of the effect. When a creature succeeds on a saving throw against your cantrip, the creature takes half the cantrip's damage (if any) but suffers no additional effect from the cantrip."}]}
                  {:name "Order of Scribes"
                   :modifiers [(mod5e/bonus-action
                                {:name "Wizardly Quill"
-                                :summary (str "Create a Tiny Quill in your hand.\n"
-                                          "• Doesn't require ink, and produces ink of a color of your choice on the writing surface.\n"
-                                          "• Time to copy a spell into your spellbook equals 2 minutes per spell level.\n"
-                                          "• You can erase anything your write with it by using a bonus action if within 5 ft.\n"
-                                          "The quill disappears if you create another one or if you die.")})]
+                                :summary (str "as a bonus action, you can magically create a Tiny quill in your free hand. The magic quill has the following properties:"
+                                          "\n\u2022 The quill doesn't require ink. When you write with it, it produces ink in a color of your choice on the writing surface."
+                                          "\n\u2022 The time you must spend to copy a spell into your spell book equals 2 minutes per spell level if you use the quill for the transcription."
+                                          "\n\u2022 You can erase anything you write with the quill if you wave the feather over the text as a bonus action, provided the text is within 5 feet of you."
+                                          "\nThis quill disappears if you create another one or if you die.")})]
+                  :levels {6 {:modifiers [(mod5e/bonus-action
+                                           {:name "Manifest Mind"
+                                            :summary (str "you can conjure forth the mind of your Awakened Spellbook. As a bonus action while the book is on your person, you can cause the mind to manifest as a Tiny spectral object, hovering in an unoccupied space of your choice within 60 feet of you. The spectral mind is intangible and doesn't occupy its space, and it sheds dim light in a 10-foot radius. It looks like a ghostly tome, a cascade of text, or a scholar from the past (your choice)."
+                                                          "\n\nWhile manifested, the spectral mind can hear and see, and it has darkvision with a range of 60 feet. The mind can telepathically share with you what it sees and hears (no action required)."
+                                                          "\n\nWhenever you cast a wizard spell on your turn, you can cast it as if you were in the spectral mind's space, instead of your own, using its senses. You can do so a number of times per day equal to your proficiency bonus, and you regain all expended uses when you finish a long rest."
+                                                          "\n\nAs a bonus action, you can cause the spectral mind to hover up to 30 feet to an unoccupied space that you or it can see. It can pass through creatures but not objects."
+                                                          "\n\nThe spectral mind stops manifesting if it is ever more than 300 feet away from you, if someone casts Dispel Magic on it, if the Awakened Spellbook is destroyed, if you die, or if you dismiss the spectral mind as a bonus action."
+                                                          "\n\nOnce you conjure the mind, you can't do so again until you finish a long rest, unless you expend a spell slot of any level to conjure it again.")})]}
+                           14 {:modifiers [(mod5e/trait-cfg
+                                             {:name "One with the Word"
+                                              :summary "your connection to your Awakened Spellbook has become so profound that your soul has become entwined with it. While the book is on your person, you have advantage on all Intelligence (Arcana) checks, as the spellbook helps you remember magical lore."})
+                                           (mod5e/reaction
+                                            {:level 14
+                                              :name "One with the Word"
+                                              :frequency units5e/long-rests-1
+                                              :summary (str "if you take damage while your spellbook's mind is manifested, you can prevent all of that damage to you by using your reaction to dismiss the spectral mind, using its magic to save yourself. Then roll 3d6. The spellbook temporarily loses spells of your choice that have a combined spell level equal to that roll or higher. For example, if the roll's total is 9, spells vanish from the book that have a combined level of at least 9, which could mean one 9th-level spell, three 3rd-level spells, or some other combination. If there aren't enough spells in the book to cover this cost, you drop to 0 hit points."
+                                                            "\n\nUntil you finish 1d6 long rests, you are incapable of casting the lost spells, even if you find them on a scroll or in another spellbook. After you finish the required number of rests, the spells reappear in the spell book")})]}}
                   :traits [{:level 2
                             :name "Awakened Spellbook"
-                            :summary (str "While holding your spellbook, you gain the following:\n"
-                                      "• You can use the book as a spellcasting focus for your wizard spells.\n"
-                                      "• When you cast a wizard spell with a spell slot, you can replace its damage type with a type that appears in another spell in your spellbook, which alters the spell for this casting only. The latter spell must be of the same level as the spell slot you expend.\n"
-                                      "• When you cast a wizard spell as a ritual, you can use the spell's normal casting time (use once/long rest).\n"
-                                      "You can replace the book over a short rest to a magic spellbook to which you're attuned, copying over the spells to it. The spells in the previous book vanishes.")}]}
+                            :summary (str "Using specially prepared inks and ancient incantations passed down by your wizardly order, you have awakened an arcane sentience within your spellbook. While you are holding the book, it grants you the following benefits:"
+                                      "\n\u2022 You can use the book as a spellcasting focus for your wizard spells."
+                                      "\n\u2022 When you cast a wizard spell with a spell slot, you can temporarily replace its damage type with a type that appears in another spell in your spellbook, which magically alters the spell's formula for this casting only. The latter spell must be of the same level as the spell slot you expend."
+                                      "\n\u2022 When you cast a wizard spell as a ritual, you can use the spell's normal casting time, rather than adding 10 minutes to it. Once you use this benefit, you can't do so again until you finish a long rest."
+                                      "\nIf necessary, you can replace the book over the course of a short rest by using your Wizardly Quill to write arcane sigils in a blank book or a magic spellbook to which you're attuned. At the end of the rest, your spellbook's consciousness is summoned into the new book, which the consciousness transforms into your spellbook, along with all its spells. If the previous book still existed somewhere, all the spells vanish from its pages.")}
+                           {:level 10
+                            :name "Master Scriviner"
+                            :summary (str "whenever you finish a long rest, you can create one magic scroll by touching your Wizardly Quill to a blank piece of paper or parchment and causing one spell from your Awakened Spellbook to be copied onto the scroll. The spellbook must be within 5 feet of you when you make the scroll."
+                                          "\n\nThe chosen spell must be of 1st or 2nd level and must have a casting time of 1 action. Once in the scroll, the spell's power is enhanced, counting as one level higher than normal. You can cast the spell from the scroll by reading it as an action. The scroll is unintelligible to anyone else, and the spell vanishes from the scroll when you cast it or when you finish your next long rest."
+                                          "\n\nYou are also adept at crafting spell scrolls, which are described in the treasure chapter of the Dungeon Master's Guide. The gold and time you must spend to make such a scroll are halved if you use your Wizardly Quill.")}
+                           ]}
                  {:name "School of Abjuration"
                     :modifiers [(mod5e/dependent-trait
                                  {:name "Arcane Ward"
                                   :page 115
-                                  :summary (str "you can weave magic around yourself for protection. When you cast an abjuration spell of 1st level or higher, you can simultaneously use a strand of the spell's magic to create a magical ward on yourself that lasts until you finish a long rest. The ward has hit points equal to twice your wizard level + your Intelligence modifier (" (+ (* 2 (?class-level :wizard)) (?ability-bonuses ::char5e/int)) "). Whenever you take damage, the ward takes the damage instead. If this damage reduces the ward to 0 hit points, you take any remaining damage."
-                                                "\nWhile the ward has 0 hit points, it can't absorb damage, but its magic remains. Whenever you cast an abjuration spell of 1st level or higher, the ward regains a number of hit points equal to twice the level of the spell."
-                                                "\nOnce you create the ward, you can't create it again until you finish a long rest.")})]
+                                  :summary (str "you can weave magic around yourself for protection. When you cast an abjuration spell of 1st level or higher, you can simultaneously use a strand of the spell's magic to create a magical ward on yourself that lasts until you finish a long rest. The ward has hit points equal to twice your wizard level + your Intelligence modifier. Whenever you take damage, the ward takes the damage instead. If this damage reduces the ward to 0 hit points, you take any remaining damage."
+                                                "\n\nWhile the ward has 0 hit points, it can't absorb damage, but its magic remains. Whenever you cast an abjuration spell of 1st level or higher, the ward regains a number of hit points equal to twice the level of the spell."
+                                                "\n\nOnce you create the ward, you can't create it again until you finish a long rest.")})]
                     :levels {6 {:modifiers [(mod5e/reaction
                                              {:name "Projected Ward"
                                               :page 115
                                               :range units5e/ft-30
-                                              :summary "when a creature that you can see within 30 feet of you takes damage, you can use your reaction to cause your Arcane Ward to absorb that damage. If this damage reduces the ward to 0 hit points, the warded creature takes any remaining damage."})]}
+                                              :summary "when a creature that you can see within 30 feet of you takes damage, you can use your reaction to cause your Arcane Ward to absorb that damage. If this damage reduces the ward to 0 hit points, the warded creature takes any remaining damage"})]}
                              10 {:modifiers [(mod5e/dependent-trait
                                               {:name "Improved Abjuration"
                                                :page 115
-                                               :summary (str "when you cast an abjuration spell that requires you to make an ability check as a part of casting that spell (as in Counterspell and Dispel Magic), you add your proficiency bonus (" ?prof-bonus ") to that ability check.")})]}
+                                               :summary "when you cast an abjuration spell that requires you to make an ability check as a part of casting that spell (as in Counterspell and Dispel Magic), you add your proficiency bonus to that ability check"})]}
                              14 {:modifiers [(mod5e/saving-throw-advantage [:spells])
                                              (mod5e/damage-resistance :spells)]}}
                     :traits [(spell-school-savant "abjuration" 115)
