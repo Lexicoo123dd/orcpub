@@ -1322,6 +1322,8 @@
 
 (def elven-accuracy-summary "Reroll one die on attacks with advantage using dex, int, wis, or cha")
 
+(def gift-of-the-metallic-dragon-summary "You learn the cure wounds spell. You can cast this spell without expending a spell slot. Once you cast this spell in this way, you can't do so again until you finish a long rest. You can also cast this spell using spell slots you have. The spell's spellcasting ability is ")
+
 #_(defn homebrew-spell-selection [spell-lists spells-map]
   (spell-selection
    spell-lists
@@ -1440,20 +1442,37 @@
       {:name "Alert"
        :icon "look-at"
        :page 165
+       :exclude-trait? true
        :summary "+5 initiative; can't be surprised; creatures don't gain advantage on attacks against you for being unseen"
-       :modifiers [(modifiers/initiative 5)]})
+       :modifiers [(modifiers/initiative 5)
+                   (modifiers/trait-cfg
+                    {:name "Alert"
+                     :summary (str "\u2022 You gain a +5 bonus to initiative."
+                                   "\n\u2022 You can't be surprised while you are conscious."
+                                   "\n\u2022 Other creatures don't gain advantage on attack rolls against you as a result of being unseen by you.")})]})
    (feat-option
       {:name "Athlete"
        :icon "weight-lifting-up"
        :page 165
+       :exclude-trait? true
        :summary "increase STR or DEX by 1; standing up only uses 5 ft movement; climbing doesn't cost extra movement; make running long or high jump after moving only 5 ft."
-       :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]})
+       :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Athlete"
+                     :summary (str "\u2022 When you are prone, standing up uses only 5 feet of your movement."
+                                   "\n\u2022 Climbing doesn't cost you extra movement."
+                                   "\n\u2022 You can make a running long jump or a running high jump after moving only 5 feet on foot, rather than 10 feet.")})]})
    (feat-option
       {:name "Actor"
        :icon "drama-masks"
        :page 165
+       :exclude-trait? true
        :summary "increase CHA by 1; advantage on Deception and Performance when trying to pass as someone else; mimic the speech of a person or sounds of a creature you have heard for 1 at least 1 minute. Determined fake by Insight vs Deception"
-       :modifiers [(modifiers/ability ::character/cha 1)]})
+       :modifiers [(modifiers/ability ::character/cha 1)
+                   (modifiers/trait-cfg
+                    {:name "Actor"
+                     :summary (str "\u2022 You have advantage on Charisma (Deception) and Charisma (Performance) checks when trying to pass yourself off as a different person."
+                                   "\n\u2022 You can mimic the speech of another person or the sounds made by other creatures. You must have heard the person speaking, or heard the creature make the sound, for at least 1 minute. A successful Wisdom (Insight) check contested by your Charisma (Deception) check allows a listener to determine that the effect is faked.")})]})
    (feat-option
       {:name "Cartomancer"
        :exclude-trait? true
@@ -1461,10 +1480,10 @@
        :modifiers [(modifiers/spells-known 0 :prestidigitation nil "Cartomancer")
                    (modifiers/trait-cfg
                     {:name "Cartomancer: Card Tricks"
-                     :summary "Prestidigitation can be used to create illusions that duplicate the effects of stage magic. When used this way, the components can be concealed as ordinary conversation and card handling"})
+                     :summary "You learn the Prestidigitation cantrip and can use it to create to create illusions that duplicate the effects of stage magic. When you use Prestidigitation in this way, you can conceal the components of the spell as ordinary conversation and card handling."})
                    (modifiers/bonus-action
                     {:name "Cartomancer: Hidden Ace"
-                     :summary "After a long rest, imbue a spell from your class's spell list into a card, which must have a casting time of 1 action and be of a level for which you have spell slots. Lasts for 8 hours. Use a bonus action to cast the spell within, and the card loses its magic"})]})
+                     :summary "When you finish a long rest, you can choose one spell from your class's spell list and imbue that spell into a card. The chosen spell must have a casting time of 1 action, and it must be a level for which you have spell slots. The card remains imbued with this spell for 8 hours. While the card is imbued with the spell, you can use a bonus action to flourish the card and cast the spell within. The card then immediately loses its magic."})]})
    (feat-option
       {:name "Charger"
        :icon "charging-bull"
@@ -1474,15 +1493,16 @@
        :modifiers [(modifiers/bonus-action
                     {:name "Charge"
                      :page 165
-                     :summary charge-summary})]})
+                     :summary (str "When you use your action to Dash, you can use a bonus action to make one melee weapon attack or to shove a creature."
+                                   "\n\nIf you move at least 10 feet in a straight line immediately before taking this bonus action, you either gain a +5 bonus to the attack's damage roll (if you chose to make a melee attack and hit) or push the target up to 10 feet away from you (if you chose to shove and you succeed).")})]})
    (feat-option
       {:name "Chef"
        :exclude-trait? true
        :summary "increase CON or WIS by 1; gain proficiency with cook's utensils; you and allies regain extra HP during a short rest; make treats that give temp HP when eaten"
        :modifiers [(modifiers/dependent-trait
                     {:name "Chef"
-                     :summary (str "• As part of a short rest, cook special food for up to " (+ 4 ?prof-bonus) " creatures, provided you have ingredients and cook's utensils on hand. At the end of the short rest, any creature who eats the food and spends a Hit Dice to regain HP regains an extra 1d8 HP."
-                                   "\n• With one hour of work after a long rest, cook " ?prof-bonus " treats that last 8 hours. A creature can spend a bonus action to eat one and gain " ?prof-bonus " temp HP")})
+                     :summary (str "\u2022 As part of a short rest, you can cook special food, provided you have ingredients and cook's utensils on hand. You can prepare enough of this food for a number of creatures equal to 4 + your proficiency bonus. At the end of the short rest, any creature who eats the food and spends one or more Hit Dice to regain hit points regains an extra 1d8 hit points."
+                                   "\n\u2022 With one hour of work or when you finish a long rest, you can cook a number of treats equal to your proficiency bonus. These special treats last 8 hours after being made. A creature can use a bonus action to eat one of those treats to gain temporary hit points equal to your proficiency bonus.")})
                    (modifiers/tool-proficiency :cooks-utensils)]
        :selections [(ability-increase-selection [::character/con ::character/wis] 1)]})
    (feat-option
@@ -1494,15 +1514,21 @@
        :modifiers [(modifiers/bonus-action
                     {:name "Crossbow Expert"
                      :page 165
-                     :summary "when you Attack with 1 hand weapon, you can attack with a hand crossbow"})
+                     :summary "When you use the Attack action and attack with a one-handed weapon, you can use a bonus action to attack with a hand crossbow you are holding."})
                    (modifiers/trait-cfg
                     {:name "Crossbow Expert"
                      :page 165
-                     :summary "ignore loading property of crossbows you are proficient with. You don't have ranged weapon disadvantage from being within 5 ft. of hostile creature"})]})
+                     :summary (str "\u2022 You ignore the loading quality of crossbows with which you are proficient."
+                                   "\n\u2022 Being within 5 feet of a hostile creature doesn't impose disadvantage on your ranged attack rolls.")})]})
    (feat-option
       {:name "Crusher"
+       :exclude-trait? true
        :summary "increase STR or DEX by 1; when dealing bludgeoning damage, move target 5 ft. to an unoccupied space, provided it's no more than one size larger than you (once/turn); on critical dealing bludgeoning damage, attack rolls are made with advantage against the target until your next turn"
-       :selections [(ability-increase-selection [::character/str ::character/dex] 1)]})
+       :selections [(ability-increase-selection [::character/str ::character/dex] 1)]
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Crusher"
+                     :summary (str "\u2022 Once per turn, when you hit a creature with an attack that deals bludgeoning damage, you can move it 5 feet to an unoccupied space, provided the target is no more than one size larger than you."
+                                   "\n\u2022 When you score a critical hit that deals bludgeoning damage to a creature, attack rolls against that creature are made with advantage until the start of your next turn.")})]})
    (feat-option
       {:name "Defensive Duelist"
        :icon "spinning-sword"
@@ -1512,22 +1538,35 @@
        :modifiers [(modifiers/reaction
                     {:name "Defensive Duelist"
                      :page 165
-                     :summary defensive-duelist-summary})]
+                     :summary "When you are wielding a finesse weapon with which you are proficient and another creature hits you with a melee attack, you can use your reaction to add your proficiency bonus to your AC for that attack, potentially causing the attack to miss you."})]
        :prereqs [(ability-prereq ::character/dex 13)]})
    (feat-option
       {:name "Dual Wielder"
        :icon "rogue"
        :page 165
+       :exclude-trait? true
        :summary "+1 AC bonus when wielding two melee weapons; two-weapon fighting with any one-handed melee weapon; draw or stow two one-handed weapons"
        :modifiers [dual-wield-weapon-mod
-                   dual-wield-ac-mod]})
+                   dual-wield-ac-mod
+                   (modifiers/trait-cfg
+                    {:name "Dual Wielder"
+                     :summary (str "\u2022 You gain a +1 bonus to AC while you are wielding a separate melee weapon in each hand."
+                                   "\n\u2022 You can use two-weapon fighting even when the one-handed melee weapons you are wielding aren't light."
+                                   "\n\u2022 You can draw or stow two one-handed weapons when you would normally be able to draw or stow only one.")})]})
    (feat-option
       {:name "Dungeon Delver"
        :icon "dungeon-gate"
        :page 166
+       :exclude-trait? true
        :summary "advantage to detect secret doors; advantage on saves against and resistance to trap damage; fast pace doesn't impose passive Perception penalty"
        :modifiers [(modifiers/damage-resistance :trap)
-                   (modifiers/saving-throw-advantage [:traps])]})
+                   (modifiers/saving-throw-advantage [:traps])
+                   (modifiers/trait-cfg
+                    {:name "Dungeon Delver"
+                     :summary (str "\u2022 You have advantage on Wisdom (Perception) and Intelligence (Investigation) checks made to detect the presence of secret doors."
+                                   "\n\u2022 You have advantage on saving throws made to avoid or resist traps."
+                                   "\n\u2022 You have resistance to the damage dealt by traps."
+                                   "\n\u2022 Traveling at a fast pace doesn't impose the normal -5 penalty on your passive Wisdom (Perception) score.")})]})
    (feat-option
       {:name "Durable"
        :icon "hospital-cross"
@@ -1538,42 +1577,54 @@
                    (modifiers/dependent-trait
                     {:name "Durable"
                      :page 166
-                     :summary (str "when you roll Hit Die to regain HPs, the min points regained is " (* 2 (?ability-bonuses ::character/con)))})]})
+                     :summary (str "When you roll a Hit Die to regain hit points, the minimum number of hit points you regain from the roll equals twice your Constitution modifier (minimum of 2) (" (max 2 (* 2 (?ability-bonuses ::character/con))) ").")})]})
    (feat-option
       {:name "Durable (AoA)"
        :icon "defensive-wall"
-       :page 170
+       :exclude-trait? true
        :summary "increase CON by 1; when you roll Hit Die to regain HPs, the min points regained is 2X your CON modifier; CON mod extra HPs per level"
        :modifiers [(modifiers/ability ::character/con 1)
-                   (mods/modifier ?hit-point-level-bonus (* 2 ?hit-point-level-bonus))]})
+                   (mods/modifier ?hit-point-level-bonus (* 2 ?hit-point-level-bonus))
+                   (modifiers/dependent-trait
+                    {:name "Durable"
+                     :summary (str "\u2022 When you roll a Hit Die to regain hit points, the minimum number of hit points you regain from the roll equals twice your Constitution modifier (minimum of 2) (" (max 2 (* 2 (?ability-bonuses ::character/con))) ")."
+                                   "\n\u2022 You recover all hit die on a long rest instead of just half.")})]})
    (feat-option
       {:name "Elemental Adept"
        :icon "wind-hole"
        :page 166
-       :summary "select a damage type (acid, cold, fire, lightning, or thunder), your spells ignore resistance to that type and min damage die roll is 2"
+       :summary "select a damage type (acid, cold, fire, lightning, or thunder), your spells ignore resistance to that type and min damage die roll is 2; can select this feat multiple times"
        :prereqs [can-cast-spell-prereq]}
       true)
    (feat-option
     {:name "Elven Accuracy"
      :page 74
      :exclude-trait? true
-     :summary (str "increase DEX, INT, WIS, or DEX by 1; " elven-accuracy-summary)
+     :summary (str "increase DEX, INT, WIS, or CHA by 1; " elven-accuracy-summary)
      :modifiers [(modifiers/trait-cfg
                   {:name "Elven Accuracy"
-                   :summary elven-accuracy-summary})]
+                   :summary "Whenever you have advantage on an attack roll using Dexterity, Intelligence, Wisdom, or Charisma, you can reroll one of the dice once."})]
      :selections [(ability-increase-selection [::character/dex ::character/int ::character/wis ::character/cha] 1 false)]
-     :prereqs [(race-prereq ["Elf" "Half-Elf"])]})
+     :prereqs [(race-prereq ["Elf" "Half-Elf" "Half-Elf (AoA)"])]})
    (feat-option
     {:name "Fey Touched"
+     :exclude-trait? true
      :summary "increase INT, WIS, or CHA by 1; learn misty step; learn 1 divination or enchantment 1st-level spell that can be casted without expending a spell slot once per long rest"
-     :modifiers [(modifiers/spells-known 2 :misty-step nil "Fey Touched")]
+     :modifiers [(modifiers/spells-known 2 :misty-step nil "Fey Touched")
+                 (modifiers/trait-cfg
+                  {:name "Fey Touched"
+                   :summary "You learn the misty step spell and one 1st-level spell of your choice. The 1st-level spell must be from the divination or enchantment school of magic. You can cast each of these spells without expending a spell slot. Once you cast either of these spells in this way, you can't cast that spell in this way again until you finish a long rest. You can also cast these spells using spell slots you have of the appropriate level. The spells' spellcasting ability is the ability increased by this feat."})]
      :selections [ ;;(fey-touched-spell-selection)
                   (fey-touched-ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false)]})
    (feat-option
     {:name "Gift of the Gem Dragon"
      :exclude-trait? true
      :summary "When you take damage from a creature within 10 ft., use reaction to force the creature to make a STR save or take 2d8 force damage and be pushed up to 10 ft. away, half damage and isn't pushed if successful"
-     :selections [(gift-of-the-gem-dragon-ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false)]})
+     :selections [(gift-of-the-gem-dragon-ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false)]
+     :modifiers [(modifiers/reaction
+                  {:name "Gift of the Gem Dragon"
+                   :frequency (units5e/long-rests ?prof-bonus)
+                   :summary "When you take damage from a creature that is within 10 feet of you, you can use your reaction to emanate telekinetic energy. The creature that dealt damage to you must make a Strength saving throw (DC equals 8 + your proficiency bonus + the ability modifier of the score increased by this feat). On a failed save, the creature takes 2d8 force damage and is pushed up to 10 feet away from you. On a successful save, the creature takes half as much damage and isn't pushed."})]})
    (feat-option
     {:name "Gift of the Metallic Dragon"
      :exclude-trait? true
@@ -1586,55 +1637,67 @@
                                 :modifiers [(modifiers/spells-known 1 :cure-wounds ::character/int "Gift of the Metallic Dragon")
                                             (modifiers/trait-cfg
                                              {:name "Gift of the Metallic Dragon: Draconic Healing"
-                                              :summary "You can cast cure wounds once/long rest or using a spell slot. INT is your spellcasting ability"})]})
+                                              :summary (str gift-of-the-metallic-dragon-summary " Intelligence")})]})
                               (t/option-cfg
                                {:name "Wisdom"
                                 :modifiers [(modifiers/spells-known 1 :cure-wounds ::character/wis "Gift of the Metallic Dragon")
                                             (modifiers/trait-cfg
                                              {:name "Gift of the Metallic Dragon: Draconic Healing"
-                                              :summary "You can cast cure wounds once/long rest or using a spell slot. WIS is your spellcasting ability"})]})
+                                              :summary (str gift-of-the-metallic-dragon-summary " Wisdom")})]})
                               (t/option-cfg
                                {:name "Charisma"
                                 :modifiers [(modifiers/spells-known 1 :cure-wounds ::character/cha "Gift of the Metallic Dragon")
                                             (modifiers/trait-cfg
                                              {:name "Gift of the Metallic Dragon: Draconic Healing"
-                                              :summary "You can cast cure wounds once/long rest or using a spell slot. CHA is your spellcasting ability"})]})]})]
+                                              :summary (str gift-of-the-metallic-dragon-summary " Charisma")})]})]})]
      :modifiers [(modifiers/spells-known 1 :cure-wounds nil "Gift of the Metallic Dragon")
                  (modifiers/reaction
                   {:name "Gift of the Metallic Dragon: Protective Wings"
                    :frequency (units5e/long-rests ?prof-bonus)
-                   :summary (str "When you or another creature within 5 ft. is hit, grant a +" ?prof-bonus " to the AC")})]})
+                   :summary "You can manifest protective wings that can shield you or others. When you or another creature you can see within 5 feet of you is hit by an attack roll, you can use your reaction to manifest spectral wings from your back for a moment. You grant a bonus to the target's AC equal to your proficiency bonus against that attack roll, potentially causing it to miss"})]})
    (feat-option
     {:name "Grappler"
      :icon "muscle-up"
      :page 167
+     :exclude-trait? true
      :summary "advantage on attacks against creature you grapple; can use an action to pin the creature"
      :modifiers [(modifiers/action
                   {:name "Grappler"
                    :page 167
-                   :summary "restrain a creature you are grappling"})]
+                   :summary (str "\u2022 You have advantage on attack rolls against a creature you are grappling."
+                                 "\n\u2022 You can use your action to try to pin a creature grappled by you. To do so, make another grapple check. If you succeed, you and the creature are both restrained until the grapple ends.")})]
      :prereqs [(ability-prereq ::character/str 13)]})
    (feat-option
       {:name "Great Weapon Master"
        :icon "broadsword"
        :page 167
+       :exclude-trait? true
        :summary "When you critical or reduce a creature to 0 HPs with melee weapon, make one melee weapon attack as bonus action. When you melee Attack with heavy weapon, you can take -5 on attack to deal +10 damage."
        :modifiers [(modifiers/bonus-action
                     {:name "Great Weapon Master"
                      :page 167
-                     :summary "When you critical or reduce a creature to 0 HPs with melee weapon, make one melee weapon attack"})]})
+                     :summary "On your turn, when you score a critical hit with a melee weapon or reduce a creature to 0 hit points with one, you can make one melee weapon attack as a bonus action."})
+                   (modifiers/trait-cfg
+                    {:name "Great Weapon Master"
+                     :summary "Before you make a melee attack with a heavy weapon that you are proficient with, you can choose to take a -5 penalty to the attack roll. If the attack hits, you add +10 to the attack's damage."})]})
    (feat-option
       {:name "Healer"
        :icon "medical-pack-alt"
        :page 167
+       :exclude-trait? true
        :summary "When you stabilize with healer's kit, the creature regains 1 HP; use a healer's kit to restore 1d6 + 4 + creature's max hit dice HPs (use once/rest/person)"
        :modifiers [(modifiers/action
-                    {:name "Healer Feat"
+                    {:name "Healer"
                      :page 167
-                     :summary "use a healer's kit to restore 1d6 + 4 + creature's max hit dice HPs (use once/rest/person)"})]})
+                     :summary "As an action, you can spend one use of a healer's kit to tend to a creature and restore 1d6 + 4 hit points to it, plus additional hit points equal to the creature's maximum number of Hit Dice. The creature can't regain hit points from this feat again until it finishes a short or long rest."})
+                   (modifiers/trait-cfg
+                    {:name "Healer"
+                     :page 167
+                     :summary "When you use a healer's kit to stabilize a dying creature, that creature also regains 1 hit point."})]})
    (feat-option
       {:name "Heavily Armored"
        :icon "lamellar"
+       :exclude-trait? true
        :summary "increase STR by 1; proficiency in heavy armor"
        :page 167
        :modifiers [(modifiers/heavy-armor-proficiency)
@@ -1644,8 +1707,12 @@
       {:name "Heavy Armor Master"
        :icon "gauntlet"
        :page 167
+       :exclude-trait? true
        :summary "increase STR by 1; when wearing heavy armor, slashing, piercing, and bludgeoning damage from non-magical attacks is 3 less"
-       :modifiers [(modifiers/ability ::character/str 1)]
+       :modifiers [(modifiers/ability ::character/str 1)
+                   (modifiers/trait-cfg
+                    {:name "Heavy Armor Master"
+                     :summary "While you are wearing heavy armor, bludgeoning, piercing, and slashing damage that you take from nonmagical attacks is reduced by 3."})]
        :prereqs [(armor-prereq :heavy)]})
    (feat-option
     {:name "Infernal Constitution"
@@ -1655,8 +1722,8 @@
      :modifiers [(modifiers/ability ::character/con 1)
                  (modifiers/trait-cfg
                   {:name "Infernal Constitution"
-                   :summary (str "• You have resistance to cold and poison damage.\n"
-                                 "• You have advantage on saving throws against being poisoned.")})]
+                   :summary (str "\u2022 You have resistance to cold and poison damage."
+                                 "\n\u2022 You have advantage on saving throws against being poisoned.")})]
      :prereqs [(race-prereq ["Tiefling" "Tiefling (AoA)"])]})
    (feat-option
       {:name "Inspiring Leader"
@@ -1665,20 +1732,27 @@
        :exclude-trait? true
        :summary "spend 10 min to give 6 friendly creatures within 30 ft. temp HPs equal to you CHA mod + your level"
        :modifiers [(modifiers/dependent-trait
-                    {:name "Inspiring Leader Feat"
+                    {:name "Inspiring Leader"
                      :page 167
-                     :summary (str "spend 10 min to give 6 friendly creatures within 30 ft. (who can see, hear, and understand you) " (+ (?ability-bonuses ::character/cha) ?total-levels) " temp HP (use once/rest/person)")})]
+                     :summary (str "You can spend 10 minutes inspiring your companions, shoring up their resolve to fight. When you do so, choose up to six friendly creatures (which can include yourself) within 30 feet of you who can see or hear you and who can understand you. Each creature can gain temporary hit points equal to your level + your Charisma modifier (" (+ (?ability-bonuses ::character/cha) ?total-levels) "). A creature can't gain temporary hit points from this feat again until it has finished a short or long rest.")})]
        :prereqs [(ability-prereq ::character/cha 13)]})
    (feat-option
       {:name "Keen Mind"
        :icon "brain"
        :page 167
+       :exclude-trait? true
        :summary "increase INT by 1; always know which direction is north; know hours before sunset or sunrise; recall anything heard or seen within a month"
-       :modifiers [(modifiers/ability ::character/int 1)]})
+       :modifiers [(modifiers/ability ::character/int 1)
+                   (modifiers/trait-cfg
+                    {:name "Keen Mind"
+                     :summary (str "\u2022 You always know which way is north."
+                                   "\n\u2022 You always know the number of hours left before the next sunrise or sunset."
+                                   "\n\u2022 You can accurately recall anything you have seen or heard within the past month.")})]})
    (feat-option
       {:name "Lightly Armored"
        :icon "scale-mail"
        :page 167
+       :exclude-trait? true
        :summary "increase STR or DEX by 1; proficiency in light armor"
        :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]
        :modifiers [(modifiers/light-armor-proficiency)]})
@@ -1693,22 +1767,34 @@
                    (modifiers/dependent-trait
                     {:name "Linguist Feat"
                      :page 167
-                     :summary (str "Create written ciphers. Others can't decipher your codes unless you teach them, they succeed on a DC " (+ (?abilities ::character/int) ?prof-bonus) " INT check, or they use magic")})]})
+                     :summary (str "You can ably create written ciphers. Others can't decipher a code you create unless you teach them, they succeed on an Intelligence check (DC equal to your Intelligence score + your proficiency bonus (" (+ (?abilities ::character/int) ?prof-bonus) ")), or they use magic to decipher it.")})]})
    (feat-option
       {:name "Lucky"
        :icon "clover"
        :page 167
-       :summary "3 luck points per long rest, which you can use to roll an additional d20 when rolling an attack, save, or ability check, or when an attack is made against you, and choose which one to use"})
+       :exclude-trait? true
+       :summary "3 luck points per long rest, which you can use to roll an additional d20 when rolling an attack, save, or ability check, or when an attack is made against you, and choose which one to use"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Lucky"
+                     :frequency (units5e/long-rests 3)
+                     :summary (str "You have inexplicable luck that seems to kick in at just the right moment."
+                                   "\nYou have 3 luck points. Whenever you make an attack roll, an ability check, or a saving throw, you can spend one luck point to roll an additional d20. You can choose to spend one of your luck points after you roll the die, but before the outcome is determined. You choose which of the d20s is used for the attack roll, ability check, or saving throw."
+                                   "\nYou can also spend one luck point when an attack roll is made against you. Roll a d20, and then choose whether the attack uses the attacker's roll or yours. If more than one creature spends a luck point to influence the outcome of a roll, the points cancel each other out; no additional dice are rolled."
+                                   "\nYou regain your expended luck points when you finish a long rest")})]})
    (feat-option
       {:name "Mage Slayer"
        :icon "zeus-sword"
        :page 168
+       :exclude-trait? true
        :summary "use reaction to attack a caster within 5 ft.; impose disadvantage to a caster's concentration check when you attack; advantage on saves against spells cast within 5 ft."
        :modifiers [(modifiers/reaction
                     {:name "Mage Slayer"
-                     :range units5e/ft-5
                      :page 168
-                     :summary "make a melee weapon attack against a creature that casts a spell within 5 ft."})]})
+                     :summary "When a creature within 5 feet of you casts a spell, you can use your reaction to make a melee weapon attack against that creature."})
+                   (modifiers/trait-cfg
+                    {:name "Mage Slayer"
+                     :summary (str "\u2022 When you damage a creature that is concentrating on a spell, that creature has disadvantage on the saving throw it makes to maintain its concentration."
+                                   "\n\u2022 You have advantage on saving throws against spells cast by creatures within 5 feet of you.")})]})
    (feat-option
       {:name "Magic Initiate"
        :icon "magic-palm"
@@ -1739,20 +1825,32 @@
       {:name "Medium Armor Master"
        :icon "bracers"
        :page 168
+       :exclude-trait? true
        :summary "medium armor doesn't give disadvantage to Stealth; max DEX bonus to AC is 3 for medium armor"
        :modifiers [medium-armor-master-max-bonus
-                   medium-armor-master-stealth]
+                   medium-armor-master-stealth
+                   (modifiers/trait-cfg
+                    {:name "Medium Armor Master"
+                     :summary (str "\u2022 Wearing medium armor doesn't impose disadvantage on your Dexterity (Stealth) checks."
+                                   "\n\u2022 When you wear medium armor, you can add 3, rather than 2, to your AC if you have a Dexterity of 16 or higher.")})]
        :prereqs [(armor-prereq :medium)]})
    (feat-option
       {:name "Mobile"
        :icon "move"
        :page 168
+       :exclude-trait? true
        :summary "speed increases by 10 ft.; Dash through difficult terrain doesn't cost extra movement; don't provoke opportunity attacks from a creature you made a melee attack against"
-       :modifiers [(modifiers/speed 10)]})
+       :modifiers [(modifiers/speed 10)
+                   (modifiers/trait-cfg
+                    {:name "Mobile"
+                     :summary (str "\u2022 Your speed increases by 10 feet."
+                                   "\n\u2022 When you use the Dash action, difficult terrain doesn't cost you extra movement on that turn."
+                                   "\n\u2022 When you make a melee attack against a creature, you don't provoke opportunity attacks from that creature for the rest of the turn, whether you hit or not.")})]})
    (feat-option
       {:name "Moderately Armored"
        :icon "shoulder-armor"
        :page 168
+       :exclude-trait? true
        :summary "increase STR or DEX by 1; gain proficiency with shields and medium armor"
        :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]
        :modifiers [(modifiers/medium-armor-proficiency)
@@ -1762,19 +1860,34 @@
       {:name "Mounted Combatant"
        :icon "cavalry"
        :page 168
-       :summary "while mounted and not incapacitated: advantage on attacks against unmounted creatures smaller than mount, force attack on mount to target you; mount takes no damage on sucessful DEX saves and half on fail"})
+       :exclude-trait? true
+       :summary "while mounted and not incapacitated: advantage on attacks against unmounted creatures smaller than mount, force attack on mount to target you; mount takes no damage on sucessful DEX saves and half on fail"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Mounted Combatant"
+                     :summary (str "\u2022 You have advantage on melee attack rolls against any unmounted creature that is smaller than your mount."
+                                   "\n\u2022 You can force an attack targeted at your mount to target you instead."
+                                   "\n\u2022 If your mount is subjected to an effect that allows it to make a Dexterity saving throw to take only half damage, it instead takes no damage if it succeeds on the saving throw, and only half damage if it fails.")})]})
    (feat-option
       {:name "Observant"
        :icon "surrounded-eye"
        :page 168
+       :exclude-trait? true
        :summary "increase INT or WIS by 1; read lips; +5 bonus to passive Perception and passive Investigation"
        :selections [(ability-increase-selection [::character/int ::character/wis] 1 false)]
        :modifiers [(modifiers/passive-perception 5)
-                   (modifiers/passive-investigation 5)]})
+                   (modifiers/passive-investigation 5)
+                   (modifiers/trait-cfg
+                    {:name "Observant"
+                     :summary (str "\u2022 If you can see a creature's mouth while it is speaking a language you understand, you can interpret what it's saying by reading its lips."
+                                   "\n\u2022 You have a +5 bonus to your passive Wisdom (Perception) and passive Intelligence (Investigation) scores.")})]})
    (feat-option
       {:name "Piercer"
        :page 80
+       :exclude-trait? true
        :summary "increase STR or DEX by 1; reroll one damage die when dealing piercing damage; roll one additional damage die on critical hit with piercing damage"
+       :modifiers [(modifiers/trait-cfg
+                    {:name (str "\u2022 Once per turn, when you hit a creature with an attack that deals piercing damage, you can reroll one of the attack's damage dice, and you must use the new roll."
+                                "\n\u2022 When you score a critical hit that deals piercing damage to a creature, you can roll one additional damage die when determining the extra piercing damage the target takes.")})]
        :selections [(ability-increase-selection [::character/str ::character/dex] 1)]})
    (feat-option
       {:name "Polearm Master"
@@ -1785,15 +1898,16 @@
        :modifiers [(modifiers/bonus-action
                     {:name "Polearm Master"
                      :page 168
-                     :summary "when you make an Attack with a glaive, quarterstaff, or halberd, make an additionaal melee attack with the other end of the weapon, dealing d4 bludgeoning damage"})
+                     :summary "When you take the Attack action and attack with only a glaive, halberd, quarterstaff, or spear, you can use a bonus action to make a melee attack with the opposite end of the weapon; this attack uses the same ability modifier as the primary attack. The weapon's damage die for this attack is a d4, and the attack deals bludgeoning damage."})
                    (modifiers/reaction
                     {:name "Polearm Master"
                      :page 168
-                     :summary "while wielding a glaive, halberd, pike, quarterstaff, or spear, creatures provoke opportunity attacks when they enter your reach with that weapon"})]})
+                     :summary "While you are wielding a glaive, halberd, pike, quarterstaff, or spear, other creatures provoke an opportunity attack from you when they enter the reach you have with that weapon."})]})
    (feat-option
       {:name "Resilient"
        :icon "dodging"
        :page 168
+       :exclude-trait? true
        :summary "increase ability by 1 and gain proficiency in saves with that ability"
        :selections [(ability-increase-selection
                      character/ability-keys
@@ -1828,32 +1942,54 @@
       {:name "Savage Attacker"
        :icon "saber-slash"
        :page 169
-       :summary "reroll melee weapon attack damage and use either total (use once/turn)"})
+       :exclude-trait? true
+       :summary "reroll melee weapon attack damage and use either total (use once/turn)"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Savage Attacker"
+                     :summary "Once per turn when you roll damage for a melee weapon attack, you can reroll the weapon's damage dice and use either total."})]})
    (feat-option
       {:name "Sentinel"
        :icon "guards"
        :page 169
-       :summary "reduce target's speed to 0 when you hit with opportunity attack; opportunity attacks even when target Disengages; use reaction to make a weapon attack against a creature within 5 ft. that attacks another target"})
+       :exclude-trait? true
+       :summary "reduce target's speed to 0 when you hit with opportunity attack; opportunity attacks even when target Disengages; use reaction to make a weapon attack against a creature within 5 ft. that attacks another target"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Sentinel"
+                     :summary (str "\u2022 When you hit a creature with an opportunity attack, the creature's speed becomes 0 for the rest of the turn."
+                                   "\n\u2022 Creatures provoke opportunity attacks from you even if they take the Disengage action before leaving your reach."
+                                   "\n\u2022 When a creature within 5 feet of you makes an attack against a target other than you (and that target doesn't have this feat), you can use your reaction to make a melee weapon attack against the attacking creature.")})]})
    (feat-option
       {:name "Sharpshooter"
        :icon "bullseye"
        :page 170
-       :summary "no disadvantage for long range for ranged weapon attacks; ranged weapons ignore half and 3/4 cover; take -5 to ranged attack to gain +10 on damage"})
+       :exclude-trait? true
+       :summary "no disadvantage for long range for ranged weapon attacks; ranged weapons ignore half and 3/4 cover; take -5 to ranged attack to gain +10 on damage"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Sharpshooter"
+                     :summary (str "\u2022 Attacking at long range doesn't impose disadvantage on your ranged weapon attack rolls."
+                                   "\n\u2022 Your ranged weapon attacks ignore half cover and three-quarters cover."
+                                   "\n\u2022 Before you make an attack with a ranged weapon that you are proficient with, you can choose to take a -5 penalty to the attack roll. If the attack hits, you add +10 to the attack's damage.")})]})
    (feat-option
       {:name "Shield Master"
        :icon "attached-shield"
        :page 170
+       :exclude-trait? true
        :summary "when Attacking use bonus action to shove; add shield's AC bonus to saves that target just you and not incapacitated; use reaction to take no damage on a sucessful DEX save"
        :modifiers [(modifiers/bonus-action
                     {:name "Shield Master: Shove"
                      :page 170
-                     :summary "make a shove with shield when taking the Attack action"})
+                     :summary "If you take the Attack action on your turn, you can use a bonus action to try to shove a creature within 5 feet of you with your shield."})
+                   (modifiers/trait-cfg
+                    {:name "Shield Master: Single DEX Save"
+                     :page 170
+                     :summary "If you aren't incapacitated, you can add your shield's AC bonus to any Dexterity saving throw you make against a spell or other harmful effect that targets only you."})
                    (modifiers/reaction
                     {:name "Shield Master: DEX Save"
                      :page 170
-                     :summary "take no damage on successful DEX save for half damage"})]})
+                     :summary "If you are subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you can use your reaction to take no damage if you succeed on the saving throw, interposing your shield between yourself and the source of the effect."})]})
    (feat-option
       {:name "Skill Expert"
+       :exclude-trait? true
        :summary "increase ability by one; proficiency in one skill; expertise in one proficient skill"
        :selections [(ability-increase-selection character/ability-keys 1)
                     (skill-selection 1)
@@ -1863,6 +1999,7 @@
       {:name "Skilled"
        :icon "juggler"
        :page 170
+       :exclude-trait? true
        :summary "proficiency in three skills and/or tools"
        :selections [(skilled-selection "Skill/Tool 1")
                     (skilled-selection "Skill/Tool 2")
@@ -1871,18 +2008,34 @@
       {:name "Skulker"
        :icon "ghost-ally"
        :page 170
+       :exclude-trait? true
        :summary "try to hide when lightly obscured; when hiding, missing a ranged weapon attack doesn't reveal you; no disadvantage on Perception checks in dim light for sight"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Skulker"
+                     :summary (str "\u2022 You can try to hide when you are lightly obscured from the creature from which you are hiding."
+                                   "\n\u2022 When you are hidden from a creature and miss it with a ranged weapon attack, making the attack doesn't reveal your position."
+                                   "\n\u2022 Dim light doesn't impose disadvantage on your Wisdom (Perception) checks relying on sight.")})]
        :prereqs [(ability-prereq ::character/dex 13)]})
    (feat-option
     {:name "Slasher"
      :page 81
+     :exclude-trait? true
      :summary "increase STR or DEX by 1; when dealing slashing damage, reduce speed of target by 10 ft. until your next turn (once/turn); on critical dealing slashing damage, target has disadvantage on attacks until your next turn"
+     :modifiers [(modifiers/trait-cfg
+                  {:name "Slasher"
+                   :summary (str "\u2022 Once per turn when you hit a creature with an attack that deals slashing damage, you can reduce the speed of the target by 10 feet until the start of your next turn."
+                                 "\n\u2022 When you score a critical hit that deals slashing damage to a creature, you grievously wound it. Until the start of your next turn, the target has disadvantage on all attack rolls.")})]
      :selections [(ability-increase-selection [::character/str ::character/dex] 1)]})
    (feat-option
       {:name "Spell Sniper"
        :icon "laser-precision"
        :page 170
+       :exclude-trait? true
        :summary "attack spells have double range; ranged spells ignore half and 3/4 cover; learn a cantrip that requires an attack roll"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Spell Sniper"
+                     :summary (str "\u2022 When you cast a spell that requires you to make an attack roll, the spell's range is doubled."
+                                   "\n\u2022 Your ranged spell attacks ignore half cover and three-quarters cover.")})]
        :prereqs [can-cast-spell-prereq]
        :selections [(t/selection-cfg
                      {:name "Spell Sniper: Spell Class"
@@ -1897,13 +2050,16 @@
       {:name "Tavern Brawler"
        :icon "broken-bottle"
        :page 170
+       :exclude-trait? true
        :summary "increase STR or CON by 1; improvised weapon proficiency; d4 damage on unarmed strike; grapple as bonus action"
        :selections [(ability-increase-selection [::character/str ::character/con] 1 false)]
        :modifiers [(modifiers/weapon-proficiency :improvised)
-                   (modifiers/bonus-action
-                    {:name "Tavern Brawler: Grapple"
+                   (modifiers/trait-cfg
+                    {:name "Tavern Brawler"
                      :page 170
-                     :summary "attempt grapple when you hit with improvised weapon or unarmed strike"})]})
+                     :summary (str "\u2022 You are proficient with improvised weapons."
+                                   "\n\u2022 Your unarmed strike uses a d4 for damage."
+                                   "\n\u2022 When you hit a creature with an unarmed strike or an improvised weapon on your turn, you can use a bonus action to attempt to grapple the target.")})]})
    (feat-option
       {:name "Telekinetic"
        :exclude-trait? true
@@ -1912,26 +2068,37 @@
        :modifiers [(modifiers/spells-known 0 :mage-hand nil "Telekinetic")
                    (modifiers/trait-cfg
                     {:name "Telekinetic: Mage Hand"
-                     :summary "You learn the mage hand cantrip. You can cast it without somatic or verbal components and can make it invisible. If you already know the spell, its range increases by 30 ft."})
+                     :summary "You learn the mage hand cantrip. You can cast it without verbal or somatic components, and you can make the spectral hand invisible. If you already know this spell, its range increases by 30 feet when you cast it. Its spellcasting ability is the ability increased by this feat."})
                    (modifiers/bonus-action
                     {:name "Telekinetic: Shove"
-                     :summary (str "Telekinetically shove one creature you can see within 30 ft. 5 ft. away or toward you if it fails a DC " (?spell-save-dc ?telekinetic-ability) " STR save")})]})
+                     :summary (str "As a bonus action, you can try to telekinetically shove one creature you can see within 30 feet of you. When you do so, the target must succeed on a Strength saving throw (DC 8 + your proficiency bonus + the ability modifier of the score increased by this feat (" (?spell-save-dc ?telekinetic-ability) ")) or be moved 5 feet toward you or away from you. A creature can willingly fail this save.")})]})
    (feat-option
       {:name "Tough"
        :icon "defensive-wall"
        :page 170
+       :exclude-trait? true
        :summary "2 extra HPs per level"
-       :modifiers [(mods/modifier ?hit-point-level-bonus (+ 2 ?hit-point-level-bonus))]})
+       :modifiers [(mods/modifier ?hit-point-level-bonus (+ 2 ?hit-point-level-bonus))
+                   (modifiers/trait-cfg
+                    {:name "Tough"
+                     :summary "Your hit point maximum increases by an amount equal to twice your level when you gain this feat. Whenever you gain a level thereafter, your hit point maximum increases by an additional 2 hit points."})]})
    (feat-option
       {:name "War Caster"
        :icon "deadly-strike"
        :page 170
+       :exclude-trait? true
        :summary "adv. on CON saves for spell concentration; somatic components with weapons or shield in hand; cast 1 action single target spell as opportunity attack"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "War Caster"
+                     :summary (str "\u2022 You have advantage on Constitution saving throws that you make to maintain your concentration on a spell when you take damage."
+                                   "\n\u2022 You can perform the somatic components of spells even when you have weapons or a shield in one or both hands."
+                                   "\n\u2022 When a hostile creature's movement provokes an opportunity attack from you, you can use your reaction to cast a spell at the creature, rather than making an opportunity attack. The spell must have a casting time of 1 action and must target only that creature.")})]
        :prereqs [can-cast-spell-prereq]})
    (feat-option
       {:name "Weapon Master"
        :icon "sword-slice"
        :page 170
+       :exclude-trait? true
        :summary "increase STR or DEX by 1; proficiency with 4 weapons"
        :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)
                     (weapon-proficiency-selection-2 weapons/weapons-map {:choose 4 :options {:any true}})]})]
