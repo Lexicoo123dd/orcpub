@@ -1152,7 +1152,7 @@ You can call upon the hospitality of your people, and those allied with your tri
 
 (defn sunlight-sensitivity [page & [source]]
   {:name "Sunlight Sensitivity"
-   :summary "Disadvantage on attack and perception rolls when there's direct sunlight"
+   :summary "You have disadvantage on attack rolls and on Wisdom (Perception) checks that rely on sight when you, the target of your attack, or whatever you are trying to perceive is in direct sunlight."
    :source (or source :phb)
    :page 24})
 
@@ -1160,7 +1160,7 @@ You can call upon the hospitality of your people, and those allied with your tri
   (mod5e/trait-cfg
    {:name "Mask of the Wild"
     :page 24
-    :summary "Hide when lightly obscured by natural phenomena."}))
+    :summary "You can attempt to hide even when you are only lightly obscured by foliage, heavy rain, falling snow, mist, and other natural phenomena."}))
 
 (defn high-elf-cantrip-selection [spell-lists spells-map]
   (opt5e/spell-selection
@@ -1212,10 +1212,10 @@ You can call upon the hospitality of your people, and those allied with your tri
                       (mod5e/darkvision 120))}]
    :traits [{:name "Fey Ancestry"
              :page 23
-             :summary "advantage on charmed saves and immune to sleep magic"}
+             :summary "You have advantage on saving throws against being charmed, and magic can't put you to sleep"}
             {:name "Trance"
              :page 23
-             :summary "Trance 4 hrs. instead of sleep 8"}]})
+             :summary "Elves don't need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day. (The Common word for such meditation is 'trance.') While meditating, you can dream after a fashion; such dreams are actually mental exercises that have become reflexive through years of practice. After resting in this way, you gain the same benefit that a human does from 8 hours of sleep"}]})
 
 (defn high-elf-aoa-spell-selection [spell-lists spells-map spell-level prereq-level]
   (opt5e/spell-selection
@@ -1303,9 +1303,9 @@ You can call upon the hospitality of your people, and those allied with your tri
                            (mod5e/spells-known 2 :waterwalk ::char5e/int "Sea Elf" 5)]
                :weapon-proficiencies [:trident :glaive :net :rapier]
                :traits [{:name "Child of the Sea"
-                         :summary "Breathe air and water, resistance to cold damage"}
+                         :summary "You can breathe air and water, and you have resistance to cold damage"}
                         {:name "Friend of the Sea"
-                         :summary "Communicate simple ideas to any Beast that has a swimming speed. It can understand your words, though you have no special ability to understand it in return. You have a swimspeed equal to your walking speed"}]}
+                         :summary "Aquatic animals have an extraordinary affinity with your people. You can communicate simple ideas to any Beast that has a swimming speed. It can understand your words, though you have no special ability to understand it in return. Additionally, you have a swimspeed equal to your walking speed"}]}
               {:name "Snow Elf"
                ;; :abilities {::char5e/wis 1}
                :modifiers [(mod5e/damage-resistance :cold)
@@ -1323,16 +1323,18 @@ You can call upon the hospitality of your people, and those allied with your tri
                            (mod5e/spells-known 2 :warding-wind ::char5e/wis "Snow Elf" 5)
                            (mod5e/reaction
                             {:name "Freezing Breeze"
-                             :summary (str "Cause an enemy within 20 ft. using their reaction to make a DC " (?spell-save-dc ::char5e/wis) " CON save, losing their reaction on a fail")})]
+                             :summary (str "By using a reaction against a creature using their reaction, you can cause a cold wind to blow around you, causing an enemy within 20 feet of you to shiver and make a constitution saving throw against DC 8 + Your Constitution + your Proficiency bonus ("
+                                           (?spell-save-dc ::char5e/con) "). On a failed save, the creature loses its reaction until the end of its turn. This feature works very similarly to the spell counterspell")})]
                :weapon-proficiencies [:longbow :morningstar :pike :whip]
                }
               ]
-   :traits [{:name "Fey Ancestry"
+   :traits [{:name "Magical Ancestry"
              :page 23
-             :summary "advantage on charmed saves and immune to sleep magic"}
+             :summary "You have advantage on saving throws against being charmed, and magic can’t put you to sleep"}
             {:name "Trance"
              :page 23
-             :summary "Trance 4 hrs. instead of sleep 8. After trance, gain proficiency with a weapon or tool"}]
+             :summary (str "Elves don’t need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day. (The Common word for such meditation is 'trance.') While meditating, you can dream after a fashion; such dreams are actually mental exercises that have become reflexive through years of practice. After resting in this way, you gain the same benefit that a human does from 8 hours of sleep."
+                           "\n\nWhenever you finish this trance, you can gain a proficiency that you don’t have, either with a weapon or a tool of your choice selected from the Player’s Handbook. You mystically acquire these proficiencies by drawing them from shared elven memory, and you retain them until you finish your next long rest")}]
    })
 
 (def genasi-option-cfg
@@ -1384,7 +1386,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                            (mod5e/spells-known 1 :feather-fall ::char5e/dex "Genasi" 3)
                            (mod5e/spells-known 2 :levitate ::char5e/dex "Genasi" 5)]
                :traits [{:name "Unending Breath"
-                         :summary "you can hold your breath indefinitely while not incapacitated"}]}
+                         :summary "You can hold your breath indefinitely while you’re not incapacitated"}]}
               {:name "Earth Genasi"
                ;; :abilities {::char5e/con 2 ::char5e/str 1}
                :speed 30
@@ -1405,7 +1407,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                              :frequency (units5e/long-rests ?prof-bonus)
                              :summary "Cast Blade Ward using a bonus action"})]
                :traits [{:name "Earth Walk"
-                         :summary "you can move across difficult terrain on the ground without expending extra movement if you"}]}
+                         :summary "You can move across difficult terrain without expending extra movement if you are using your walking speed on the ground or a floor"}]}
               {:name "Lightning Genasi"
                ;; :abilities {::char5e/con 2 ::char5e/cha 1}
                :speed 30
@@ -1424,7 +1426,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                            (mod5e/spells-known 1 :thunderwave ::char5e/cha "Genasi" 3)
                            (mod5e/spells-known 2 :kinetic-jaunt ::char5e/cha "Genasi" 5)]
                :traits [{:name "Lightning Adapted Hearing"
-                         :summary "you can't be deafened by magical means"}]}
+                         :summary "you cannot be blinded through magical means"}]}
               {:name "Water Genasi"
                ;; :abilities {::char5e/con 2 ::char5e/wis 1}
                :speed 30
@@ -1460,25 +1462,27 @@ You can call upon the hospitality of your people, and those allied with your tri
                (mod5e/bonus-action
                 {:name "Nimble Escape"
                  :frequency units5e/turns-1
-                 :summary "Take the Disengage or Hide action"})
+                 :summary "You can take the Disengage or Hide action as a bonus action on each of your turns"})
                (mod5e/dependent-trait
                 {:name "Fury of the Small"
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary (str "Once per turn, when you damage a larger creature with an attack or spell, deal " ?prof-bonus "extra damage")})]
+                 :summary (str "When you damage a creature with an attack or a spell and the creature’s size is larger than yours, you can cause the attack or spell to deal extra damage to the creature. The extra damage equals your proficiency bonus")})]
    :traits [{:name "Fey Ancestry"
-             :summary "advantage on charmed saves"}]
+             :summary "You have advantage on saving throws you make to avoid or end the charmed condition on yourself"}]
    :subraces [{:name "Forest Goblin"
                ;; :abilities {::char5e/dex 1 ::char5e/con 1}
                :modifiers [(mod5e/tool-proficiency :leatherworkers-tools)]
                :traits [{:name "Keen Hearing"
-                         :summary "Advantage on Perception checks that rely on hearing"}
+                         :summary "You have advantage on Perception checks that rely on hearing"}
                         {:name "Resourceful Hunter"
-                         :summary "During a short rest, use the corpse of a small or larger beast with usable materials to create a dagger, spear, light shield, or 1d6 arrows, darts, or blowing needles"}]}
+                         :summary "During a short rest, you can use the corpse of a small or larger beast with usable materials to create a dagger, spear, light shield, or 1d6 arrows, darts or blowing needles"}]}
               {:name "Desert Goblin"
                ;; :abilities {::char5e/str 1 ::char5e/con 1}
                :modifiers [(mod5e/damage-resistance :fire)]
                :traits [{:name "Shield Expert"
-                         :summary "You can carry a shield with the bulky property without a movement speed penalty. You can use shields one level above your proficient armor level"}]}
+                         :summary (str "Handling shields of all kinds in creative assaults, you can use them to their maximal potential."
+                                       "\n\nYou can carry a shield with the bulky property without a movement speed penalty."
+                                       "\n\nAdditionally, you can use shields of armour one level above the armours you are proficient with. (e.g If you are proficient with light and medium armour, you can use a heavy shield)")}]}
               {:name "Swamp Goblin"
                ;; :abilities {::char5e/con 1}
                :selections [
@@ -1492,7 +1496,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                               :max 1})]
                :modifiers [(mod5e/tool-proficiency :poisoners-kit)]
                :traits [{:name "Swamp Hunter"
-                         :summary "Advantage on Nature checks to extract poison from beasts"}]}
+                         :summary "You have advantage on Nature checks used to extract poison from a beasts"}]}
               {:name "Frost Goblin"
                ;; :abilities {::char5e/con 1 ::char5e/int 1}
                :modifiers [(mod5e/damage-resistance :cold)
@@ -1531,14 +1535,15 @@ You can call upon the hospitality of your people, and those allied with your tri
                              :level 3
                              :page 7
                              :source :mpmm
-                             :summary (str "Creatures other than allies within 10 ft. that you can see must succeed on a DC " (?spell-save-dc ::char5e/cha) " cha save or be frightened of you until the end of your next turn. For 1 minute, once per turn, deal an additional " ?prof-bonus " necrotic damage to one target you deal damage to with a spell or attack.")})]}
+                             :summary (str "Your eyes briefly become pools of darkness, and ghostly, flightless wings sprout from your back temporarily. Creatures other than your allies within 10 feet of you that can see you must succeed on a Charisma saving throw (DC 8 + your proficiency bonus + your Charisma modifier ["
+                                           (?spell-save-dc ::char5e/cha) "]) or become frightened of you until the end of your next turn. Until the transformation ends, once on each of your turns, you can deal extra necrotic damage to one target when you deal damage to it with an attack or a spell. The extra damage equals your proficiency bonus")})]}
               {:name "Radiant Consumption"
                :modifiers [(mod5e/bonus-action
                             {:name "Radiant Consumption"
                              :level 3
                              :page 7
                              :source :mpmm
-                             :summary (str "For 1 minute, shed 10 ft. bright light and 10 ft. dim light, deal " ?prof-bonus " radiant damage to each creature within 10 ft. at the end of your turn and once per turn, deal an additional " ?prof-bonus " radiant damage to one target you deal damage to with a spell or attack.")})]}
+                             :summary (str "Searing light temporarily radiates from your eyes and mouth. For the duration, you shed bright light in a 10-foot radius and dim light for an additional 10 feet, and at the end of each of your turns, each creature within 10 feet of you takes radiant damage equal to your proficiency bonus. Until the transformation ends, once on each of your turns, you can deal extra radiant damage to one target when you deal damage to it with an attack or a spell. The extra damage equals your proficiency bonus")})]}
               {:name "Radiant Soul"
                :modifiers [(mod5e/bonus-action
                             {:name "Radiant Soul"
@@ -1549,7 +1554,8 @@ You can call upon the hospitality of your people, and those allied with your tri
    :modifiers [(mod5e/action
                 {:name "Healing Hands"
                  :page 7
-                 :summary "Touch and heal a creature equal to your proficiency bonus d6 (use once/long rest)."})
+                 :frequency units5e/long-rests-1
+                 :summary "As an action, you can touch a creature and roll a number of d4s equal to your proficiency bonus. The creature regains a number of hit points equal to the total rolled. Once you use this trait, you can't use it again until you finish a long rest"})
                (mod5e/damage-resistance :necrotic)
                (mod5e/damage-resistance :radiant)
                (mod5e/spells-known 0 :light ::char5e/cha "Aasimar")]})
@@ -1577,7 +1583,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                :weapon-proficiencies [:battleaxe :flail :glaive :greataxe :greatsword :halberd :lance :longsword :maul :morningstar :pike :rapier :scimitar :shortsword :trident :war-pick :warhammer :whip :longbow]
                :modifiers [(mod5e/bonus-action
                             {:name "Charge"
-                            :summary "If you move at least 30 feet in a straight line, you can make an attack with your hooves or Dash"})]}
+                            :summary "If you move at least 30 feet in a straight line, you can make an attack with your hooves or take the Dash action as a bonus action"})]}
               {:name "Ovine"
                ;; :abilities {::char5e/con 2 ::char5e/dex 1}
                :size :medium
@@ -1586,7 +1592,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                :profs {:skill-options {:choose 1 :options {:animal-handling true :athletics true :perception true :nature true :survival true}}}
                :modifiers [(mod5e/tool-proficiency :weavers-tools)]
                :traits [{:name "Soft Pelt"
-                        :summary "Resistance to bludgeoning damage from melee weapon attacks while not wearing heavy armor"}]
+                        :summary "You have resistance to bludgeoning damage from weapon attacks while not wearing heavy armor"}]
                :selections [(t/selection-cfg
                              {:name "Tool Proficiencies"
                               :tags #{:profs}
@@ -1604,9 +1610,10 @@ You can call upon the hospitality of your people, and those allied with your tri
                        :tool {:masons-tools true}
                        :skill-options {:choose 1 :options {:acrobatics true :perception true :nature true :survival true}}}
                :traits [{:name "Skilled Climber"
-                         :summary "Unlike other centaurs, climbing does not cost you the extra feet. Climbing speed equals walking speed if the climb is less than 90 degrees with minimal footing"}
+                         :summary "You have a climbing speed equal to your walking speed as long as the climb is not 90 degrees or more and provides a minimal amount of footing (Not completely smooth surface)"}
                         {:name "Evasive Bounce"
-                         :summary "If you move at least 10 feet towards an enemy in a straight line and make a melee weapon attack, you can bounce off the enemy and move yourself 5 feet away from them without provoking opportunity attacks.\nYou can only bounce away toward where you came from and only once off the same target."}]}
+                         :summary (str "If you move at least 10 feet towards an enemy in a straight line and make a melee weapon attack, you can bounce off the enemy and move yourself 5 feet away from them without provoking opportunity attacks."
+                                       "\n\nYou can only bounce away toward where you came from and only once off the same target.")}]}
               {:name "Cervine"
                ;; :abilities {::char5e/dex 1 ::char5e/con 1 ::char5e/wis 1}
                :size :medium
@@ -1616,9 +1623,10 @@ You can call upon the hospitality of your people, and those allied with your tri
                        :skill-options {:choose 1 :options {:acrobatics true :athletics true :perception true :stealth true :medicine true}}}
                :modifiers [(mod5e/spells-known 2 :locate-animals-or-plants ::char5e/wis "Cervine Centaur")]
                :traits [{:name "Connection to the Wilds"
-                        :summary "You can cast Locate Animals or Plants at will with a radius of 500 ft., 5 miles if cast as a Ritual"}
+                        :summary "You can cast Locate Animals or Plants at will with a radius of 500 feet, or 5 miles if cast as a Ritual"}
                        {:name "Undergrowth Mobility"
-                        :summary "Treat difficult terrain created by plants as regular terrain, magical or not.\n   In terrain with plants of medium size or larger nearby, whether creature or part of the surroundings, you can Hide behind them with a bonus action"}]
+                        :summary (str "You can treat difficult terrain created by plants as regular terrain, magical or not."
+                                      "\n\nIn terrain with plants of medium size or larger nearby, whether creature or part of the surroundings, you can take the Hide action behind them as a bonus action")}]
                :selections [(opt5e/cantrip-selection :druid "Cervine Centaur" ::char5e/wis 1)]
               }
               ]})
@@ -1639,8 +1647,8 @@ You can call upon the hospitality of your people, and those allied with your tri
    :modifiers [(mod5e/action
                 {:name "Shapechanger"
                  :page 10
-                 :summary "you change your appearance and your voice. You determine the specifics of the changes, including your coloration, hair length, and sex. You can also adjust your height between Medium and Small. You can make yourself appear as a member of another race, though none of your game statistics change. You can't duplicate the appearance of an individual you've never seen, and you must adopt a form that has the same basic arrangement of limbs that you have. Your clothing and equipment aren't changed by this trait.
-                 You stay in the new form until you use an action to revert to your true form or until you die."})]})
+                 :summary (str "As an action, you change your appearance and your voice. You determine the specifics of the changes, including your coloration, hair length, and sex. You can also adjust your height between Medium and Small. You can make yourself appear as a member of another race, though none of your game statistics change. You can't duplicate the appearance of an individual you've never seen, and you must adopt a form that has the same basic arrangement of limbs that you have. Your clothing and equipment aren't changed by this trait."
+                               "\n\nYou stay in the new form until you use an action to revert to your true form or until you die.")})]})
 
 (defn duergar-magic-option [ability]
   [(mod5e/spells-known 2 :enlarge-reduce ability "Duergar" 3)
@@ -1682,9 +1690,9 @@ You can call upon the hospitality of your people, and those allied with your tri
                              {:name "Charisma"
                               :modifiers (duergar-magic-option ::char5e/cha)})]})]
    :traits [{:name "Dwarven Resilience"
-             :summary "Advantage on poison saves, resistance to poison damage"}
+             :summary "You have advantage on saving throws you make to avoid or end the poisoned condition on yourself. You also have resistance to poison damage"}
             {:name "Psionic Fortitude"
-             :summary "Advantage on saves against charmed or stunned"}]})
+             :summary "You have advantage on saving throws you make to avoid or end the charmed or stunned condition on yourself"}]})
 
 (def dwarf-option-cfg
   {:name "Dwarf",
@@ -1699,10 +1707,10 @@ You can call upon the hospitality of your people, and those allied with your tri
    :weapon-proficiencies [:handaxe :battleaxe :light-hammer :warhammer]
    :selections [(opt5e/tool-selection [:smiths-tools :brewers-supplies :masons-tools] 1)]
    :traits [{:name "Dwarven Resilience"
-             :summary "Advantage on poison saves, resistance to poison damage"
+             :summary "You have advantage on saving throws against poison, and you have resistance against poison damage"
              :page 20},
             {:name "Stonecunning"
-             :summary "2X prof bonus on stonework-related history checks"
+             :summary "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus"
              :page 20}]
    :subraces [{:name "Hill Dwarf",
                ;; :abilities {::char5e/wis 1}
@@ -1728,7 +1736,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                                                 (>= lvl 5) (conj "Invisibility"))))
                                           " on yourself once per day while not in direct sunlight, without needing material components. INT is your spellcasting ability.")})]
                :traits [{:name "Duergar Resilience"
-                         :summary "Advantage on saving throws against illusions, being charmed and paralyzed."}
+                         :summary "You have advantage on saving throws against poison, and you have resistance against poison damage. You also have advantage on saving throws against illusions and against being charmed or paralyzed"}
                         (sunlight-sensitivity 81)]}]
    :modifiers [(mod5e/damage-resistance :poison)
                (mod5e/saving-throw-advantage [:poisoned])]})
@@ -1746,10 +1754,10 @@ You can call upon the hospitality of your people, and those allied with your tri
                (mod5e/reaction
                 {:name "Stone's Endurance"
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary (str "When you take damage, reduce the damage taken by 1d12+" (?ability-bonuses ::char5e/con))})]
+                 :summary (str "You can supernaturally draw on unyielding stone to shrug off harm. When you take damage, you can use your reaction to roll a d12. Add your Constitution modifier to the number rolled and reduce the damage by that total")})]
    :traits [(powerful-build 21)
             {:name "Mountain Born"
-             :summary "You have resistance to cold damage. You also naturally acclimate to high altitudes, including elevations above 20,000 feet."}]})
+             :summary "You have resistance to cold damage. You also naturally acclimate to high altitudes, even if you've never been to one. This includes elevations above 20,000 feet"}]})
 
 (defn halfling-option-cfg [spell-lists spells-map]
   {:name "Halfling"
@@ -1766,17 +1774,17 @@ You can call upon the hospitality of your people, and those allied with your tri
      ;; :abilities {::char5e/cha 1}
      :traits [{:name "Naturally Stealthy"
                :page 28
-               :summary "Can attempt to hide behind creatures larger than you"}]}
+               :summary "You can attempt to hide even when you are obscured only by a creature that is at least one size larger than you"}]}
     {:name "Stout"
      ;; :abilities {::char5e/con 1}
      :modifiers [(mod5e/damage-resistance :poison)
                  (mod5e/saving-throw-advantage [:poisoned])]
      :traits [{:name "Stout Resilience"
-               :summary "Advantage on poison saves, resistance to poison damage"}]}
+               :summary "You have advantage on saving throws against poison, and you have resistance against poison damage"}]}
     {:name "Ghostwise"
     ;;  :abilities {::char5e/wis 1}
      :traits [{:name "Silent Speech"
-               :summary "Speak telepathically to any creature within 30 ft. which only understands you if you share a language. Only works on one creature at a time."}]}
+               :summary "You can speak telepathically to any creature within 30 feet of you. The creature understands you only if the two of you share a language. You can speak telepathically in this way to one creature at a time"}]}
     {:name "Lotusden"
      ;; :abilities {::char5e/wis 1}
      :modifiers [(mod5e/spells-known 0 :druidcraft ::char5e/wis "Lotusden Halfling")
@@ -1802,18 +1810,18 @@ You can call upon the hospitality of your people, and those allied with your tri
                  (opt5e/subrace-spells-known spell-lists spells-map "Mark of Hospitality" 1 5)))
      :selections (opt5e/subrace-spell-selections spell-lists spells-map "Mark of Hospitality" 1 5)
      :traits [{:name "Ever Hospitable"
-               :summary "Add 1d4 to any Persuasion check and ability checks involving Brewer's Tools or Cook's Utensils."}
+               :summary "When you make a Charisma (Persuasion) check or an ability check involving brewer's supplies or cook's utensils, you can roll a d4 and add the number rolled to the ability check"}
               {:name "Innkeeper's Magic"
-               :summary "You know prestidigitation and can cast Purify Foods and Drink and Unseen Servant once per long rest. Cha is your spellcasting ability."}]}]
+               :summary "You know the prestidigitation cantrip. You can also cast the purify food and drink and unseen servant spells with this trait. Once you cast either spell with this trait, you can't cast that spell with it again until you finish long rest. Charisma is your spellcasting ability for these spells"}]}]
    :traits [{:name "Lucky"
              :page 28
-             :summary "Reroll 1s on d20 once"}
-            {:name "Nimble"
+             :summary "When you roll a 1 on an attack roll, ability check, or saving throw, you can reroll the die and must use the new roll"}
+            {:name "Halfling Nimbleness"
              :page 28
-             :summary "Move through the space of creatures larger than you"}
+             :summary "You can move through the space of any creature that is of a size larger than yours"}
             {:name "Brave"
              :page 28
-             :summary "you have advantage on saves against being frightened"}]})
+             :summary "You have advantage on saving throws against being frightened"}]})
 
 ;; (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 1]) 0)
 ;;                  (opt5e/race-spell-selection spell-lists spells-map (get-in sl5e/subrace-spell-lists ["Mark of Hospitality" 1 2]) 0)
@@ -1898,12 +1906,16 @@ You can call upon the hospitality of your people, and those allied with your tri
              :summary "You have advantage on saves against being charmed"}]
    :modifiers [(mod5e/saving-throw-advantage [:charmed])
                (mod5e/bonus-action
-                {:name "Fox Spirit"
-                 :summary (str "Hide or reveal your vulpine features (ears, tails). Spells like detect magic can discern that you are hiding something. Your features are revealed if unconcious. While revealed, your spell save DC for any spells that cause the charmed condition is increased by +" (max 1 (int (/ ?total-levels 4))) ".\n  You can speak with foxes as if affected by the spell speak with animals")})
+                {:name "Kitsune Ancestry"
+                 :summary (str "You possess Kitsune like features, which mostly include fox ears and a tail. You can hide/reveal these by using a bonus action. Spells like Detect Magic are able to discern that you are hiding something with illusion magic and when you drop unconcious or die, your Kitsune features are revealed if hidden previously."
+                               "\n\nWhile your true form with ears and tails is revealed, your Spellsave DC for spells that cause the charmed condition is calculated as 8 + Spellcasting Modifier + Proficiency Bonus + your Character level/4 (minimum of 1)."
+                               "\n\nAdditionally, you can speak with foxes like under the influence of the Speak with Animals spell.")})
                (mod5e/dependent-trait
                 {:name "Kitsune Magic"
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary (str "You have " ?prof-bonus " charges to cast disguise self, misty step, and a modified modify memory. Each casting costs one charge and you regain one charge after a long rest. This modify memory can only affect the target's memory of an event within the last 10 minutes that lasted max 1 minute. You choose INT, WIS, or CHA as your spellcasting ability for these spells")})
+                 :summary (str "You get charges equal to your proficiency bonus with which you can cast a list of spells. All these spells pull from the same charges, so you can cast any combination of these spells only an amount equal to your proficiency bonus. You regain one charge of this feature upon finishing a long rest (At most = Proficiency Bonus)."
+                               "\n\nThe Spells are Disguise Self and Misty Step. Additionally, you get access to a special weaker variant of Modify Memory, which you can cast only with this feature."
+                               "\n\nThe changes of this Modify Memory are that you can only affect the target’s memory of an event that happened within the last 10 minutes that lasted no longer than 1 minute. You choose if your spellcasting ability for these spells is Intelligence, Wisdom or Charisma while creating your character.")})
                (mod5e/spells-known 1 :disguise-self nil "Kitsune")
                (mod5e/spells-known 2 :misty-step nil "Kitsune")
                (mod5e/spells-known 5 :modify-memory nil "Kitsune")]
@@ -1925,22 +1937,24 @@ You can call upon the hospitality of your people, and those allied with your tri
    :speed 30
    :languages ["Common" "Lamia"]
    :profs {:armor {:light true}
-           :weapon {:scimitar true :glaive true :halberd true :lance true :pike true :whip true}}
+           :weapon {:scimitar true}}
   ;;  :selections [(opt5e/ability-increase-selection [::char5e/str ::char5e/dex] 1 true)]
    :modifiers [(mod5e/damage-resistance :poison)
                (mod5e/saving-throw-advantage [:poisoned])
                (mod5e/dependent-trait
                 {:name "Frightening Gaze"
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary (str "A target that can see you has to make a DC " (?spell-save-DC ::char5e/cha) " WIS Save or be frightened of you"
+                 :summary (str "You can try to frighten a target within 30 feet with your gaze. The target must make a Wisdom Save against 8 + your proficiency bonus + your Charisma modifier. (DC " (?spell-save-DC ::char5e/cha) "). On a failed save, the target is frightened of you"
                            (common/bonus-str 
                             (condp <= ?total-levels 5 
-                             ", and have its movement speed reduced to 0 if it fails by 5 or more" ""))
-                 ". The target can repeat the save at the end of its turns. A target that has succeeded on the save is immune for 24 hours.")})]
+                             ", and has its movement speed reduced to 0 for it's next turn if it fails by 5 or more" ""))
+                 ". The target must be able to see you, otherwise they automatically suceed the save. The target can repeat the save at the end of its turns. Once the target has succeeded on a save against this effect, it's immune against it for 24 hours.")})]
    :traits [{:name "Tremor Sense"
-             :summary "You have tremorsense of 15 ft. Advantage on perception checks for feeling things through the ground."}
+             :summary "You have tremorsense of 15 feet. You have advantage on perception checks for feeling things through the ground."}
             {:name "Cold Blooded Anatomy"
-             :summary "Advantage on poison saves, resistance to poison damage. You can survive 3 times longer without good or drink. When in 0 degrees or lower or when hit by cold damage, your movement speed is halved until the end of your next turn."}]})
+             :summary (str "You have resistance to poison damage and advantage on saving throws against being poisoned."
+                           "\n\nAdditionally, you can survive 3 times longer without food or drink than an average humanoid."
+                           "\n\nHowever, you have a susceptibility to the cold. When hit by cold damage or when in an environment of 0 degrees or lower, your movement speed is halved until the end of your next turn.")}]})
 
 (defn draconic-ancestry-option [{:keys [name breath-weapon]}]
   (t/option-cfg
@@ -2005,7 +2019,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                              :page 168
                              :source :egw
                              :frequency units5e/rests-1
-                             :summary (str "When you take damage from a creature in range of a weapon you are wielding, you can make an attack with the weapon against that creature.")})]}]
+                             :summary (str "When you take damage from a creature in range of a weapon you are wielding, you can use your reaction to make an attack against that creature.")})]}]
    :modifiers [(mod5e/attack
                 (let [breath-weapon ?draconic-ancestry-breath-weapon
                       damage-type (:damage-type breath-weapon)]
@@ -2043,25 +2057,21 @@ You can call upon the hospitality of your people, and those allied with your tri
    :modifiers [(mod5e/saving-throw-advantage [:magic] [::char5e/int ::char5e/wis ::char5e/cha])]
    :traits [{:name "Gnome Cunning"
              :page 37
-             :summary "Advantage on INT, WIS, and CHA saves against magic"}]
+             :summary "You have advantage on all Intelligence, Wisdom, and Charisma saves against magic"}]
    :subraces
    [{:name "Rock Gnome"
      ;; :abilities {::char5e/con 1}
      :modifiers [(mod5e/tool-proficiency :tinkers-tools)]
      :traits [{:name "Artificer's Lore"
                :page 37
-               :summary "Add 2X prof bonus on magical, alchemical, or technological item-related history checks."}
+               :summary "Whenever you make an Intelligence (History) check related to magical, alchemical, or technological items, you can add twice your proficiency bonus instead of any other proficiency bonus that may apply"}
               {:name "Tinker"
                :page 37
-               :summary "Using tinker's tools, you can spend 1 hour and 10 gp worth of materials to construct a Tiny clockwork device (AC 5, 1 hp). The device ceases to function after 24 hours (unless you spend 1 hour repairing it to keep the device functioning), or when you use your action to dismantle it; at that time, you can reclaim the materials used to create it. You can have up to three such devices active at a time. When you create a device, choose one of the following options:
-
-Clockwork Toy: This toy is a clockwork animal, monster, or person, such as a frog, mouse, bird, dragon, or soldier. When placed on the ground, the toy moves 5 feet across the ground on each of your turns in a random direction. It makes noises as appropriate to the creature it represents.
-
-Fire Starter: The device produces a miniature flame, which you can use to light a candle, torch, or campfire. Using the device requires your action.
-
-Music Box: When opened, this music box plays a single song at a moderate volume. The box stops playing when it reaches the song's end or when it is closed.
-
-May make other objects at the DM's discretion."}]}
+               :summary (str "You have proficiency with artisan tools (tinker's tools). Using those tools, you can spend 1 hour and 10 gp worth of materials to construct a Tiny clockwork device (AC 5, 1 hp). The device ceases to function after 24 hours (unless you spend 1 hour repairing it to keep the device functioning), or when you use your action to dismantle it; at that time, you can reclaim the materials used to create it. You can have up to three such devices active at a time. When you create a device, choose one of the following options:"
+                             "\n\u2022 Clockwork Toy. This toy is a clockwork animal, monster, or person, such as a frog, mouse, bird, dragon, or soldier. When placed on the ground, the toy moves 5 feet across the ground on each of your turns in a random direction. It makes noises as appropriate to the creature it represents."
+                             "\n\u2022 Fire Starter. The device produces a miniature flame, which you can use to light a candle, torch, or campfire. Using the device requires your action."
+                             "\n\u2022 Music Box. When opened, this music box plays a single song at a moderate volume. The box stops playing when it reaches the song's end or when it is closed."
+                             "\n\u2022 At your DM's discretion, you may make other objects with effects similar in power to these. The Prestidigitation cantrip is a good baseline for such effects.")}]}
     {:name "Forest Gnome"
      ;; :abilities {::char5e/dex 1}
      :modifiers [(mod5e/spells-known 0 :minor-illusion ::char5e/int "Forest Gnome")]
@@ -2071,8 +2081,9 @@ May make other objects at the DM's discretion."}]}
     {:name "Svirfneblin (Deep Gnome)"
      ;; :abilities {::char5e/dex 1}
      :darkvision 120
+     :languages ["Undercommon"]
      :traits [{:name "Stone Camouflage"
-               :summary "Advantage on Stealth checks to hide in rocky terrain."}]}]})
+               :summary "You have advantage on Stealth checks to hide in rocky terrain."}]}]})
 
 (defn deep-gnome-option-cfg [language-map]
   {:name "Deep Gnome"
@@ -2097,12 +2108,12 @@ May make other objects at the DM's discretion."}]}
                                 (cond-> []
                                   (>= lvl 3) (conj "Disguise Self")
                                   (>= lvl 5) (conj "Nondetection"))))
-                            " on yourself once per long rest without needing material components. You can also cast these using spell slots of the appropriate level. INT, WIS, or CHA is your spellcasting ability.")})
+                            " once per long rest without needing material components. You can also cast these using spell slots of the appropriate level. INT, WIS, or CHA is your spellcasting ability.")})
                (mod5e/action
                 {:name "Svirfneblin Camouflage"
                  :page 11
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary "Make a Stealth check with advantage"})]
+                 :summary "When you make a Stealth check, you can make the check with advantage"})]
    :traits [{:name "Gnome"
              :page 11
              :summary "You are considered a gnome for any prerequisite or effect that requires you to be a gnome."}]})
@@ -2125,7 +2136,7 @@ May make other objects at the DM's discretion."}]}
    :modifiers [(mod5e/saving-throw-advantage [:charmed])]
    :traits [{:name "Fey Ancestry"
              :page 39
-             :summary "advantage on charmed saves and immune to sleep magic"}]})
+             :summary "You have advantage on saving throws against being charmed, and magic can't put you to sleep"}]})
 
 ;; (opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/cha) 2 true)
 
@@ -2164,7 +2175,7 @@ May make other objects at the DM's discretion."}]}
                (mod5e/immunity :magical-sleep)]
    :traits [{:name "Magical Ancestry"
              :page 39
-             :summary "advantage on charmed saves and immune to sleep magic"}]})
+             :summary "You have advantage on saving throws against being charmed, and magic can't put you to sleep"}]})
 
 (def half-orc-option-cfg
   {:name "Half-Orc"
@@ -2180,21 +2191,21 @@ May make other objects at the DM's discretion."}]}
    :traits [{:name "Relentless Endurance"
              :page 41
              :frequency units5e/long-rests-1
-             :summary "Drop to 1 hp instead of being reduced to 0."}
+             :summary "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead"}
             {:name "Savage Attacks"
              :page 41
-             :summary "On critical hit with melee weapon attack, add additional damage dice roll"}]})
+             :summary "When you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage of the critical hit"}]})
 
 (def harpy-option-cfg
   {:name "Harpy"
    :key :harpy
    ;; :abilities {::char5e/dex 2}
    :custom-ability-scores true
+   :speed 30
    :languages ["Common" "Harpian"]
    :profs {:skill {:perception true}}
    :subraces [{:name "Eagle Harpy"
                :size :medium
-               :speed 30
                ;; :abilities {::char5e/str 1}
                :modifiers [(mod5e/flying-speed-override 45)
                            (mod5e/attack
@@ -2205,9 +2216,10 @@ May make other objects at the DM's discretion."}]}
                              :damage-die-count 1
                              :damage-modifier (if (= (?class-level :monk) 0) (::char5e/str ?ability-bonuses) (max (::char5e/str ?ability-bonuses) (::char5e/dex ?ability-bonuses)))})]
                :traits [{:name "Flight"
-                         :summary "Fly speed of 45 ft. You can't fly if you're wearing medium or heavy armor or have a weapon with the two-handed property equipped. You cannot cast spells that use somatic components or reload weapons with the reload property while flying."}
+                         :summary (str "You have a fly speed of 45 feet. If the walking speed is reduced to 0 in any way, your fly speed also becomes 0."
+                                       "\n\nYou can’t fly if you are wearing medium or heavy armour and you cannot cast spells that use somatic components or have a weapon with the two-handed property equipped. For versatile weapons, you can only use the 1 handed option. Weapons with the Reload Property can’t be reloaded while flying")}
                         {:name "Harpy Flyby"
-                         :summary "When you hit an an enemy within 5 ft. of you while flying, you don't provoke opportunity attacks from that enemy."}]}
+                         :summary "When you hit an enemy within 5 feet of you while flying, you don’t provoke opportunity attacks from that enemy for the rest of the turn"}]}
                {:name "Owl Harpy"
                 :sizes [:small :medium]
                 :darkvision 120
@@ -2231,9 +2243,10 @@ May make other objects at the DM's discretion."}]}
                 ;;                           {:name "Medium"
                 ;;                             :modifiers [(mod5e/size :medium)]})]})]
                 :traits [{:name "Flight"
-                          :summary "Fly speed of 30 ft. You can't fly if you're wearing medium or heavy armor or have a weapon with the two-handed property equipped. You cannot cast spells that use somatic components or reload weapons with the reload property while flying."}
+                          :summary (str "You have a fly speed of 30 feet. If the walking speed is reduced to 0 in any way, your fly speed also becomes 0."
+                                        "\n\nYou can’t fly if you are wearing medium or heavy armour and you cannot cast spells that use somatic components or have a weapon with the two-handed property equipped. For versatile weapons, you can only use the 1 handed option. Weapons with the Reload Property can’t be reloaded while flying")}
                          {:name "Dampening Feathers"
-                          :summary "Advantage on Stealth checks while gliding. While gliding, you descend 5 ft. for every 15 ft. flown horizontally."}]}]})
+                          :summary "While you are gliding, your wings don’t make any noise, giving you advantage on Stealth checks that rely on you not making noise. While gliding, you descend 5 feet down for every 15 feet flown horizontally"}]}]})
 
 (def hobgoblin-option-cfg
   {:name "Hobgoblin"
@@ -2245,21 +2258,21 @@ May make other objects at the DM's discretion."}]}
    :modifiers [(mod5e/bonus-action
                 {:name "Commander's Gift"
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary (str "Take the help action." 
+                 :summary (str "You can use this trait to take the Help action as a bonus action, and you can do so a number of times equal to your proficiency bonus. You regain all expended uses when you finish a long rest."
                            (common/bonus-str 
                             (condp <= ?total-levels 3 
                              (str " Choose one of the following options when using this trait:"
-                                  "\n   Hospitality. You and the creature you help each gain 1d6+" ?prof-bonus " temp HP."
+                                  "\n   Hospitality. You and the creature you help each gain a number of temporary hit points equal to 1d6 plus your proficiency bonus."
                                   "\n   Passage. You and the creature you help each get +10 walking speed until the start of your next turn."
-                                  "\n   Spite. Until the start of your next turn, the first target the creature you help hits with an attack has disadvantage on on the next attack it makes within the next minute.") "")))})
+                                  "\n   Spite. Until the start of your next turn, the first time the creature you help hits a target with an attack roll, that target has disadvantage on the next attack roll it makes within the next minute.") "")))})
                (mod5e/dependent-trait
                 {:name "Army Advantage"
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary "If you miss with an attack or fail an ability check or a saving throw, gain a bonus to the roll equal to the number of allies you can see within 30 ft. of you (max +3)."})]
+                 :summary "If you miss with an attack roll or fail an ability check or a saving throw, you can draw on your bonds of reciprocity to gain a bonus to the roll equal to the number of allies you can see within 30 feet of you (maximum bonus of +3)"})]
    :subraces [{:name "Forest Tribe"
                :modifiers [(mod5e/trait-cfg
                             {:name "Forest Tribe Bonus"
-                             :summary "You can cast animal friendship at will. WIS is the spellcasting ability. A creature targeted by this trait is then immune to it for the next 24 hours."})
+                             :summary "You can cast animal friendship at will. Wisdom is your spell casting ability for this spell. If the target of the spell succeed's on the save or the spell otherwise ends on the target, then the target is immune to your animal friendship for 24 hours."})
                            (mod5e/spells-known 1 :animal-friendship ::char5e/wis "Hobgoblin")]}
               {:name "Rock Tribe"
                :modifiers [(mod/vec-mod ?unarmored-defense :hobgoblin)
@@ -2275,7 +2288,8 @@ May make other objects at the DM's discretion."}]}
                :modifiers [(mod5e/armor-proficiency :shields)
                            (mod5e/damage-resistance :fire)]
                :traits [{:name "Desert Tribe Bonus"
-                         :summary "You can ignore the bulky property of shields"}]}
+                         :summary (str "You are proficient with light, medium and heavy shields and can ignore the bulky property on shields."
+                                       "\n  Additionally, you have resistance to fire damage.")}]}
               {:name "Frost Tribe"
                :modifiers [(mod5e/weapon-proficiency :crossbow-hand)
                            (mod5e/weapon-proficiency :crossbow-light)
@@ -2342,14 +2356,14 @@ May make other objects at the DM's discretion."}]}
    :languages ["Common" "Lenuboon"]
    :modifiers [(mod5e/bonus-action
                 {:name "Dextrous Feet"
-                 :summary "Use your feet to manupulate an object, open or close a door or container, or pick up or set down a Tiny object"})
+                 :summary "As a bonus action, you can use your feet to manipulate an object, open or close a door or container, or pick up or set down a Tiny object"})
                (mod5e/reaction
                 {:name "Lenuboon Dodge"
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary (str "Reduce damage taken by 1d6+" ?prof-bonus)})
+                 :summary "When you take damage, you can use your reaction to reduce the damage you take by 1d6 plus your proficiency bonus (minimum of 0 damage)"})
                (mod5e/climbing-speed-equal-to-walking)]
    :traits [{:name "Glide"
-             :summary "When you fall and aren't incapacitated, subtract up to 100 ft. from fall damage, and move 3 ft. horizontally for every foot descended"}
+             :summary "You have stretchable membranes between your arms and legs, like a wingsuit, that you can use as wings to slow your fall or allow you to glide. When you fall and aren't incapacitated, you can subtract up to 100 feet from the fall when calculating falling damage, and you can move up to 3 feet horizontally for every 1 foot you descend"}
             {:name "Natural Climber"
              :summary "You have a climbing speed equal to your walking speed"}]
    })
@@ -2398,12 +2412,14 @@ May make other objects at the DM's discretion."}]}
                (mod/cum-sum-mod ?initiative ?prof-bonus)
                (mod5e/dependent-trait
                 {:name "Nimble Rabbit"
-                 :summary (str "Advantage on skill checks and saves that would cause you to become grappled, prone, or restrained. Initiative increases by " (common/bonus-str ?prof-bonus))})]
+                 :summary (str "You have advantage skill checks and saves that would cause you to become grappled, prone or restrained."
+                               "\n  Additionally, you add your proficiency to your initiative rolls")})]
                (opt5e/race-spells-known spell-lists spells-map "Lumini" 1 9)))
    :traits [{:name "Moon Jump"
-             :summary "High jump distance increases by 5 ft. and long jump by 10 ft."}
+             :summary "You can add +5 feet to any high jump and +10 feet to any long jump you perform"}
             {:name "Luminusborn"
-             :summary "As a spellcaster, you gain access to the graviturgy spell list.\n  You learn one 1st level spell from the graviturgy spell list, and can cast it for free once per long rest. WIS, INT, or CHA is your spellcasting ability for it."}]})
+             :summary (str "As a spellcaster, you gain access to the Graviturgy list of spells, and can learn a spell from this list in place of a spell from your regular spell list."
+                           "\n  Additionally, you learn one 1st level spell from the graviturgy spell list, and can cast it for free once per long rest. Wisdom, Intelligence, or Charisma is your spellcasting ability for this spell (choose when creating the character).")}]})
 
 (defn orc-option-cfg [language-map]
   {:name "Orc"
@@ -2420,11 +2436,11 @@ May make other objects at the DM's discretion."}]}
                 {:name "Adrenaline Rush"
                  :page 28
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary "Take the Dash action as a bonus action"})]
+                 :summary "You can take the Dash action as a bonus action. Whenever you use this trait, you gain a number of temporary hit points equal to your proficiency bonus"})]
    :traits [{:name "Relentless Endurance"
              :page 28
              :frequency units5e/long-rests-1
-             :summary "Drop to 1 hp instead of being reduced to 0"}
+             :summary "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead"}
             (powerful-build 28)]})
 
 (defn shifter-option-cfg [language-map]
@@ -2441,12 +2457,19 @@ May make other objects at the DM's discretion."}]}
    :subraces [{:name "Beasthide"
                :traits [{:name "Beasthide"
                          :page 32
-                         :summary "Gain 1d6 more temp HP when shifting. +1 AC while shifted"}]}
+                         :summary "You gain 1d6 additional temporary hit points. While shifted, you have a +1 bonus to your Armor Class"}]}
               {:name "Longtooth"
                :modifiers [(mod5e/bonus-action
                             {:name "Longtooth"
                              :page 32
-                             :summary (str "When shifting and then while shifted, make an unarmed strike with your fangs, dealing 1d6 + " (::char5e/str ?ability-bonuses) " piercing damage")})]}
+                             :summary "When you shift and as a bonus action on your other turns while shifted, you can use your elongated fangs to make an unarmed strike. If you hit with your fangs, you can deal piercing damage equal to 1d6 + your Strength modifier, instead of the bludgeoning damage normal for an unarmed strike"})
+                           (mod5e/attack
+                            {:name "Fangs"
+                             :attack-type :melee
+                             :damage-type :piercing
+                             :damage-die 6
+                             :damage-die-count 1
+                             :damage-modifier (if (= (?class-level :monk) 0) (::char5e/str ?ability-bonuses) (max (::char5e/str ?ability-bonuses) (::char5e/dex ?ability-bonuses)))})]}
               {:name "Swiftstride"
                :modifiers [(mod5e/bonus-action
                             {:name "Longtooth"
@@ -2455,12 +2478,12 @@ May make other objects at the DM's discretion."}]}
               {:name "Wildhunt"
                :traits [{:name "Wildhunt"
                          :page 32
-                         :summary "While shifted, advantage on WIS checks, and no creature within 30 ft. can attack with advantage against you unless incapacitated"}]}]
+                         :summary "While shifted, your walking speed increases by 10 feet. Additionally, you can move up to 10 feet as a reaction when a creature ends its turn within 5 feet of you. This reactive movement doesn’t provoke opportunity attacks"}]}]
    :modifiers [(mod5e/bonus-action
                 {:name "Shifting"
                  :page 32
                  :frequency (units5e/long-rests ?prof-bonus)
-                 :summary (str "Transform for 1 minute, until you die, or revert back. While shifted, gain " (* 2 ?prof-bonus) " temp HP")})]})
+                 :summary "As a bonus action, you can assume a more bestial appearance. This transformation lasts for 1 minute, until you die, or until you revert to your normal appearance as a bonus action. When you shift, you gain temporary hit points equal to 2 x your proficiency bonus"})]})
 
 (def tiefling-option-cfg
   {:name "Tiefling"
@@ -2475,7 +2498,7 @@ May make other objects at the DM's discretion."}]}
    :modifiers [(mod5e/trait-cfg
                 {:name "Hellish Resistance"
                  :page 43
-                 :summary "Resistance to fire damage"})
+                 :summary "You have resistance to fire damage"})
                (mod5e/damage-resistance :fire)]
    :subraces [{:name "Bloodline of Asmodeus"
                ;; :abilities {::char5e/int 1}
@@ -2488,7 +2511,7 @@ May make other objects at the DM's discretion."}]}
                                               (cond-> []
                                                 (>= lvl 3) (conj "Hellish Rebuke (2nd level)")
                                                 (>= lvl 5) (conj "Darkness"))))
-                                          " once per long rest. CHA is the spellcasting ability.")})
+                                          " once per long rest. Charisma is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
                            (mod5e/spells-known 1 :hellish-rebuke ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :darkness ::char5e/cha "Tiefling" 5)]}
@@ -2501,7 +2524,7 @@ May make other objects at the DM's discretion."}]}
                                               (cond-> []
                                                 (>= lvl 3) (conj "Ray of Sickness (2nd level)")
                                                 (>= lvl 5) (conj "Crown of Madness"))))
-                                          " once per long rest. CHA is the spellcasting ability.")})
+                                          " once per long rest. Charisma is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
                            (mod5e/spells-known 1 :ray-of-sickness ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :crown-of-madness ::char5e/cha "Tiefling" 5)]}
@@ -2514,7 +2537,7 @@ May make other objects at the DM's discretion."}]}
                                               (cond-> []
                                                 (>= lvl 3) (conj "Disguise Self")
                                                 (>= lvl 5) (conj "Detect Thoughts"))))
-                                          " once per long rest. CHA is the spellcasting ability.")})
+                                          " once per long rest. Charisma is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
                            (mod5e/spells-known 1 :disguise-self ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :detect-thoughts ::char5e/cha "Tiefling" 5)]}
@@ -2527,7 +2550,7 @@ May make other objects at the DM's discretion."}]}
                                               (cond-> []
                                                 (>= lvl 3) (conj "Charm Person (2nd level)")
                                                 (>= lvl 5) (conj "Suggestion"))))
-                                          " once per long rest. CHA is the spellcasting ability.")})
+                                          " once per long rest. Charisma is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :friends ::char5e/cha "Tiefling")
                            (mod5e/spells-known 1 :charm-person ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :suggestion ::char5e/cha "Tiefling" 5)]}
@@ -2540,7 +2563,7 @@ May make other objects at the DM's discretion."}]}
                                               (cond-> []
                                                 (>= lvl 3) (conj "Disguise Self")
                                                 (>= lvl 5) (conj "Invisibility"))))
-                                          " once per long rest. CHA is the spellcasting ability.")})
+                                          " once per long rest. Charisma is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :minor-illusion ::char5e/cha "Tiefling")
                            (mod5e/spells-known 1 :disguise-self ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :invisibility ::char5e/cha "Tiefling" 5)]}
@@ -2553,7 +2576,7 @@ May make other objects at the DM's discretion."}]}
                                               (cond-> []
                                                 (>= lvl 3) (conj "Armor of Agathys (2nd level)")
                                                 (>= lvl 5) (conj "Darkness"))))
-                                          " once per long rest. CHA is the spellcasting ability.")})
+                                          " once per long rest. Charisma is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :ray-of-frost ::char5e/cha "Tiefling")
                            (mod5e/spells-known 1 :armor-of-agathys ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :darkness ::char5e/cha "Tiefling" 5)]}
@@ -2565,8 +2588,8 @@ May make other objects at the DM's discretion."}]}
                                             (let [lvl ?total-levels]
                                               (cond-> []
                                                 (>= lvl 3) (conj "Tenser's Floating Disk")
-                                                (>= lvl 5) (conj "Arcane Lock (without M component)"))))
-                                          " once per long rest. CHA is the spellcasting ability.")})
+                                                (>= lvl 5) (conj "Arcane Lock (without Material component)"))))
+                                          " once per long rest. Charisma is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :mage-hand ::char5e/cha "Tiefling")
                            (mod5e/spells-known 1 :tensers-floating-disk ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :arcane-lock ::char5e/cha "Tiefling" 5)]}
@@ -2579,7 +2602,7 @@ May make other objects at the DM's discretion."}]}
                                               (cond-> []
                                                 (>= lvl 3) (conj "Burning Hands (2nd level)")
                                                 (>= lvl 5) (conj "Flame Blade"))))
-                                          " once per long rest. CHA is the spellcasting ability.")})
+                                          " once per long rest. Charisma is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :mage-hand ::char5e/cha "Tiefling")
                            (mod5e/spells-known 1 :burning-hands ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :flame-blade ::char5e/cha "Tiefling" 5)]}
@@ -2592,7 +2615,7 @@ May make other objects at the DM's discretion."}]}
                                               (cond-> []
                                                 (>= lvl 3) (conj "Searing Smite (2nd level)")
                                                 (>= lvl 5) (conj "Branding Smite"))))
-                                          " once per long rest. CHA is the spellcasting ability.")})
+                                          " once per long rest. Charisma is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :thaumaturgy ::char5e/cha "Tiefling")
                            (mod5e/spells-known 1 :searing-smite ::char5e/cha "Tiefling" 3)
                            (mod5e/spells-known 2 :branding-smite ::char5e/cha "Tiefling" 5)]}
@@ -2614,17 +2637,17 @@ May make other objects at the DM's discretion."}]}
               ;;  :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/str) 1)]
                :modifiers [(mod5e/trait-cfg
                             {:name "Devilish Resistance"
-                            :summary "Resistance to fire damage"})
+                            :summary "You have resistance to fire damage"})
                            (mod5e/damage-resistance :fire)
                            (mod5e/dependent-trait
                             {:name "Devil's Wrath"
-                            :summary (str "You know produce flame and can cast "
+                            :summary (str "You know Produce Flame and learn "
                                           (common/list-print
                                             (let [lvl ?total-levels]
                                               (cond-> []
                                                 (>= lvl 3) (conj "Searing Smite")
                                                 (>= lvl 5) (conj "Enhance Ability"))))
-                                          " once per long rest or use spell slots. STR is your spellcasting ability.")})
+                                          ", which you can cast once per long rest using this trait. Strength is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :produce-flame ::char5e/str "Tiefling")
                            (mod5e/spells-known 1 :searing-smite ::char5e/str "Tiefling" 3)
                            (mod5e/spells-known 2 :enhance-ability ::char5e/str "Tiefling" 5)]}
@@ -2634,17 +2657,17 @@ May make other objects at the DM's discretion."}]}
               ;;  :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/int) 1)]
                :modifiers [(mod5e/trait-cfg
                             {:name "Devilish Resistance"
-                            :summary "Resistance to cold damage"})
+                            :summary "You have resistance to cold damage"})
                            (mod5e/damage-resistance :cold)
                            (mod5e/dependent-trait
                             {:name "Devil's Knowledge"
-                            :summary (str "You know Frostbite and can cast "
+                            :summary (str "You know Frostbite and learn "
                                           (common/list-print
                                             (let [lvl ?total-levels]
                                               (cond-> []
-                                                (>= lvl 3) (conj "Detect Magic once or as a ritual")
-                                                (>= lvl 5) (conj "Borrowed Knowledge once"))))
-                                          ". You must finish a long rest to cast these again or use spell slots. INT is your spellcasting ability.")})
+                                                (>= lvl 3) (conj "Detect Magic (can be casted as a ritual)")
+                                                (>= lvl 5) (conj "Borrowed Knowledge"))))
+                                          ", which you can cast once per long rest using this trait. Intelligence is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :frostbite ::char5e/int "Tiefling")
                            (mod5e/spells-known 1 :detect-magic ::char5e/int "Tiefling" 3)
                            (mod5e/spells-known 2 :borrowed-knowledge ::char5e/int "Tiefling" 5)]}
@@ -2654,18 +2677,18 @@ May make other objects at the DM's discretion."}]}
               ;;  :selections [(opt5e/ability-increase-selection (disj (set char5e/ability-keys) ::char5e/str) 1)]
                :modifiers [(mod5e/trait-cfg
                             {:name "Devilish Resistance"
-                            :summary "Resistance to acid damage and advantage on saves against spells."})
+                            :summary "You have resistance to acid damage and advantage on saving throws against spells."})
                            (mod5e/damage-resistance :acid)
                            (mod5e/saving-throw-advantage [:spells])
                            (mod5e/dependent-trait
                             {:name "Devil's Dissent"
-                            :summary (str "You know Primal Savagery and can cast "
+                            :summary (str "You know Primal Savagery and learn "
                                           (common/list-print
                                             (let [lvl ?total-levels]
                                               (cond-> []
                                                 (>= lvl 3) (conj "Cause Fear")
                                                 (>= lvl 5) (conj "Hold Person"))))
-                                          " once per long rest or use spell slots. WIS is your spellcasting ability.")})
+                                          ", which you can cast once per long rest using this trait. Wisdom is your spellcasting ability for these spells.")})
                            (mod5e/spells-known 0 :primal-savagery ::char5e/wis "Tiefling")
                            (mod5e/spells-known 1 :cause-fear ::char5e/wis "Tiefling" 3)
                            (mod5e/spells-known 2 :hold-person ::char5e/wis "Tiefling" 5)]}]})
@@ -2696,7 +2719,7 @@ May make other objects at the DM's discretion."}]}
                                  [(= :tortle (first ?unarmored-defense))])
                (mod5e/action
                 {:name "Shell Defense"
-                 :summary "Withdraw into your shell. Until you emerge, you gain a +4 to your AC, and you have advantage on STR and CON saves. While in your shell, you are prone, your speed is 0 and can't increase, you have disadvantage on DEX saves, you can't take reactions, and the only action you can take is a bonus action to emerge from your shell."})]
+                 :summary "You can withdraw into your shell as an action. Until you emerge, you gain a +4 bonus to your AC, and you have advantage on Strength and Constitution saving throws. While in your shell, you are prone, your speed is 0 and can’t increase, you have disadvantage on Dexterity saving throws, you can’t take reactions, and the only action you can take is a bonus action to emerge from your shell"})]
   ;;  :selections [(opt5e/language-selection-aux (vals language-map) 1)
   ;;               (t/selection-cfg
   ;;                {:name "Size"
@@ -2710,7 +2733,7 @@ May make other objects at the DM's discretion."}]}
    :traits [{:name "Hold Breath"
              :summary "You can hold your breath for up to 1 hour."}
             {:name "Natural Armor"
-             :summary "You have a base armor of 17 (your Dex modifier doesn't affect this number). You can't wear light, medium, or heavy armor, but if you are using a shield, you can apply the shield's bonus as normal."}]
+             :summary "Your shell provides you a base AC of 17 (your Dexterity modifier doesn’t affect this number). You can’t wear light, medium, or heavy armor, but if you are using a shield, you can apply the shield’s bonus as normal"}]
    }
 )
 
