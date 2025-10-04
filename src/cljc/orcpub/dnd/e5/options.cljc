@@ -1541,6 +1541,17 @@
                      :summary "When you are wielding a finesse weapon with which you are proficient and another creature hits you with a melee attack, you can use your reaction to add your proficiency bonus to your AC for that attack, potentially causing the attack to miss you."})]
        :prereqs [(ability-prereq ::character/dex 13)]})
    (feat-option
+      {:name "Drow High Magic"
+       :exclude-trait? true
+       :summary "Learn detect magic and cast at will; learn levitate and dispel magic to cast once per long rest; CHA spellcasting ability"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Drow High Magic"
+                     :summary "You learn more of the magic typical of dark elves. You learn the detect magic spell and can cast it at will, without expending a spell slot. You also learn levitate and dispel magic, each of which you can cast once without expending a spell slot. You regain the ability to cast those two spells in this way when you finish a long rest. Charisma is your spellcasting ability for all three spells."})
+                   (modifiers/spells-known 1 :detect-magic ::character/cha "Drow High Magic")
+                   (modifiers/spells-known 2 :levitate ::character/cha "Drow High Magic")
+                   (modifiers/spells-known 3 :dispel-magic ::character/cha "Drow High Magic")]
+       :prereqs [(subrace-prereq "Elf (AoA)" "Dark Elf")]})
+   (feat-option
       {:name "Dual Wielder"
        :icon "rogue"
        :page 165
