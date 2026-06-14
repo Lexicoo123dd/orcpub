@@ -11,7 +11,8 @@ ADD ./ /orcpub
 RUN printenv &&\
 	lein uberjar
 
-FROM openjdk:8-jre-alpine as runner
+# FROM openjdk:8-jre-alpine as runner
+FROM eclipse-temurin:8-jre-alpine as runner
 MAINTAINER daemonsthere@gmail.com
 
 COPY --from=builder /orcpub/target/orcpub.jar /orcpub.jar
