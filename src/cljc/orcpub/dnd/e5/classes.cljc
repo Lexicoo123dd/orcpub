@@ -651,6 +651,35 @@
                                             "\n\u2022 You gain immunity to fire damage."
                                             "\n\u2022 While wearing heavy armor, you have resistance to bludgeoning, piercing, and slashing damage from nonmagical attacks.")}]}
 
+                 {:name "Knowledge Domain"
+                  :selections [(opt5e/language-selection-aux (vals language-map) 2)
+                               (opt5e/skill-expertise-selection [:arcana :history :nature :religion] 2)]
+                  :modifiers [(opt5e/cleric-spell 1 :command 1)
+                              (opt5e/cleric-spell 1 :identify 1)
+                              (opt5e/cleric-spell 2 :augury 3)
+                              (opt5e/cleric-spell 2 :suggestion 3)
+                              (opt5e/cleric-spell 3 :nondetection 5)
+                              (opt5e/cleric-spell 3 :speak-with-dead 5)
+                              (opt5e/cleric-spell 4 :arcane-eye 7)
+                              (opt5e/cleric-spell 4 :confusion 7)
+                              (opt5e/cleric-spell 5 :legend-lore 9)
+                              (opt5e/cleric-spell 5 :scrying 9)]
+                  :levels {2 {:modifiers [(mod5e/action
+                                           {:name "Channel Divinity: Knowledge of the Ages"
+                                            :summary "You can use your Channel Divinity to tap into a divine well of knowledge. As an action, you choose one skill or tool. For 10 minutes, you have proficiency with the chosen skill or tool."})]}
+                           6 {:modifiers [(mod5e/action
+                                           {:name "Channel Divinity: Read Thoughts"
+                                            :summary (str "You can use your Channel Divinity to read a creature's thoughts. You can then use your access to the creature's mind to command it."
+                                                          "\n\nAs an action, choose one creature that you can see within 60 feet of you. That creature must make a Wisdom saving throw. If the creature succeeds on the saving throw, you can't use this feature on it again until you finish a long rest."
+                                                          "\n\nIf the creature fails its save, you can read its surface thoughts (those foremost in its mind, reflecting its current emotions and what it is actively thinking about) when it is within 60 feet of you. This effect lasts for 1 minute."
+                                                          "\n\nDuring that time, you can use your action to end this effect and cast the Suggestion spell on the creature without expending a spell slot. The target automatically fails its saving throw against the spell.")})]}
+                           8 {:selections [(opt5e/potent-spellcasting-selection)]}
+                           17 {:modifiers [(mod5e/trait-cfg
+                                            {:name "Visions of the Past"
+                                             :summary (str "You can call up visions of the past that relate to an object you hold or your immediate surroundings. You spend at least 1 minute in meditation and prayer, then receive dreamlike, shadowy glimpses of recent events. You can meditate in this way for a number of minutes equal to your Wisdom score and must maintain concentration during that time, as if you were casting a spell."
+                                                           "\n\nOnce you use this feature, you can't use it again until you finish a short or long rest."
+                                                           "\n\nObject Reading. Holding an object as you meditate, you can see visions of the object's previous owner. After meditating for 1 minute, you learn how the owner acquired and lost the object, as well as the most recent significant event involving the object and that owner. If the object was owned by another creature in the recent past (within a number of days equal to your Wisdom score), you can spend 1 additional minute for each owner to learn the same information about that creature."
+                                                           "\n\nArea Reading. As you meditate, you see visions of recent events in your immediate vicinity (a room, street, tunnel, clearing, or the like, up to a 50-foot cube), going back a number of days equal to your Wisdom score. For each minute you meditate, you learn about one significant event, beginning with the most recent. Significant events typically involve powerful emotions, such as battles and betrayals, marriages and murders, births and funerals. However, they might also include more mundane events that are nevertheless important in your current situation.")})]}}}
                  {:name "Life Domain"
                   :profs {:armor {:heavy true}}
                   :modifiers [(opt5e/cleric-spell 1 :bless 1)
