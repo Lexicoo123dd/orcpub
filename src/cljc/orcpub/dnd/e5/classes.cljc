@@ -81,12 +81,18 @@
                                               6 4
                                               3 3
                                               2))
-                  :summary (str (if (>= (?class-level :barbarian) 7) "As part of the bonus action, move up to half your speed. ") "Advantage on Strength checks and saves; melee damage using strength bonus +"
+                  :summary (str "In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action."
+                                "\nWhile raging, you gain the following benefits if you aren't wearing heavy armor:"
+                                "\n\u2022 You have advantage on Strength checks and Strength saving throws."
+                                "\n\u2022 When you make a melee weapon attack using Strength, you gain a "
                                 (common/bonus-str (condp <= (?class-level :barbarian)
                                                     16 4
                                                     9 3
                                                     2))
-                                "; resistance to bludgeoning, piercing, and slashing damage; can't cast or concentrate on spells; ends early if knocked unconcious or if you haven't attacked a hostile creature or taken damage since your last turn")})]
+                                " bonus to the damage roll."
+                                "\n\u2022 You have resistance to bludgeoning, piercing, and slashing damage."
+                                "\n\nIf you are able to cast spells, you can't cast them or concentrate on them while raging."
+                                "\n\nYour rage lasts for 1 minute. It ends early if you are knocked unconscious or if your turn ends and you haven't attacked a hostile creature since your last turn or taken damage since then. You can also end your rage on your turn as a bonus action.")})]
     :levels {3 {:selections [(opt5e/skill-selection [:animal-handling :athletics :intimidation :nature :perception :survival] 1)]}
              5 {:modifiers [(extra-attack-trait 49)
                             (mod5e/num-attacks 2)
@@ -133,6 +139,9 @@
               :page 49
               :summary (str "Your instincts are so honed that you have advantage on initiative rolls"
                             "\n\nAdditionally, if you are surprised at the beginning of combat and aren't incapacitated, you can act normally on your first turn, but only if you enter your rage before doing anything else on that turn.")}
+             {:name "Instinctive Pounce"
+              :level 7
+              :summary "As part of the bonus action you take to enter your rage, you can move up to half your speed."}
              {:name "Relentless Rage"
               :level 11
               :page 49
