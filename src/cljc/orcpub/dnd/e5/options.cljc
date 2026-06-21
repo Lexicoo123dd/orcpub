@@ -1474,6 +1474,16 @@
                      :summary (str "\u2022 You have advantage on Charisma (Deception) and Charisma (Performance) checks when trying to pass yourself off as a different person."
                                    "\n\u2022 You can mimic the speech of another person or the sounds made by other creatures. You must have heard the person speaking, or heard the creature make the sound, for at least 1 minute. A successful Wisdom (Insight) check contested by your Charisma (Deception) check allows a listener to determine that the effect is faked.")})]})
    (feat-option
+      {:name "Bountiful Luck"
+       :exclude-trait? true
+       :summary "as a reaction, have an ally reroll a 1 on the d20 for an attack roll, ability check, or saving throw"
+       :modifiers [(modifiers/reaction
+                    {:name "Bountiful Luck"
+                     :summary (str "Your people have extraordinary luck, which you have learned to mystically lend to your companions when you see them falter. You're not sure how you do it; you just wish it, and it happens. Surely a sign of fortune's favor!"
+                                   "\n\nWhen an ally you can see within 30 feet of you rolls a 1 on the d20 for an attack roll, an ability check, or a saving throw, you can use your reaction to let the ally reroll the die. The ally must use the new roll."
+                                   "\n\nWhen you use this ability, you can't use your Lucky racial trait before the end of your next turn.")})]
+       :prereqs [(race-prereq ["Halfling"])]})
+   (feat-option
       {:name "Cartomancer"
        :exclude-trait? true
        :summary "learn prestidigitation and hide its components using conversation and card handling; imbue a card with a spell to cast it as a bonus action once"
@@ -1541,6 +1551,41 @@
                      :summary "When you are wielding a finesse weapon with which you are proficient and another creature hits you with a melee attack, you can use your reaction to add your proficiency bonus to your AC for that attack, potentially causing the attack to miss you."})]
        :prereqs [(ability-prereq ::character/dex 13)]})
    (feat-option
+      {:name "Dragon Fear"
+       :exclude-trait? true
+       :summary "increase STR, CON, or CHA by 1; use Breath Weapon to force each create of your choice within 30 ft. to make a WIS save or become frightened for 1 minute"
+       :modifiers [(modifiers/action
+                    {:name "Dragon Fear"
+                     :summary (str "Instead of exhaling destructive energy, you can expend a use of your Breath Weapon trait to roar, forcing each creature of your choice within 30 feet of you to make a Wisdom saving throw (DC 8 + your proficiency bonus + your Charisma modifier = " (?spell-save-dc ::character/cha) "). A target automatically succeeds on the save if it can't hear or see you. On a failed save, a target becomes frightened of you for 1 minute. If the frightened target takes any damage, it can repeat the saving throw, ending the effect on itself on a success.")})]
+       :selections [(ability-increase-selection [::character/str ::character/con ::character/cha] 1 false)]
+       :prereqs [(race-prereq ["Dragonborn" "Dragonborn (Standard)"])]})
+   (feat-option
+      {:name "Dragon Hide"
+       :exclude-trait? true
+       :summary "increase STR, CON, or CHA by 1; calculate AC as 13 + DEX; use claws for unarmed strikes, dealing 1d4 + STR slashing damage"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Dragon Hide"
+                     :summary (str "You manifest scales and claws reminiscent of your draconic ancestors. You gain the following benefits:"
+                                   "\n\u2022 Your scales harden. While you aren't wearing armor, you can calculate your AC as 13 + your Dexterity modifier. You can use a shield and still gain this benefit."
+                                   "\n\u2022 You grow retractable claws from the tips of your fingers. Extending or retracting the claws requires no action. The claws are natural weapons, which you can use to make unarmed strikes. If you hit with them, you deal slashing damage equal to 1d4 + your Strength modifier, instead of the normal bludgeoning damage for an unarmed strike.")})
+                   (mods/vec-mod ?unarmored-defense :dragon-hide)
+                   (mods/cum-sum-mod ?unarmored-ac-bonus 3
+                                    nil
+                                    nil
+                                    [(= :dragon-hide (first ?unarmored-defense))])
+                   (mods/cum-sum-mod ?unarmored-with-shield-ac-bonus 3
+                                    nil
+                                    nil
+                                    [(= :dragon-hide (first ?unarmored-defense))])
+                   (modifiers/attack
+                    {:name "Claws"
+                     :damage-die 4
+                     :damage-die-count 1
+                     :damage-modifier (?ability-bonuses ::character/str)
+                     :summary "Unarmed strike"})]
+       :selections [(ability-increase-selection [::character/str ::character/con ::character/cha] 1 false)]
+       :prereqs [(race-prereq ["Dragonborn" "Dragonborn (Standard)"])]})
+   (feat-option
       {:name "Drow High Magic"
        :exclude-trait? true
        :summary "Learn detect magic and cast at will; learn levitate and dispel magic to cast once per long rest; CHA spellcasting ability"
@@ -1601,6 +1646,14 @@
                      :summary (str "\u2022 When you roll a Hit Die to regain hit points, the minimum number of hit points you regain from the roll equals twice your Constitution modifier (minimum of 2) (" (max 2 (* 2 (?ability-bonuses ::character/con))) ")."
                                    "\n\u2022 You recover all hit die on a long rest instead of just half.")})]})
    (feat-option
+      {:name "Dwarven Fortitude"
+       :summary "increase CON by 1; when taking the dodge action, spend a Hit Die to heal yourself equal to the roll + CON"
+       :modifiers [(modifiers/ability ::character/con 1)
+                   (modifiers/trait-cfg
+                    {:name "Dwarven Fortitude"
+                     :summary "Whenever you take the Dodge action in combat, you can spend one Hit Die to heal yourself. Roll the die, add your Constitution modifier, and regain a number of hit points equal to the total (minimum of 1)."})]
+       :prereqs [(race-prereq ["Dwarf"])]})
+   (feat-option
       {:name "Elemental Adept"
        :icon "wind-hole"
        :page 166
@@ -1617,6 +1670,16 @@
                    :summary "Whenever you have advantage on an attack roll using Dexterity, Intelligence, Wisdom, or Charisma, you can reroll one of the dice once."})]
      :selections [(ability-increase-selection [::character/dex ::character/int ::character/wis ::character/cha] 1 false)]
      :prereqs [(race-prereq ["Elf" "Half-Elf" "Half-Elf (AoA)"])]})
+   (feat-option
+    {:name "Fade Away"
+     :exclude-trait? true
+     :summary "increase DEX or INT by 1; once per rest, use reaction to turn invisible after taking damage until the end of next turn, or until attacking, dealing damage, or forcing a saving throw"
+     :modifiers [(modifiers/reaction
+                  {:name "Fade Away"
+                   :frequency units5e/rests-1
+                   :summary "Immediately after you take damage, you can use a reaction to magically become invisible until the end of your next turn or until you attack, deal damage, or force someone to make a saving throw"})]
+     :selections [(ability-increase-selection [::character/dex ::character/int] 1 false)]
+     :prereqs [(race-prereq ["Gnome"])]})
    (feat-option
     {:name "Fey Touched"
      :exclude-trait? true
