@@ -2501,6 +2501,18 @@
                 :modifiers [(modifiers/tool-proficiency :thieves-tools)
                             (modifiers/tool-expertise :thieves-tools)]})]}))
 
+(defn artificer-spell [spell-level spell-key min-level]
+  (modifiers/spells-known-cfg
+   spell-level
+   {:key spell-key
+    :ability ::character/int
+    :class "Artificer"
+    :qualifier "Specialist"
+    :class-key :artificer
+    :always-prepared? true}
+   min-level
+   nil))
+
 (defn cleric-spell [spell-level spell-key min-level]
   (modifiers/spells-known-cfg
    spell-level
@@ -2589,7 +2601,8 @@
   (subclass-spell-selection spell-lists spells-map class-kw (if (= class-kw :warlock-int) "Warlock (Int)" "Warlock") spellcasting-ability spells 0))
 
 (def classes
-  {:bard "Bard"
+  {:artificer "Artificer"
+   :bard "Bard"
    :cleric "Cleric"
    :druid "Druid"
    :paladin "Paladin"
@@ -2600,7 +2613,8 @@
    :wizard "Wizard"})
 
 (def prepared-cantrip-classes
-  {:cleric "Cleric"
+  {:artificer "Artificer"
+   :cleric "Cleric"
    :druid "Druid"})
 
 (def unprepared-classes
@@ -2611,13 +2625,15 @@
    :wizard "Wizard"})
 
 (def prepared-classes
-  {:cleric "Cleric"
+  {:artificer "Artificer"
+   :cleric "Cleric"
    :druid "Druid"
    :paladin "Paladin"
    :ranger "Ranger"})
 
 (def class-prepares-spells?
-  {:bard false
+  {:artificer true
+   :bard false
    :cleric true
    :druid true
    :paladin true
@@ -2628,7 +2644,8 @@
    :wizard false})
 
 (def class-spellcasting-ability
-  {:bard ::character/cha
+  {:artificer ::character/int
+   :bard ::character/cha
    :cleric ::character/wis
    :druid ::character/wis
    :paladin ::character/cha
@@ -2639,7 +2656,8 @@
    :wizard ::character/int})
 
 (def class-level-factors
-  {:bard 1
+  {:artificer 4
+   :bard 1
    :cleric 1
    :druid 1
    :paladin 2
@@ -2653,6 +2671,7 @@
   {1 [1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 9 9]
    2 [0 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5]
    3 [0 0 1 1 1 1 2 2 2 2 2 2 3 3 3 3 3 3 4 4]
+   4 [1 1 1 1 2 2 2 2 3 3 3 3 4 4 4 4 5 5 5 5]
    5 [1 1 2 2 3 3 4 4 5 5 5 5 5 5 5 5 5 5 5 5]})
 
 (defn spell-level-prereq [spell-level class-key]
@@ -3190,6 +3209,16 @@
     :options (weapon-options (weapons/simple-weapons (vals weapon-map)))
     :min num
     :max num
+    :prereq-fn (first-class? class-kw)}))
+
+(defn simple-weapon-selection-numbered [n class-kw weapon-map]
+  (new-starting-equipment-selection
+   class-kw
+   {:name (str "Simple Weapon " n)
+    :tags #{:starting-equipment}
+    :options (weapon-options (weapons/simple-weapons (vals weapon-map)))
+    :min 1
+    :max 1
     :prereq-fn (first-class? class-kw)}))
 
 (defn weapon-option-2 [class-kw weapon-map [k num]]
@@ -3945,6 +3974,15 @@
      :tags #{:spells}}
     cfg)))
 
+(defn artificer-infusion-selection [cfg]
+  (t/selection-cfg
+   (merge
+    {:name "Artificer Infusions"
+     :multiselect? true
+     :ref [:class :artificer :artificer-infusions]
+     :tags #{:spells}}
+    cfg)))
+
 (def pact-of-the-tome-name "Pact Boon: Pact of the Tome")
 (def pact-of-the-chain-name "Pact Boon: Pact of the Chain")
 (def pact-of-the-blade-name "Pact Boon: Pact of the Blade")
@@ -4318,3 +4356,102 @@
                     :area-type :cone
                     :length 15
                     :save ::character/con}}])
+
+(defn artificer-infusion-options [spell-lists spells-map]
+   [(t/option-cfg
+     {:name "Arcane Propulsion Armor"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Arcane Propulsion Armor"
+                    :summary (str "Item: A suit of armor (requires attunement)"
+                    "\nThe wearer of this armor gains these benefits:"
+                    "\n\u2022 The wearer's walking speed increases by 5 feet."
+                    "\n\u2022 The armor includes gauntlets, each of which is a magic melee weapon that can be wielded only when the hand is holding nothing. The wearer is proficient with the gauntlets, and each one deals 1d8 force damage on a hit and has the thrown property, with a normal range of 20 feet and a long range of 60 feet. When thrown, the gauntlet detaches and flies at the attack's target, then immediately returns to the wearer and reattaches."
+                    "\n\u2022 The armor can't be removed against the wearer's will."
+                    "\n\u2022 If the wearer is missing any limbs, the armor replaces those limbs - hands, arms, feet, legs, or similar appendages. The replacements function identically to the body parts they replace.")})]})
+    (t/option-cfg
+      {:name "Armor of Magical Strength"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Infusion: Armor of Magical Strength"
+                     :summary (str "Item: A suit of armor (requires attunement)"
+                     "\nThis armor has 6 charges. The wearer can expend the armor's charges in the following ways:"
+                     "\n\u2022 When the wearer makes a Strength check or a Strength saving throw, it can expend 1 charge to add a bonus to the roll equal to its Intelligence modifier."
+                     "\n\u2022 If the creature would be knocked prone, it can use its reaction to expend 1 charge to avoid being knocked prone."
+                     "\nThe armor regains 1d6 expended charges daily at dawn.")})]})
+    (t/option-cfg
+     {:name "Boots of the Winding Path"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Boots of the Winding Path"
+                    :summary (str "Item: A pair of boots (requires attunement)"
+                    "\nWhile wearing these boots, a creature can teleport up to 15 feet as a bonus action to an unoccupied space the creature can see. The creature must have occupied that space at some point during the current turn.")})]})
+    (t/option-cfg
+     {:name "Enhanced Arcane Focus"
+      :modifiers [(modifiers/dependent-trait
+                   {:name "Infusion: Enhanced Arcane Focus"
+                    :summary (str "Item: A rod, staff or wand (requires attunement)"
+                    "\nWhile holding this item, a creature gains +" (if (>= (?class-level :artificer) 10) 2 1) " bonus to spell attack rolls. In addition, the creature ignores half cover when making a spell attack.")})]})
+    (t/option-cfg
+     {:name "Enhanced Defense"
+      :modifiers [(modifiers/dependent-trait
+                   {:name "Infusion: Enhanced Defense"
+                    :summary (str "Item: A suit of armor or a shield"
+                                  "\nA creature gains a +" (if (>= (?class-level :artificer) 10) 2 1) " bonus to Armor Class while wearing (armor) or wielding (shield) the infused item.")})]})
+    (t/option-cfg
+     {:name "Enhanced Weapon"
+      :modifiers [(modifiers/dependent-trait
+                   {:name "Infusion: Enhanced Weapon"
+                    :summary (str "Item: A simple or martial weapon"
+                                  "\nThis magic weapon grants a +" (if (>= (?class-level :artificer) 10) 2 1) " bonus to attack and damage rolls made with it.")})]})
+    (t/option-cfg
+     {:name "Helm of Awareness"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Helm of Awareness"
+                    :summary (str "Item: A helmet (requires attunement)"
+                                  "\nWhile wearing this helmet, a creature has advantage on initiative rolls. In addition, the wearer can’t be surprised, provided it isn’t incapacitated.")})]})
+    (t/option-cfg
+     {:name "Mind Sharpener"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Mind Sharpener"
+                    :summary (str "Item: A suit of armor or robes"
+                                  "\nThe infused item can send a jolt to the wearer to refocus their mind. The item has 4 charges. When the wearer fails a Constitution saving throw to maintain concentration on a spell, the wearer can use its reaction to expend 1 of the item's charges to succeed instead. The item regains 1d4 expended charges daily at dawn.")})]})
+    (t/option-cfg
+     {:name "Radiant Weapon"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Radiant Weapon"
+                    :summary (str "Item: A simple or martial weapon (requires attunement)"
+                                  "\nThis magic weapon grants a +1 bonus to attack and damage rolls made with it. While holding it, the wielder can take a bonus action to cause it to shed bright light in a 30-foot radius and dim light for an additional 30 feet. The wielder can extinguish the light as a bonus action."
+                                  "\n\nThe weapon has 4 charges. As a reaction immediately after being hit by an attack, the wielder can expend 1 charge and cause the attacker to be blinded until the end of the attacker's next turn, unless the attacker succeeds on a Constitution saving throw against your spell save DC. The weapon regains 1d4 expended charges daily at dawn.")})]})
+    (t/option-cfg
+     {:name "Repeating Shot"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Repeating Shot"
+                    :summary (str "Item: A simple or martial weapon with the ammunition property (requires attunement)"
+                                  "\nThis magic weapon grants a +1 bonus to attack and damage rolls made with it when it's used to make a ranged attack, and it ignores the loading property if it has it."
+                                  "\n\nIf the weapon lacks ammunition, it produces its own, automatically creating one piece of magic ammunition when the wielder makes a ranged attack with it. The ammunition created by the weapon vanishes the instant after it hits or misses a target.")})]})
+    (t/option-cfg
+     {:name "Repulsion Shield"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Repulsion Shield"
+                    :summary (str "Item: A shield (requires attunement)"
+                                  "\nA creature gains a +1 bonus to Armor Class while wielding this shield."
+                                  "\n\nThe shield has 4 charges. While holding it, the wielder can use a reaction immediately after being hit by a melee attack to expend 1 of the shield's charges and push the attacker up to 15 feet away. The shield regains 1d4 expended charges daily at dawn.")})]})
+    (t/option-cfg
+     {:name "Resistant Armor"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Resistant Armor"
+                    :summary (str "Item: A suit of armor (requires attunement)"
+                                  "\nWhile wearing this armor, a creature has resistance to one of the following damage types, which you choose when you infuse the item: acid, cold, fire, force, lightning, necrotic, poison, psychic, radiant, or thunder.")})]})
+    (t/option-cfg
+     {:name "Returning Weapon"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Returning Weapon"
+                    :summary (str "Item: A simple or martial weapon with the thrown property"
+                                  "\nThis magic weapon grants a +1 bonus to attack and damage rolls made with it, and it returns to the wielder’s hand immediately after it is used to make a ranged attack.")})]})
+    (t/option-cfg
+     {:name "Spell-Refueling Ring"
+      :modifiers [(modifiers/trait-cfg
+                   {:name "Infusion: Spell-Refueling Ring"
+                    :summary (str "Item: A ring (requires attunement)"
+                                  "\nWhile wearing this ring, the creature can recover one expended spell slot as an action. The recovered slot can be of 3rd level or lower. Once used, the ring can't be used again until the next dawn.")})]})
+    
+    ]
+  )

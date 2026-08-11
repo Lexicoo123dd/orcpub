@@ -2802,7 +2802,8 @@ You can call upon the hospitality of your people, and those allied with your tri
         (tortle-option-cfg language-map)]))))))
 
 (defn base-class-options [spell-lists spells-map plugin-subclasses-map language-map weapons-map invocations boons]
-  [(classes5e/barbarian-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
+  [(classes5e/artificer-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
+   (classes5e/barbarian-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
    (classes5e/bard-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
    (classes5e/cleric-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)
    (classes5e/druid-option spell-lists spells-map plugin-subclasses-map language-map weapons-map)

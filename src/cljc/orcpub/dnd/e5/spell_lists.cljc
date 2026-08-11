@@ -39,6 +39,19 @@
 
 (def phb-spell-lists
   {
+   :artificer
+   {0
+    [:acid-splash :booming-blade :create-bonfire :dancing-lights :fire-bolt :frostbite :green-flame-blade :guidance :light :lightning-lure :mage-hand :magic-stone :mending :message :poison-spray :prestidigitation :ray-of-frost :resistance :shocking-grasp :spare-the-dying :sword-burst :thorn-whip :thunderclap]
+    1
+    [:absorb-elements :alarm :catapult :cure-wounds :detect-magic :disguise-self :expeditious-retreat :faerie-fire :false-life :feather-fall :grease :identify :jump :longstrider :purify-food-and-drink :sanctuary :snare :tashas-caustic-brew]
+    2
+    [:aid :air-bubble :alter-self :arcane-lock :blur :continual-flame :darkvision :enhance-ability :enlarge-reduce :heat-metal :invisibility :kinetic-jaunt :lesser-restoration :levitate :magic-mouth :magic-weapon :protection-from-poison :pyrotechnics :rope-trick :see-invisibility :skywrite :spider-climb :vortex-warp :web]
+    3
+    [:ashardalons-stride :blink :catnap :create-food-and-water :dispel-magic :elemental-weapon :flame-arrows :fly :glyph-of-warding :haste :intellect-fortress :protection-from-energy :revivify :tiny-servant :water-breathing :water-walk]
+    4
+    [:arcane-eye :elemental-bane :fabricate :freedom-of-movement :leomunds-secret-chest :mordenkainens-faithful-hound :mordenkainens-private-sanctum :otilukes-resilient-sphere :stone-shape :stoneskin :summon-construct]
+    5 
+    [:animate-objects :bigbys-hand :create-spelljamming-helm :creation :greater-restoration :skill-empowerment :transmute-rock :wall-of-stone]},
    :bard
    {0
     [:blade-ward :dancing-lights :friends :light :mage-hand :mending :message :minor-illusion
