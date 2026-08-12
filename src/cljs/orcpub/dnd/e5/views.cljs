@@ -1971,6 +1971,61 @@
                                prepared-spell-count))))
               (sort-by :key spells))))]]]))))
 
+(defn infusions-table []
+  (let [expanded-spells (r/atom {})
+        mobile? @(subscribe [:mobile?])]
+    (fn [id lvl spells spell-modifiers hide-unprepared? prepare-spell-count-fn]
+      (let [prepares-spells @(subscribe [::char/prepares-spells id])
+            prepared-spells-by-class @(subscribe [::char/prepared-spells-by-class id])]
+        [:div.m-t-10.m-b-30
+         [:div.flex.justify-cont-s-b
+          [:div
+           [:span.f-w-b.i "Infusions"]
+           (if hide-unprepared?
+             [:span.i.opacity-5.m-l-5 "(uninfused hidden)"])]]
+         [:table.w-100-p.t-a-l.striped
+          [:tbody.spells
+           [:tr.f-w-b.f-s-12
+            [:th.p-l-10.p-b-5.p-t-5 "Infused? / Name"]
+            [:th.p-l-10.p-b-5.p-t-5 (if mobile? "Type" "Type")]
+            [:th.p-l-10.p-b-5.p-t-5 (if mobile? "Att" "Attunement?")]
+            [:th.p-l-10.p-b-5.p-t-5 "DC"]
+            [:th
+             {:class-name (if (not mobile?) "p-b-10 p-t-10")}
+             "Mod."]
+            [:th.p-l-10.p-b-5.p-t-5 "Attack"]
+            [:th.p-l-10.p-b-5.p-t-5]]
+           (doall
+            (map-indexed
+             (fn [i r]
+               (with-meta r {:key i}))
+             (mapcat
+              (fn [{:keys [key class always-prepared?] :as spell}]
+                (let [k (str key class)
+                      prepared-spell-count (or (some->> class
+                                                        (get prepared-spells-by-class)
+                                                        count)
+                                               0)
+                      prepare-spell-count (prepare-spell-count-fn class)]
+                  (if (char/spell-prepared? {:hide-unprepared? hide-unprepared?
+                                             :always-prepared? always-prepared?
+                                             :lvl lvl
+                                             :key key
+                                             :class class
+                                             :prepares-spells prepares-spells
+                                             :prepared-spells-by-class prepared-spells-by-class})
+                    (spell-row id
+                               lvl
+                               spell-modifiers
+                               prepares-spells
+                               prepared-spells-by-class
+                               spell
+                               (@expanded-spells k)
+                               (toggle-spell-expanded! expanded-spells k)
+                               prepare-spell-count
+                               prepared-spell-count))))
+              (sort-by :key spells))))]]]))))
+
 (defn toggle-hide-unprepared-fn [hide-unprepared?]
   #(swap! hide-unprepared? not))
 
