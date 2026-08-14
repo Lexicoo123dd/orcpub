@@ -1879,7 +1879,7 @@ You can call upon the hospitality of your people, and those allied with your tri
                                                          :selections [(opt5e/language-selection-aux (vals language-map) 1)]})]})]})
                             (t/option-cfg
                              {:name "Variant Human"
-                              :selections [(opt5e/feat-selection spell-lists spells-map 1)
+                              :selections [(opt5e/feat-selection spell-lists spells-map language-map 1)
                                            (opt5e/skill-selection 1)
                                            (opt5e/ability-increase-selection char5e/ability-keys 2 true)]})]})]})
 

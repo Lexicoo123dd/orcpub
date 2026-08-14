@@ -231,6 +231,11 @@
       (or (= school "divination")
           (= school "enchantment"))))
 
+(defn shadow-touched-spell? [s]
+    (let [school (:school s)]
+      (or (= school "illusion")
+          (= school "necromancy"))))
+
 (defn ability-increase-selection-2 [{:keys [ability-keys num-increases min max max-ability different? modifier-fn modifier-fns selection-fn]}]
   (t/selection-cfg
    {:name "Ability Score Improvement"
@@ -803,12 +808,32 @@
                     :exclude-ref? true
                     }))
 
+(defn shadow-touched-spell-selection [spellcasting-ability]
+  (spell-selection sl/spell-lists
+                    spells/spell-map
+                    {:title "Shadow Touched Illusion or Necromancy Spell"
+                    :spellcasting-ability spellcasting-ability
+                    :class-name "Shadow Touched"
+                    :num 1
+                    :prepend-level? false
+                    :spell-keys (map :key (filter #(and (= 1 (:level %)) (shadow-touched-spell? %)) spells/spells))
+                    :exclude-ref? true
+                    }))
+
 (defn fey-touched-ability-increase-selection [ability-keys num-increases & [different?]]
   (ability-increase-selection-2 {:ability-keys ability-keys
                                  :num-increases num-increases
                                  :different? different?
                                  :selection-fn (fn [k] (fey-touched-spell-selection k))
                                  :modifier-fns [(fn [k] (modifiers/spells-known 2 :misty-step k "Fey Touched"))
+                                                ]}))
+
+(defn shadow-touched-ability-increase-selection [ability-keys num-increases & [different?]]
+  (ability-increase-selection-2 {:ability-keys ability-keys
+                                 :num-increases num-increases
+                                 :different? different?
+                                 :selection-fn (fn [k] (shadow-touched-spell-selection k))
+                                 :modifier-fns [(fn [k] (modifiers/spells-known 2 :invisibility k "Shadow Touched"))
                                                 ]}))
 
 (defn gift-of-the-gem-dragon-ability-increase-selection [ability-keys num-increases & [different? modifier-fns]]
@@ -989,6 +1014,7 @@
                                            (not= k source))
                                          (?skill-profs skill-kw))])])
 
+;; Does not work; always gives expertise
 (defn tool-prof-or-expertise [tool-kw source]
   [(modifiers/tool-proficiency tool-kw false nil source)
    (modifiers/tool-expertise tool-kw [(some
@@ -1316,10 +1342,6 @@
                     (mods/set-mod ?feats kw))
        (not multiselect?) (update :prereqs conj (does-not-have-feat-prereq kw))))))
 
-(def charge-summary "when you Dash, you can make 1 melee attack or shove as a bonus action; if you move 10 ft. before taking this bonus action you gain +5 damage to attack or shove 10 ft.")
-
-(def defensive-duelist-summary "when you are hit with a melee attack, you can add your prof bonus to AC for the attack if you are wielding a finesse weapon you are proficient with")
-
 (def elven-accuracy-summary "Reroll one die on attacks with advantage using dex, int, wis, or cha")
 
 (def gift-of-the-metallic-dragon-summary "You learn the cure wounds spell. You can cast this spell without expending a spell slot. Once you cast this spell in this way, you can't do so again until you finish a long rest. You can also cast this spell using spell slots you have. The spell's spellcasting ability is ")
@@ -1437,7 +1459,7 @@
       (dispatch (conj name-event value)))
     {:class-name "input"}]])
 
-(defn feat-options [spell-lists spells-map]
+(defn feat-options [spell-lists spells-map language-map]
   [(feat-option
       {:name "Alert"
        :icon "look-at"
@@ -1463,12 +1485,53 @@
                                    "\n\u2022 Climbing doesn't cost you extra movement."
                                    "\n\u2022 You can make a running long jump or a running high jump after moving only 5 feet on foot, rather than 10 feet.")})]})
    (feat-option
+      {:name "Athlete (WoPV)"
+       :icon "weight-lifting-up"
+       :page 165
+       :exclude-trait? true
+       :summary "increase STR, DEX, or CON by 1; gain prof in Athletics or Acrobatics; standing up only uses 5 ft movement; climbing doesn't cost extra movement; make running long or high jump after moving only 5 ft.; advantage on Athletics and Acrobatics checks for traversing terrain"
+       :selections [(ability-increase-selection [::character/str ::character/dex ::character/con] 1 false)
+                    (skill-selection [:athletics :acrobatics] 1)]
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Athlete"
+                     :summary (str "\u2022 When you are prone, standing up uses only 5 feet of your movement."
+                                   "\n\u2022 Climbing doesn't cost you extra movement."
+                                   "\n\u2022 You can make a running long jump or a running high jump after moving only 5 feet on foot, rather than 10 feet."
+                                   "\n\u2022 You have advantage on Strength (Athletics) and Dexterity (Acrobatics) checks for traversing terrain.")})]})
+   (feat-option
+      {:name "Athlete (LRC)"
+       :icon "weight-lifting-up"
+       :page 165
+       :exclude-trait? true
+       :summary "increase STR, DEX, or CON by 1; gain prof in Athletics or Acrobatics; standing up only uses 5 ft movement; climbing doesn't cost extra movement; make running long or high jump after moving only 5 ft.; advantage on Athletics and Acrobatics checks for traversing terrain, being knocked prone, and for grappling or shoving"
+       :selections [(ability-increase-selection [::character/str ::character/dex ::character/con] 1 false)
+                    (skill-selection [:athletics :acrobatics] 1)]
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Athlete"
+                     :summary (str "\u2022 When you are prone, standing up uses only 5 feet of your movement."
+                                   "\n\u2022 Climbing doesn't cost you extra movement."
+                                   "\n\u2022 You can make a running long jump or a running high jump after moving only 5 feet on foot, rather than 10 feet."
+                                   "\n\u2022 You have advantage on Strength (Athletics) and Dexterity (Acrobatics) checks for traversing terrain, avoiding being knocked prone, and for contests involving grappling or shoving.")})]})
+   (feat-option
       {:name "Actor"
        :icon "drama-masks"
        :page 165
        :exclude-trait? true
        :summary "increase CHA by 1; advantage on Deception and Performance when trying to pass as someone else; mimic the speech of a person or sounds of a creature you have heard for 1 at least 1 minute. Determined fake by Insight vs Deception"
        :modifiers [(modifiers/ability ::character/cha 1)
+                   (modifiers/trait-cfg
+                    {:name "Actor"
+                     :summary (str "\u2022 You have advantage on Charisma (Deception) and Charisma (Performance) checks when trying to pass yourself off as a different person."
+                                   "\n\u2022 You can mimic the speech of another person or the sounds made by other creatures. You must have heard the person speaking, or heard the creature make the sound, for at least 1 minute. A successful Wisdom (Insight) check contested by your Charisma (Deception) check allows a listener to determine that the effect is faked.")})]})
+   (feat-option
+      {:name "Actor (WoPV/LRC)"
+       :icon "drama-masks"
+       :page 165
+       :exclude-trait? true
+       :summary "increase CHA by 1; advantage on Deception and Performance when trying to pass as someone else; mimic the speech of a person or sounds of a creature you have heard for 1 at least 1 minute. Determined fake by Insight vs Deception; gain proficiency or expertise with Disguise Kit"
+       :modifiers [(modifiers/ability ::character/cha 1)
+                   (tool-prof-or-expertise :disguise-kit :actor)
+                   (modifiers/tool-proficiency :disguise-kit)
                    (modifiers/trait-cfg
                     {:name "Actor"
                      :summary (str "\u2022 You have advantage on Charisma (Deception) and Charisma (Performance) checks when trying to pass yourself off as a different person."
@@ -1499,12 +1562,25 @@
        :icon "charging-bull"
        :page 165
        :exclude-trait? true
-       :summary charge-summary
+       :summary "when you Dash, you can make 1 melee attack or shove as a bonus action; if you move 10 ft. before taking this bonus action you gain +5 damage to attack or shove 10 ft."
        :modifiers [(modifiers/bonus-action
                     {:name "Charge"
                      :page 165
                      :summary (str "When you use your action to Dash, you can use a bonus action to make one melee weapon attack or to shove a creature."
                                    "\n\nIf you move at least 10 feet in a straight line immediately before taking this bonus action, you either gain a +5 bonus to the attack's damage roll (if you chose to make a melee attack and hit) or push the target up to 10 feet away from you (if you chose to shove and you succeed).")})]})
+   (feat-option
+      {:name "Charger (LRC)"
+       :icon "charging-bull"
+       :page 165
+       :exclude-trait? true
+       :summary "when you Dash, you can make 1 melee attack or shove as a bonus action; if you move 10 ft. before taking attacking or shoving you gain 1d8 damage to attack or shove 10 ft."
+       :modifiers [(modifiers/bonus-action
+                    {:name "Charger: Dash"
+                     :page 165
+                     :summary "When you use your action to Dash, you can use a bonus action to make one melee weapon attack or to shove a creature."})
+                   (modifiers/trait-cfg
+                    {:name "Charger: Charge"
+                     :summary "Once per turn, if you move at least 10 feet in a straight line immediately before making a melee attack or shoving a creature, you either gain a 1d8 bonus to the attack’s damage roll (if you chose to make a melee attack and hit) or push the target up to 10 feet away from you (if you chose to shove and you succeed)."})]})
    (feat-option
       {:name "Chef"
        :exclude-trait? true
@@ -1544,12 +1620,36 @@
        :icon "spinning-sword"
        :page 165
        :exclude-trait? true
-       :summary defensive-duelist-summary
+       :summary "when you are hit with a melee attack, you can add your prof bonus to AC for the attack if you are wielding a finesse weapon you are proficient with"
        :modifiers [(modifiers/reaction
                     {:name "Defensive Duelist"
                      :page 165
                      :summary "When you are wielding a finesse weapon with which you are proficient and another creature hits you with a melee attack, you can use your reaction to add your proficiency bonus to your AC for that attack, potentially causing the attack to miss you."})]
        :prereqs [(ability-prereq ::character/dex 13)]})
+   (feat-option
+      {:name "Defensive Duelist (WoPV)"
+       :icon "spinning-sword"
+       :page 165
+       :exclude-trait? true
+       :summary "increase STR or DEX by 1; when you are hit with a melee attack, you can add your prof bonus to AC for the attack if you are wielding a finesse weapon you are proficient with; gain proficiency with all finesse weapons"
+       :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]
+       :modifiers [(modifiers/weapon-proficiency :finesse)
+                   (modifiers/reaction
+                    {:name "Defensive Duelist"
+                     :page 165
+                     :summary "When you are wielding a finesse weapon with which you are proficient and another creature hits you with a melee attack, you can use your reaction to add your proficiency bonus to your AC for that attack, potentially causing the attack to miss you."})]})
+   (feat-option
+      {:name "Defensive Duelist (LRC)"
+       :icon "spinning-sword"
+       :page 165
+       :exclude-trait? true
+       :summary "increase DEX by 1; when you are hit with a melee attack, you can add your prof bonus to AC for the attack if you are wielding a finesse weapon you are proficient with; gain proficiency with all finesse weapons"
+       :modifiers [(modifiers/ability ::character/dex 1)
+                   (modifiers/weapon-proficiency :finesse)
+                   (modifiers/reaction
+                    {:name "Defensive Duelist"
+                     :page 165
+                     :summary "When you are wielding a finesse weapon with which you are proficient and another creature hits you with a melee attack, you can use your reaction to add your proficiency bonus to your AC for that attack, potentially causing the attack to miss you."})]})
    (feat-option
       {:name "Dragon Fear"
        :exclude-trait? true
@@ -1635,16 +1735,28 @@
                      :page 166
                      :summary (str "When you roll a Hit Die to regain hit points, the minimum number of hit points you regain from the roll equals twice your Constitution modifier (minimum of 2) (" (max 2 (* 2 (?ability-bonuses ::character/con))) ").")})]})
    (feat-option
-      {:name "Durable (AoA)"
+      {:name "Durable (WoPV)"
        :icon "defensive-wall"
        :exclude-trait? true
-       :summary "increase CON by 1; when you roll Hit Die to regain HPs, the min points regained is 2X your CON modifier; CON mod extra HPs per level"
+       :summary "increase CON by 1; when you roll Hit Die to regain HPs, the min points regained is 2X your CON modifier; recover all hit dice on a long rest"
        :modifiers [(modifiers/ability ::character/con 1)
-                   (mods/modifier ?hit-point-level-bonus (* 2 ?hit-point-level-bonus))
                    (modifiers/dependent-trait
                     {:name "Durable"
                      :summary (str "\u2022 When you roll a Hit Die to regain hit points, the minimum number of hit points you regain from the roll equals twice your Constitution modifier (minimum of 2) (" (max 2 (* 2 (?ability-bonuses ::character/con))) ")."
                                    "\n\u2022 You recover all hit die on a long rest instead of just half.")})]})
+   (feat-option
+      {:name "Durable (LRC)"
+       :icon "hospital-cross"
+       :exclude-trait? true
+       :summary "increase CON by 1; when you roll Hit Die to regain HPs, the min points regained is 2X your CON modifier; use bonus action to heal from Hit Dice"
+       :modifiers [(modifiers/ability ::character/con 1)
+                   (modifiers/dependent-trait
+                    {:name "Durable"
+                     :page 166
+                     :summary (str "When you roll a Hit Die to regain hit points, the minimum number of hit points you regain from the roll equals twice your Constitution modifier (minimum of 2) (" (max 2 (* 2 (?ability-bonuses ::character/con))) ").")})
+                   (modifiers/bonus-action
+                    {:name "Durable"
+                     :summary "As a Bonus Action, you can expend one of your Hit Dice, roll the die, and regain a number of Hit Points equal to th e roll."})]})
    (feat-option
       {:name "Dwarven Fortitude"
        :summary "increase CON by 1; when taking the dodge action, spend a Hit Die to heal yourself equal to the roll + CON"
@@ -1680,6 +1792,17 @@
                    :summary "Immediately after you take damage, you can use a reaction to magically become invisible until the end of your next turn or until you attack, deal damage, or force someone to make a saving throw"})]
      :selections [(ability-increase-selection [::character/dex ::character/int] 1 false)]
      :prereqs [(race-prereq ["Gnome"])]})
+   (feat-option
+    {:name "Fey Teleportation"
+     :exclude-trait? true
+     :summary "increase INT or CHA by 1; learn to speak, read, and write Sylvan; learn and cast misty step once per rest"
+     :selections [(ability-increase-selection [::character/int ::character/cha] 1 false)]
+     :modifiers [(modifiers/language :sylvan)
+                 (modifiers/trait-cfg
+                  {:name "Fey Teleportation"
+                   :summary "You learn the misty step spell and can cast it once without expending a spell slot. You regain the ability to cast it in this way when you finish a short or long rest. Intelligence is your spellcasting ability for this spell."})
+                 (modifiers/spells-known 2 :misty-step ::character/int "Fey Teleportation")]
+     :prereqs [(subrace-prereq "Elf (AoA)" "High Elf")]})
    (feat-option
     {:name "Fey Touched"
      :exclude-trait? true
@@ -1742,6 +1865,20 @@
                                  "\n\u2022 You can use your action to try to pin a creature grappled by you. To do so, make another grapple check. If you succeed, you and the creature are both restrained until the grapple ends.")})]
      :prereqs [(ability-prereq ::character/str 13)]})
    (feat-option
+    {:name "Grappler (LRC)"
+     :icon "muscle-up"
+     :page 167
+     :exclude-trait? true
+     :summary "once per turn, deal both damage and attempt to grapple a creature you hit; advantage on attacks against creature you grapple; attempt to grapple with opportunity attack; speed isn't halved when moving a creature your size or smaller"
+     :modifiers [(modifiers/action
+                  {:name "Grappler"
+                   :page 167
+                   :summary (str "\u2022 When you hit a creature with an Unarmed Strike as part of the Attack action on your turn, you can both deal damage and attempt to grapple the creature. You can use this benefit only once per turn."
+                                 "\n\u2022 You have advantage on attack rolls against a creature you are grappling."
+                                 "\n\u2022 When making an opportunity attack, you can attempt to grapple the provoking creature instead of making an attack."
+                                 "\n\u2022 Your speed isn’t halved when you move a creature grappled by you if the creature is your size or smaller.")})]
+     :prereqs [(ability-prereq ::character/str 13)]})
+   (feat-option
       {:name "Great Weapon Master"
        :icon "broadsword"
        :page 167
@@ -1787,6 +1924,17 @@
                    (modifiers/trait-cfg
                     {:name "Heavy Armor Master"
                      :summary "While you are wearing heavy armor, bludgeoning, piercing, and slashing damage that you take from nonmagical attacks is reduced by 3."})]
+       :prereqs [(armor-prereq :heavy)]})
+   (feat-option
+      {:name "Heavy Armor Master (LRC)"
+       :icon "gauntlet"
+       :page 167
+       :exclude-trait? true
+       :summary "increase CON or STR by 1; when wearing heavy armor, take prof bonus less slashing, piercing, and bludgeoning damage"
+       :selections [(ability-increase-selection [::character/con ::character/str] 1 false)]
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Heavy Armor Master"
+                     :summary "While you are wearing heavy armor, bludgeoning, piercing, and slashing damage that you take is reduced by an amount equal to your proficiency bonus (minimum of 3)."})]
        :prereqs [(armor-prereq :heavy)]})
    (feat-option
     {:name "Infernal Constitution"
@@ -1836,7 +1984,7 @@
        :page 167
        :exclude-trait? true
        :summary "increase INT by 1; learn 3 languages; create written ciphers"
-       :selections []
+       :selections [(language-selection-aux (vals language-map) 1)]
        :modifiers [(modifiers/ability ::character/int 1)
                    (modifiers/dependent-trait
                     {:name "Linguist Feat"
@@ -1909,6 +2057,20 @@
                                    "\n\u2022 When you wear medium armor, you can add 3, rather than 2, to your AC if you have a Dexterity of 16 or higher.")})]
        :prereqs [(armor-prereq :medium)]})
    (feat-option
+      {:name "Medium Armor Master (LRC)"
+       :icon "bracers"
+       :page 168
+       :exclude-trait? true
+       :summary "increase STR or DEX by 1; medium armor doesn't give disadvantage to Stealth; max DEX bonus to AC is 3 for medium armor"
+       :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]
+       :modifiers [medium-armor-master-max-bonus
+                   medium-armor-master-stealth
+                   (modifiers/trait-cfg
+                    {:name "Medium Armor Master"
+                     :summary (str "\u2022 Wearing medium armor doesn't impose disadvantage on your Dexterity (Stealth) checks."
+                                   "\n\u2022 When you wear medium armor, you can add 3, rather than 2, to your AC if you have a Dexterity of 16 or higher.")})]
+       :prereqs [(armor-prereq :medium)]})
+   (feat-option
       {:name "Mobile"
        :icon "move"
        :page 168
@@ -1955,6 +2117,19 @@
                      :summary (str "\u2022 If you can see a creature's mouth while it is speaking a language you understand, you can interpret what it's saying by reading its lips."
                                    "\n\u2022 You have a +5 bonus to your passive Wisdom (Perception) and passive Intelligence (Investigation) scores.")})]})
    (feat-option
+      {:name "Orcish Fury"
+       :exclude-trait? true
+       :summary "increase STR or CON by 1; once per rest, on a hit with a simple or martial weapon, add one of the weapon's damage die again; after using Relentless Endurance, use reaction to make a weapon attack"
+       :selections [(ability-increase-selection [::character/str ::character/con] 1 false)]
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Orcish Fury: Attack"
+                     :frequency units5e/rests-1
+                     :summary "When you hit with an attack using a simple or martial weapon, you can roll one of the weapon's damage dice an additional time and add it as extra damage of the weapon's damage type"})
+                   (modifiers/reaction
+                    {:name "Orcish Fury: Relentless Endurance"
+                     :summary "Immediately after you use your Relentless Endurance trait, you can use your reaction to make one weapon attack."})]
+       :prereqs [(race-prereq ["Half-Orc"])]})
+   (feat-option
       {:name "Piercer"
        :page 80
        :exclude-trait? true
@@ -1963,6 +2138,17 @@
                     {:name (str "\u2022 Once per turn, when you hit a creature with an attack that deals piercing damage, you can reroll one of the attack's damage dice, and you must use the new roll."
                                 "\n\u2022 When you score a critical hit that deals piercing damage to a creature, you can roll one additional damage die when determining the extra piercing damage the target takes.")})]
        :selections [(ability-increase-selection [::character/str ::character/dex] 1)]})
+   (feat-option
+      {:name "Poisoner"
+       :exclude-trait? true
+       :summary "damage rolls ignore resistance to poison; apply poison using bonus action instead of action; gain proficiency with the poisoner's kit; spend 1 hour and 50 gp to create poison"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Poisoner"
+                     :summary (str "\u2022 When you make a damage roll that deals poison damage, it ignores resistance to poison damage."
+                                   "\n\u2022 With one hour of work using a poisoner's kit and expending 50 gp worth of materials, you can create a number of doses of potent poison equal to your proficiency bonus. Once applied to a weapon or piece of ammunition, the poison retains its potency for 1 minute or until you hit with the weapon or ammunition. When a creature takes damage from the coated weapon or ammunition, that creature must succeed on a DC 14 Constitution saving throw or take 2d8 poison damage and become poisoned until the end of your next turn.")})
+                   (modifiers/bonus-action
+                    {:name "Poisoner: Apply Poison"
+                     :summary "You can apply poison to a weapon or piece of ammunition as a bonus action, instead of an action."})]})
    (feat-option
       {:name "Polearm Master"
        :icon "halberd"
@@ -1978,6 +2164,15 @@
                      :page 168
                      :summary "While you are wielding a glaive, halberd, pike, quarterstaff, or spear, other creatures provoke an opportunity attack from you when they enter the reach you have with that weapon."})]})
    (feat-option
+      {:name "Prodigy"
+       :exclude-trait? true
+       :summary "gain one skill proficiency, one tool proficiency, and one language proficiency; gain expertise with a skill you have proficiency in"
+       :selection [(skill-selection 1)
+                   (tool-selection 1)
+                   (language-selection-aux (vals language-map) 1)
+                   (expertise-selection 1)]
+       :prereqs [(race-prereq ["Half-Elf" "Half-Elf (AoA)" "Half-Orc" "Human"])]})
+   (feat-option
       {:name "Resilient"
        :icon "dodging"
        :page 168
@@ -1988,6 +2183,16 @@
                      1
                      false
                      [(fn [k] (modifiers/saving-throws nil k))])]})
+   (feat-option
+      {:name "Revenant Blade"
+       :exclude-trait? true
+       :summary "increase STR or DEX by 1; +1 to AC while holding a double-bladed scimitar with two hands; double-bladed scimitar have the finesse property"
+       :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Revenant Blade"
+                     :summary (str "\u2022 While you are holding a double-bladed scimitar with two hands, you gain a +1 bonus to Armor Class."
+                                   "\n\u2022 A double-bladed scimitar has the finesse property when you wield it.")})]
+       :prereqs [(race-prereq ["Elf" "Elf (AoA)"])]})
    (feat-option
       {:name "Ritual Caster"
        :icon "gift-of-knowledge"
@@ -2022,6 +2227,35 @@
                     {:name "Savage Attacker"
                      :summary "Once per turn when you roll damage for a melee weapon attack, you can reroll the weapon's damage dice and use either total."})]})
    (feat-option
+      {:name "Savage Attacker (WoPV)"
+       :icon "saber-slash"
+       :page 169
+       :exclude-trait? true
+       :summary "increase STR, DEX, or CON by 1; reroll melee weapon attack damage and use either total (use once/turn); score critical hit on a 19"
+       :selections [(ability-increase-selection [::character/str ::character/dex ::character/con] 1 false)]
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Savage Attacker"
+                     :summary (str "\u2022 Once per turn when you roll damage for a melee weapon attack, you can reroll the weapon's damage dice and use either total."
+                                   "\n\u2022 The roll on the d20 needed to score a critical hit is reduced by 1. This stacks with other features that increase your crit range, down to 17.")})]})
+   (feat-option
+      {:name "Savage Attacker (LRC)"
+       :icon "saber-slash"
+       :page 169
+       :exclude-trait? true
+       :summary "reroll melee weapon attack damage and use either total; score critical hit on a 19"
+       :modifiers [(modifiers/trait-cfg
+                    {:name "Savage Attacker"
+                     :summary (str "\u2022 When you roll damage for a melee weapon attack, you can reroll the weapon’s damage dice and use either total."
+                                   "\n\u2022 The roll on the d20 needed to score a critical hit is reduced by 1. This stacks with other features that increase your crit range, down to 17.")})]})
+   (feat-option
+      {:name "Second Chance"
+       :exclude-trait? true
+       :summary "increase DEX, CON, or CHA by 1"
+       :modifiers [(modifiers/reaction
+                    {:name "Second Chance"
+                     :summary "When a creature you can see hits you with an attack roll, you can use your reaction to force that creature to reroll. Once you use this ability, you can't use it again until you roll initiative at the start of combat or until you finish a short or long rest."})]
+       :prereqs [(race-prereq ["Halfling"])]})
+   (feat-option
       {:name "Sentinel"
        :icon "guards"
        :page 169
@@ -2032,6 +2266,15 @@
                      :summary (str "\u2022 When you hit a creature with an opportunity attack, the creature's speed becomes 0 for the rest of the turn."
                                    "\n\u2022 Creatures provoke opportunity attacks from you even if they take the Disengage action before leaving your reach."
                                    "\n\u2022 When a creature within 5 feet of you makes an attack against a target other than you (and that target doesn't have this feat), you can use your reaction to make a melee weapon attack against the attacking creature.")})]})
+   (feat-option
+    {:name "Shadow Touched"
+     :exclude-trait? true
+     :summary "increase INT, WIS, or CHA by 1; learn invisibility; learn 1 illusion or necromancy 1st-level spell that can be casted without expending a spell slot once per long rest"
+     :modifiers [(modifiers/spells-known 2 :invisibility nil "Shadow Touched")
+                 (modifiers/trait-cfg
+                  {:name "Shadow Touched"
+                   :summary "You learn the invisibility spell and one 1st-level spell of your choice. The 1st-level spell must be from the illusion or necromancy school of magic. You can cast each of these spells without expending a spell slot. Once you cast either of these spells in this way, you can't cast that spell in this way again until you finish a long rest. You can also cast these spells using spell slots you have of the appropriate level. The spells' spellcasting ability is the ability increased by this feat."})]
+     :selections [(shadow-touched-ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false)]})
    (feat-option
       {:name "Sharpshooter"
        :icon "bullseye"
@@ -2147,12 +2390,35 @@
                     {:name "Telekinetic: Shove"
                      :summary (str "As a bonus action, you can try to telekinetically shove one creature you can see within 30 feet of you. When you do so, the target must succeed on a Strength saving throw (DC 8 + your proficiency bonus + the ability modifier of the score increased by this feat (" (?spell-save-dc ?telekinetic-ability) ")) or be moved 5 feet toward you or away from you. A creature can willingly fail this save.")})]})
    (feat-option
+      {:name "Telepathic"
+       :exclude-trait? true
+       :summary "increase INT, WIS, or CHA by 1; speak telepathically to any creature within 60 ft.; cast detect thoughts hand without components"
+       :selections [(ability-increase-selection [::character/int ::character/wis ::character/cha] 1 false [(fn [k] (mods/modifier ?telepathic-ability k)) (fn [k] (modifiers/spells-known 2 :detect-thoughts k "Telepathic"))])]
+       :modifiers [(modifiers/spells-known 2 :detect-thoughts nil "Telepathic")
+                   (modifiers/trait-cfg
+                    {:name "Telepathic: Telepathy"
+                     :summary "You can speak telepathically to any creature you can see within 60 feet of you. Your telepathic utterances are in a language you know, and the creature understands you only if it knows that language. Your communication doesn't give the creature the ability to respond to you telepathically."})
+                   (modifiers/trait-cfg
+                    {:name "Telepathic: Detect Thoughts"
+                     :summary "You can cast the detect thoughts spell, requiring no spell slot or components, and you must finish a long rest before you can cast it this way again. Your spellcasting ability for the spell is the ability increased by this feat. If you have spell slots of 2nd level or higher, you can cast this spell with them."})]})
+   (feat-option
       {:name "Tough"
        :icon "defensive-wall"
        :page 170
        :exclude-trait? true
        :summary "2 extra HPs per level"
        :modifiers [(mods/modifier ?hit-point-level-bonus (+ 2 ?hit-point-level-bonus))
+                   (modifiers/trait-cfg
+                    {:name "Tough"
+                     :summary "Your hit point maximum increases by an amount equal to twice your level when you gain this feat. Whenever you gain a level thereafter, your hit point maximum increases by an additional 2 hit points."})]})
+   (feat-option
+      {:name "Tough (LRC)"
+       :icon "defensive-wall"
+       :page 170
+       :exclude-trait? true
+       :summary "increase CON by 1; 2 extra HPs per level"
+       :modifiers [(mods/modifier ?hit-point-level-bonus (+ 2 ?hit-point-level-bonus))
+                   (modifiers/ability ::character/con 1)
                    (modifiers/trait-cfg
                     {:name "Tough"
                      :summary "Your hit point maximum increases by an amount equal to twice your level when you gain this feat. Whenever you gain a level thereafter, your hit point maximum increases by an additional 2 hit points."})]})
@@ -2175,7 +2441,30 @@
        :exclude-trait? true
        :summary "increase STR or DEX by 1; proficiency with 4 weapons"
        :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)
-                    (weapon-proficiency-selection-2 weapons/weapons-map {:choose 4 :options {:any true}})]})]
+                    (weapon-proficiency-selection-2 weapons/weapons-map {:choose 4 :options {:any true}})]})
+   (feat-option
+      {:name "Weapon Master (LRC)"
+       :icon "sword-slice"
+       :page 170
+       :exclude-trait? true
+       :summary "increase STR or DEX by 1; proficiency with Simple and Martial weapons; score critical hit on 19"
+       :selections [(ability-increase-selection [::character/str ::character/dex] 1 false)]
+       :modifiers [(modifiers/weapon-proficiency :simple)
+                   (modifiers/weapon-proficiency :martial)]})
+   (feat-option
+    {:name "Wood Elf Magic"
+     :exclude-trait? true
+     :summary "learn one druid cantrip; learn longstrider and pass without trace that can be cast without expending a spell slot once per long rest"
+     :modifiers [(modifiers/spells-known 1 :longstrider ::character/wis "Wood Elf Magic")
+                 (modifiers/spells-known 2 :pass-without-trace ::character/wis "Wood Elf Magic")]
+     :selections [(:spell-selection spell-lists spells-map
+                  {:class-key :druid
+                   :level 0
+                   :excluse-ref? true
+                   :spell-casting-ability ::character/wis
+                   :class-name "Wood Elf Magic"
+                   :num 1})]
+     :prereqs [(subrace-prereq "Elf (AoA)" "Wood Elf")]})]
   #_(map
    (fn [i]
      (t/option-cfg
@@ -2465,10 +2754,10 @@
       fighting-style-options)
      fighting-style-options)))
 
-(defn feat-selection [spell-lists spells-map num]
+(defn feat-selection [spell-lists spells-map language-map num]
   (t/selection-cfg
    {:name "Feats"
-    :options (feat-options spell-lists spells-map)
+    :options (feat-options spell-lists spells-map language-map)
     :multiselect? true
     :tags #{:feats}
     :order 2
@@ -2477,7 +2766,7 @@
     :min num
     :max num}))
 
-(defn ability-score-improvement-selection [spell-lists spells-map cls lvl]
+(defn ability-score-improvement-selection [spell-lists spells-map language-map cls lvl]
   (t/selection-cfg
    {:name "Ability Score Improvement or Feat"
     :key :asi-or-feat
@@ -2485,7 +2774,7 @@
     :options [(ability-increase-option 2 false character/ability-keys)
               (t/option-cfg
                {:name "Feat"
-                :selections [(feat-selection spell-lists spells-map 1)]})]}))
+                :selections [(feat-selection spell-lists spells-map language-map 1)]})]}))
 
 (def rogue-expertise-selection
   (t/selection-cfg
@@ -2859,11 +3148,11 @@
   (ability-increase-selection-2
    {:min 0}))
 
-(defn homebrew-feat-selection [spell-lists spells-map]
+(defn homebrew-feat-selection [spell-lists spells-map language-map]
   (feat-selection-2
    {:min 0
     :max nil
-    :options (feat-options spell-lists spells-map)}))
+    :options (feat-options spell-lists spells-map language-map)}))
 
 (def homebrew-al-illegal
   (modifiers/al-illegal "Homebrew options are not allowed"))
@@ -2924,7 +3213,7 @@
     :selections [homebrew-skill-prof-selection
                  homebrew-tool-prof-selection
                  homebrew-ability-increase-selection
-                 (homebrew-feat-selection spell-lists spells-map)
+                 (homebrew-feat-selection spell-lists spells-map language-map)
                  homebrew-speed-selection
                  homebrew-darkvision-selection
                  homebrew-armor-prof-selection
@@ -2972,7 +3261,7 @@
                  homebrew-skill-prof-selection
                  homebrew-tool-prof-selection
                  homebrew-ability-increase-selection
-                 (homebrew-feat-selection spell-lists spells-map)
+                 (homebrew-feat-selection spell-lists spells-map language-map)
                  homebrew-speed-selection
                  homebrew-darkvision-selection
                  homebrew-armor-prof-selection
@@ -3590,7 +3879,7 @@
                {:name "<none>"
                 :key :none}))}))
 
-(defn custom-subclass-option [spell-lists spells-map weapon-map cls-key level-key subclass-selection-key spellcasting-class?]
+(defn custom-subclass-option [spell-lists spells-map language-map weapon-map cls-key level-key subclass-selection-key spellcasting-class?]
   (let [path [:class cls-key :levels level-key subclass-selection-key]]
     (t/option-cfg
      {:name "Custom"
@@ -3607,7 +3896,7 @@
       :selections (let [selections
                         [homebrew-skill-prof-selection
                          homebrew-tool-prof-selection
-                         (homebrew-feat-selection spell-lists spells-map)
+                         (homebrew-feat-selection spell-lists spells-map language-map)
                          homebrew-armor-prof-selection
                          (homebrew-weapon-prof-selection weapon-map)]]
                     selections
@@ -3661,9 +3950,9 @@
                                      (map
                                       #(subclass-option spell-lists spells-map language-map (assoc cls :key kw) %)
                                       (if source (map (fn [sc] (assoc sc :source source)) subclasses) subclasses))
-                                     (custom-subclass-option spell-lists spells-map weapon-map kw level-kw subclass-selection-key (some? spellcasting)))})]))
+                                     (custom-subclass-option spell-lists spells-map language-map weapon-map kw level-kw subclass-selection-key (some? spellcasting)))})]))
                     (if (and (not plugin?) (ability-inc-set i))
-                      [(ability-score-improvement-selection spell-lists spells-map name i)])
+                      [(ability-score-improvement-selection spell-lists spells-map language-map name i)])
                     (if (not plugin?)
                       [(assoc
                         (hit-points-selection hit-die name i)

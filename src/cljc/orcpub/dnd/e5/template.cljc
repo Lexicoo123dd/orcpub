@@ -1566,7 +1566,7 @@
                (opt5e/custom-background-option language-map))})
    (opt5e/feat-selection-2
     {:options (concat
-               (opt5e/feat-options spell-lists spells-map)
+               (opt5e/feat-options spell-lists spells-map language-map)
                (map
                 (partial opt5e/feat-option-from-cfg language-map spells-map spell-lists custom-and-standard-weapons)
                 feats))
