@@ -2040,6 +2040,19 @@
    (let [update-fn (partial toggle-spell-slot-used level i)]
      (update-character-fx db id update-fn))))
 
+(defn toggle-character-infusion [infusion-key character]
+  (update-in
+   character
+   [::entity/values
+    ::char5e/infused-infusions]
+   (partial toggle-set infusion-key)))
+
+(reg-event-fx
+ ::char5e/toggle-infusion
+ (fn [{:keys [db]} [_ id infusion-key]]
+   (let [update-fn (partial toggle-character-infusion infusion-key)]
+     (update-character-fx db id update-fn))))
+
 (defn set-current-hit-points [character current-hit-points]
   (assoc-in
    character

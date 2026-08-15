@@ -2457,11 +2457,11 @@
      :summary "learn one druid cantrip; learn longstrider and pass without trace that can be cast without expending a spell slot once per long rest"
      :modifiers [(modifiers/spells-known 1 :longstrider ::character/wis "Wood Elf Magic")
                  (modifiers/spells-known 2 :pass-without-trace ::character/wis "Wood Elf Magic")]
-     :selections [(:spell-selection spell-lists spells-map
+     :selections [(spell-selection spell-lists spells-map
                   {:class-key :druid
                    :level 0
-                   :excluse-ref? true
-                   :spell-casting-ability ::character/wis
+                   :exclude-ref? true
+                   :spellcasting-ability ::character/wis
                    :class-name "Wood Elf Magic"
                    :num 1})]
      :prereqs [(subrace-prereq "Elf (AoA)" "Wood Elf")]})]
@@ -4271,6 +4271,56 @@
      :ref [:class :artificer :artificer-infusions]
      :tags #{:spells}}
     cfg)))
+
+(defn infusion-item-field [name value attunement?]
+  [:div.m-b-2
+   [:span.f-w-b (str name ": ")]
+   [:span.f-w-n value]
+   (when attunement?
+     [:span.f-w-i " (requires attunement)"])])
+
+(defn infusion-help [{:keys [level attunement? item description summary]}]
+  [:div
+   [:div.m-b-5
+    (spell-field "Level" level)
+    (infusion-item-field "Item" item attunement?)]
+   [:div.f-w-n (if (or description summary)
+                 (doall
+                  (map-indexed
+                   (fn [i p]
+                     ^{:key i} [:p.m-t-5 p])
+                   (s/split (or description summary) #"\n"))))]])
+
+(defn infusion-option [infusions-map key]
+  (let [{:keys [name level edit-event] :as infusion} (infusions-map key)]
+    (t/option-cfg
+     {:name name
+      :key key
+      :edit-event edit-event
+      :help (infusion-help infusion)
+      :prereqs [(total-levels-option-prereq level :artificer)]
+      :modifiers [(modifiers/infusions-known key)]})))
+
+(def memoized-infusion-option (memoize infusion-option))
+
+(defn infusion-options [infusions-map]
+  (map
+   #(memoized-infusion-option infusions-map %)
+   (sort (keys infusions-map))))
+
+(defn infusion-selection [infusions-map num]
+  (let []
+     (t/selection-cfg
+      {:name "Artificer Infusions"
+       :key :artificer-infusions
+       :ref [:class :artificer :artificer-infusions]
+       :order 2
+       :multiselect? true
+       :options (infusion-options infusions-map)
+       :min num
+       :max num
+       :tags #{:spells}})))
+
 
 (def pact-of-the-tome-name "Pact Boon: Pact of the Tome")
 (def pact-of-the-chain-name "Pact Boon: Pact of the Chain")

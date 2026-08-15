@@ -3146,6 +3146,12 @@ You can call upon the hospitality of your people, and those allied with your tri
            levels))))
 
 (reg-sub
+ ::spells5e/infusions-map
+ (fn [_ _]
+   (into {}
+         (map (juxt :key identity) spells5e/infusions))))
+
+(reg-sub
  ::spells5e/builder-item
  (fn [db _]
    (::spells5e/builder-item db)))

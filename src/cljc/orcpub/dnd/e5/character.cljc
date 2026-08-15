@@ -542,6 +542,12 @@
 (defn spell-save-dc-fn [built-char]
   (get-prop built-char :spell-save-dc))
 
+(defn infusions-known [built-char]
+  (get-prop built-char :infusions-known))
+
+(defn infuse-count [built-char]
+  (get-prop built-char :infuse-count))
+
 (defn traits [built-char]
   (get-prop built-char :traits))
 

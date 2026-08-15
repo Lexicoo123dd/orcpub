@@ -1333,3 +1333,174 @@ When the wall appears, each creature within its area must make a Strength saving
 At the start of each of your turns after the wall appears, the wall, along with any creatures in it, moves 50 feet away from you. Any Huge or smaller creature inside the wall or whose space the wall enters when it moves must succeed on a Strength saving throw or take 5d10 bludgeoning damage. A creature can take this damage only once per round. At the end of the turn, the wall's height is reduced by 50 feet, and the damage creatures take from the spell on subsequent rounds is reduced by 1d10. When the wall reaches 0 feet in height, the spell ends.
 A creature caught in the wall can move by swimming. Because of the force of the wave, though, the creature must make a successful Strength (Athletics) check against your spell save DC in order to move at all. If it fails the check, it can't move. A creature that moves out of the area falls to the ground."
     }])
+
+
+(spec/def ::level (spec/int-in 0 21))
+(spec/def ::attunement? boolean?)
+(spec/def ::item string?)
+
+(spec/def ::infusion (spec/keys :req-un [::name ::key]
+                                :opt-un [::level
+                                         ::attunement?
+                                         ::item
+                                         ::summary
+                                         ::description]))
+
+(def all-infusions
+  [{:name "Arcane Propulsion Armor"
+    :level 14
+    :attunement? true
+    :item "A suit of armor"
+    :description (str "The wearer of this armor gains these benefits:"
+                      "\n\u2022 The wearer's walking speed increases by 5 feet."
+                      "\n\u2022 The armor includes gauntlets, each of which is a magic melee weapon that can be wielded only when the hand is holding nothing. The wearer is proficient with the gauntlets, and each one deals 1d8 force damage on a hit and has the thrown property, with a normal range of 20 feet and a long range of 60 feet. When thrown, the gauntlet detaches and flies at the attack's target, then immediately returns to the wearer and reattaches."
+                      "\n\u2022 The armor can't be removed against the wearer's will."
+                      "\n\u2022 If the wearer is missing any limbs, the armor replaces those limbs - hands, arms, feet, legs, or similar appendages. The replacements function identically to the body parts they replace.")}
+   {:name "Armor of Magical Strength"
+    :attunement? true
+    :item "A suit of armor"
+    :description (str "This armor has 6 charges. The wearer can expend the armor's charges in the following ways:"
+                      "\n\u2022 When the wearer makes a Strength check or a Strength saving throw, it can expend 1 charge to add a bonus to the roll equal to its Intelligence modifier."
+                      "\n\u2022 If the creature would be knocked prone, it can use its reaction to expend 1 charge to avoid being knocked prone."
+                      "\nThe armor regains 1d6 expended charges daily at dawn.")}
+   {
+    :name "Boots of the Winding Path"
+    :level 6
+    :attunement? true
+    :item "A pair of boots"
+    :description "While wearing these boots, a creature can teleport up to 15 feet as a bonus action to an unoccupied space the creature can see. The creature must have occupied that space at some point during the current turn."
+    }
+   {:name "Enhanced Arcane Focus"
+    :attunement? true
+    :item "A rod, staff or wand"
+    :description (str "While holding this item, a creature gains +1 bonus to spell attack rolls. In addition, the creature ignores half cover when making a spell attack."
+                      "\nThe bonus increases to +2 when you reach 10th level in this class.")}
+   {:name "Enhanced Defense"
+    :attunement? false
+    :item "A suit of armor or a shield"
+    :description (str "A creature gains a +1 bonus to Armor Class while wearing (armor) or wielding (shield) the infused item."
+                      "\nThe bonus increases to +2 when you reach 10th level in this class.")}
+   {:name "Enhanced Weapon"
+    :attunement? false
+    :item "A simple or martial weapon"
+    :description (str "This magic weapon grants a +1 bonus to attack and damage rolls made with it."
+                      "\nThe bonus increases to +2 when you reach 10th level in this class.")}
+   {:name "Helm of Awareness"
+    :level 10
+    :attunement? true
+    :item "A helmet"
+    :description "While wearing this helmet, a creature has advantage on initiative rolls. In addition, the wearer can’t be surprised, provided it isn’t incapacitated."}
+   {:name "Mind Sharpener"
+    :attunement? false
+    :item "A suit of armor or robes"
+    :description "The infused item can send a jolt to the wearer to refocus their mind. The item has 4 charges. When the wearer fails a Constitution saving throw to maintain concentration on a spell, the wearer can use its reaction to expend 1 of the item's charges to succeed instead. The item regains 1d4 expended charges daily at dawn."}
+   {:name "Radiant Weapon"
+    :level 6
+    :attunement? true
+    :item "A simple or martial weapon"
+    :description (str "This magic weapon grants a +1 bonus to attack and damage rolls made with it. While holding it, the wielder can take a bonus action to cause it to shed bright light in a 30-foot radius and dim light for an additional 30 feet. The wielder can extinguish the light as a bonus action."
+                      "\nThe weapon has 4 charges. As a reaction immediately after being hit by an attack, the wielder can expend 1 charge and cause the attacker to be blinded until the end of the attacker's next turn, unless the attacker succeeds on a Constitution saving throw against your spell save DC. The weapon regains 1d4 expended charges daily at dawn.")}
+   {:name "Repeating Shot"
+    :attunement? true
+    :item "A simple or martial weapon with the ammunition property"
+    :description (str "This magic weapon grants a +1 bonus to attack and damage rolls made with it when it's used to make a ranged attack, and it ignores the loading property if it has it."
+                      "\nIf the weapon lacks ammunition, it produces its own, automatically creating one piece of magic ammunition when the wielder makes a ranged attack with it. The ammunition created by the weapon vanishes the instant after it hits or misses a target.")}
+   {:name "Repulsion Shield"
+    :level 6
+    :attunement? true
+    :item "A shield"
+    :description (str "A creature gains a +1 bonus to Armor Class while wielding this shield."
+                      "\nThe shield has 4 charges. While holding it, the wielder can use a reaction immediately after being hit by a melee attack to expend 1 of the shield's charges and push the attacker up to 15 feet away. The shield regains 1d4 expended charges daily at dawn.")}
+   {:name "Resistance Armor"
+    :level 6
+    :attunement? true
+    :item "A suit of armor"
+    :description "While wearing this armor, a creature has resistance to one of the following damage types, which you choose when you infuse the item: acid, cold, fire, force, lightning, necrotic, poison, psychic, radiant, or thunder."}
+   {:name "Returning Weapon"
+    :attunement? false
+    :item "A simple or martial weapon with the thrown property"
+    :description "This magic weapon grants a +1 bonus to attack and damage rolls made with it, and it returns to the wielder’s hand immediately after it is used to make a ranged attack."}
+   {:name "Spell-Refueling Ring"
+    :level 6
+    :attunement? true
+    :item "A ring"
+    :description "While wearing this ring, the creature can recover one expended spell slot as an action. The recovered slot can be of 3rd level or lower. Once used, the ring can't be used again until the next dawn."}
+   {:name "Bag of Holding"
+    :level 2
+    :attunement? false
+    :description (str "This bag has an interior space considerably larger than its outside dimensions, roughly 2 feet in diameter at the mouth and 4 feet deep. The bag can hold up to 500 pounds, not exceeding a volume of 64 cubic feet. The bag weighs 15 pounds, regardless of its contents. Retrieving an item from the bag requires an action."
+                      "\nIf the bag is overloaded, pierced, or torn, it ruptures and is destroyed, and its contents are scattered in the Astral Plane. If the bag is turned inside out, its contents spill forth, unharmed, but the bag must be put right before it can be used again. Breathing creatures inside the bag can survive up to a number of minutes equal to 10 divided by the number of creatures (minimum 1 minute), after which time they begin to suffocate."
+                      "\nPlacing a bag of holding inside an extradimensional space created by a Heward's handy haversack, portable hole, or similar item instantly destroys both items and opens a gate to the Astral Plane. The gate originates where the one item was placed inside the other. Any creature within 10 feet of the gate is sucked through it to a random location on the Astral Plane. The gate then closes. The gate is one-way only and can't be reopened.")}
+   {:name "Sending Stones"
+    :level 2
+    :attunement? true
+    :description (str "Sending stones come in pairs, with each smooth stone carved to match the other so the pairing is easily recognized. While you touch one stone, you can use an action to cast the sending spell from it. The target is the bearer of the other stone. If no creature bears the other stone, you know that fact as soon as you use the stone and don't cast the spell."
+                      "\nOnce sending is cast through the stones, they can't be used again until the next dawn. If one of the stones in a pair is destroyed, the other one becomes nonmagical.")}
+   {:name "Amulet of Health"
+    :level 14
+    :attunement? true
+    :description "Your Constitution score is 19 while you wear this amulet. It has no effect on you if your Constitution score is already 19 or higher without it."}
+   {:name "Arcane Propulsion Arm"
+    :level 14
+    :attunement? true
+    :description (str "This prosthetic appendage was developed by artificers of House Cannith. To attune to this item, you must attach it to your arm at the wrist, elbow, or shoulder, at which point the prosthetic magically forms a copy of the appendage it's replacing."
+                      "\nWhile attached, the prosthetic provides these benefits:"
+                      "\n\u2022 The prosthetic is a fully capable part of your body."
+                      "\n\u2022 You can take an action to remove the prosthetic, and it removes itself if your attunement to it ends. It can't be removed against your will."
+                      "\n\u2022 The prosthetic is a magic melee weapon with which you're proficient. It deals 1d8 force damage on a hit and has the thrown property, with a normal range of 20 feet and a long range of 60 feet. When thrown, the prosthetic detaches and flies at the target of the attack, then immediately returns to you and reattaches.")}
+   {:name "Belt of Hill Giant Strength"
+    :level 14
+    :attunement? true
+    :description "While wearing this belt, your Strength score changes to 21. The item has no effect on you if your Strength without the belt is equal to or greater than the belt's score."}
+   {:name "Boots of Levitation"
+    :level 14
+    :attunement? true
+    :description "While you wear these boots, you can use an action to cast the levitate spell on yourself at will."}
+   {:name "Boots of Speed"
+    :level 14
+    :attunement? true
+    :description (str "While you wear these boots, you can use a bonus action and click the boots' heels together. If you do, the boots double your walking speed, and any creature that makes an opportunity attack against you has disadvantage on the attack roll. If you click your heels together again, you end the effect."
+                      "\nWhen the boots' property has been used for a total of 10 minutes, the magic ceases to function until you finish a long rest.")}
+   {:name "Bracers of Defense"
+    :level 14
+    :attunement? true
+    :description "While wearing these bracers, you gain a +2 bonus to AC if you are wearing no armor and using no shield."}
+   {:name "Cloak of the Bat"
+    :level 14
+    :attunement? true
+    :description (str "While wearing this cloak, you have advantage on Dexterity (Stealth) checks. In an area of dim light or darkness, you can grip the edges of the cloak with both hands and use it to fly at a speed of 40 feet. If you ever fail to grip the cloak's edges while flying in this way, or if you are no longer in dim light or darkness, you lose this flying speed."
+                      "\nWhile wearing the cloak in an area of dim light or darkness, you can use your action to cast polymorph on yourself, transforming into a bat. While you are in the form of the bat, you retain your Intelligence, Wisdom, and Charisma scores. The cloak can't be used this way again until the next dawn.")}
+   {:name "Dimensional Shackles"
+    :level 14
+    :attunement? false
+    :description (str "You can use an action to place these shackles on an incapacitated creature. The shackles adjust to fit a creature of Small to Large size. In addition to serving as mundane manacles, the shackles prevent a creature bound by them from using any method of extradimensional movement, including teleportation or travel to a different plane of existence. They don't prevent the creature from passing-through an interdimensional portal."
+                      "\nYou and any creature you designate when you use the shackles can use an action to remove them. Once every 30 days, the bound creature can make a DC 30 Strength (Athletics) check. On a success, the creature breaks free and destroys the shackles.")}
+   {:name "Gem of Seeing"
+    :level 14
+    :attunement? true
+    :description (str "This gem has 3 charges. As an action, you can speak the gem's command word and expend 1 charge. For the next 10 minutes, you have truesight out to 120 feet when you peer through the gem."
+                      "\nThe gem regains 1d3 expended charges daily at dawn.")}
+   {:name "Horn of Blasting"
+    :level 14
+    :attunement? false
+    :description (str "You can use an action to speak the horn's command word and then blow the horn, which emits a thunderous blast in a 30-foot cone that is audible 600 feet away. Each creature in the cone must make a DC 15 Constitution saving throw. On a failed save, a creature takes 5d6 thunder damage and is deafened for 1 minute. On a successful save, a creature takes half as much damage and isn't deafened. Creatures and objects made of glass or crystal have disadvantage on the saving throw and take 10d6 thunder damage instead of 5d6."
+                      "\nEach use of the horn's magic has a 20 percent chance of causing the horn to explode. The explosion deals 10d6 fire damage to the blower and destroys the horn.")}
+   {:name "Ring of Free Action"
+    :level 14
+    :attunement? true
+    :description "While you wear this ring, difficult terrain doesn't cost you extra movement. In addition, magic can neither reduce your speed nor cause you to be paralyzed or restrained."}
+   {:name "Ring of Protection"
+    :level 14
+    :attunement? true
+    :description "You gain a +1 bonus to AC and saving throws while wearing this ring."}
+   {:name "Ring of the Ram"
+    :level 14
+    :attunement? true
+    :description (str "This ring has 3 charges, and it regains 1d3 expended charges daily at dawn. While wearing the ring, you can use an action to expend 1 to 3 of its charges to make a ranged spell attack against one creature you can see within 60 feet of you. The ring produces a spectral ram's head and makes its attack roll with a +7 bonus. On a hit, for each charge you spend, the target takes 2d10 force damage and is pushed 5 feet away from you."
+                      "\nAlternatively, you can expend 1 to 3 of the ring's charges as an action to try to break an object you can see within 60 feet of you that isn't being worn or carried. The ring makes a Strength check with a +5 bonus for each charge you spend.")}
+   ; {:name ""
+   ;  :level 
+   ;  :attunement? true
+   ;  :description ""}
+   ])
+

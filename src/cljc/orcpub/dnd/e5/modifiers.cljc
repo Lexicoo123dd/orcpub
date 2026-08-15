@@ -286,6 +286,24 @@
 (defn spell-attack-modifier-bonus [bonus]
   (mods/cum-sum-mod ?spell-attack-modifier-bonus bonus))
 
+(defn add-infusion [infusions-known {:keys [key]}]
+  (conj (or infusions-known #{}) key))
+
+(defn infusion-data [infusion-key]
+  {:key infusion-key})
+
+(defn infusions-known [infusion-key]
+  (mods/modifier
+    ?infusions-known
+    (add-infusion
+     ?infusions-known
+     (infusion-data
+      infusion-key))))
+
+(defn infuse-count [bonus]
+  (mods/modifier ?infuse-count
+                 (+ (or ?infuse-count 0) bonus)))
+
 (defn trait-cfg [{:keys [name description class-key level summary page conditions source] :as cfg}]
   (let [class-key? (not (nil? class-key))]
     (mods/modifier ?traits

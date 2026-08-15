@@ -82,13 +82,23 @@
                                 "\n\u2022 A static visual effect appears on one of the object's surfaces. This effect can be a picture, up to 25 words of text, lines and shapes, or a mixture of these elements, as you like."
                                 "\nThe chosen property lasts indefinitely. As an action, you can touch the object and end the property early."
                                 "\n\nYou can bestow magic on multiple objects, touching one object each time you use this feature, though a single object can only bear one property at a time. The maximum number of objects you can affect with this feature at one time is equal to your Intelligence modifier (minimum of one object). If you try to exceed your maximum, the oldest property immediately ends, and then the new property applies.")})]
-    :levels {2 {:selections [(artificer-infusion-selection spell-lists spells-map 4)]}
+    :levels {
+             2 {:selections [(opt5e/infusion-selection spells5e/infusion-map 4)]
+                :modifiers [(mod5e/infuse-count 2)]}
+             6 {:selections [(opt5e/infusion-selection spells5e/infusion-map 2)]
+                :modifiers [(mod5e/infuse-count 1)]}
              7 {:modifiers [(mod5e/reaction
                              {:name "Flash of Genius"
                               :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/int)))
                               :summary "you've gained the ability to come up with solutions under pressure. When you or another creature you can see within 30 feet of you makes an ability check or a saving throw, you can use your reaction to add your Intelligence modifier to the roll."})]}
-
-             }
+             8 {:selections [(opt5e/infusion-selection spells5e/infusion-map 2)]
+                :modifiers [(mod5e/infuse-count 1)]}
+             10 {:selections [(opt5e/infusion-selection spells5e/infusion-map 2)]
+                :modifiers [(mod5e/infuse-count 1)]}
+             14 {:selections [(opt5e/infusion-selection spells5e/infusion-map 2)]
+                :modifiers [(mod5e/infuse-count 1)]}
+             18 {:selections [(opt5e/infusion-selection spells5e/infusion-map 2)]
+                :modifiers [(mod5e/infuse-count 1)]}}
     :traits [{:name "The Right Tool for the Job"
               :level 3
               :summary "you've learned how to produce exactly the tool you need: with thieves' tools or artisan's tools in hand, you can magically create one set of artisan's tools in an unoccupied space within 5 feet of you. This creation requires 1 hour of uninterrupted work, which can coincide with a short or long rest. Though the product of magic, the tools are nonmagical, and they vanish when you use this feature again"}
@@ -169,6 +179,7 @@
                                             :damage-die-count 1
                                             :damage-modifier (max (max (?ability-bonuses ::char5e/int) (?ability-bonuses ::char5e/str)) (?ability-bonuses ::char5e/dex))})]}
                            5 {:modifiers [(mod5e/num-attacks 2)]}
+                           9 {:modifiers [(mod5e/infuse-count 2)]}
                            15 {:modifiers [(mod5e/reaction
                                             {:name "Perfected Armor: Guardian"
                                              :frequency (units5e/long-rests ?prof-bonus)

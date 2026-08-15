@@ -5350,3 +5350,18 @@ An affected creature is aware of the spell and can thus avoid answering question
       [(:key spell)
        spell]))
    spells))
+
+(def infusions
+  (map
+   (fn [i]
+     (assoc i :key (or (:key i) (common/name-to-kw (:name i)))))
+   spells2/all-infusions))
+
+(def infusion-map
+  (into
+   {}
+   (map
+    (fn [infusion]
+      [(:key infusion)
+       infusion]))
+   infusions))

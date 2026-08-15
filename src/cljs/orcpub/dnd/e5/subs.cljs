@@ -590,6 +590,8 @@
    ::char5e/spell-modifiers char5e/spell-modifiers
    ::char5e/spell-slot-factors char5e/spell-slot-factors
    ::char5e/total-spellcaster-levels char5e/total-spellcaster-levels
+   ::char5e/infusions-known char5e/infusions-known
+   ::char5e/infuse-count char5e/infuse-count
    ::char5e/weapons char5e/normal-weapons-inventory
    ::char5e/magic-weapons char5e/magic-weapons-inventory
    ::char5e/equipment char5e/normal-equipment-inventory
@@ -956,6 +958,15 @@
    (get-in character
            [::entity/values
             ::char5e/prepared-spells-by-class])))
+
+(reg-sub
+ ::char5e/infused-infusions
+ (fn [[_ id] _]
+   (subscribe [::char5e/character id]))
+ (fn [character _]
+   (get-in character
+           [::entity/values
+            ::char5e/infused-infusions])))
 
 (reg-sub
  ::char5e/feature-used?

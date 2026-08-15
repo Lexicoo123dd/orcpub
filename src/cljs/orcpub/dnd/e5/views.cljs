@@ -1995,6 +1995,105 @@
              [spells-table id lvl (vals spells) spell-modifiers @hide-unprepared? prepare-spell-count-fn])
            spells-known)))])))
 
+(defn infusion-summary [name level include-name? & [subheader-size]]
+  [:div.p-b-20
+   (if include-name? [:span.f-s-24.f-w-b name])
+   [:div.i.f-w-b.opacity-5
+    {:class-name (str "f-s-" (or subheader-size 18))}
+    (if (pos? level)
+      (str (common/ordinal level) "-level Infusion")
+      " ")]])
+
+(defn infusion-attunement-field [attunement?]
+  [:div
+   (when attunement?
+     [:span.f-w-i "(requires attunement)"])])
+
+(defn infusion-item-field [name value attunement?]
+  [:div
+   [:span.f-w-b name ":"]
+   [:span.m-l-10 value]
+   (when attunement?
+     [:span.f-w-i " (requires attunement)"])])
+
+(defn infusion-component [{:keys [name level attunement? item description summary] :as infusion} include-name? & [subheader-size]]
+  [:div.m-l-10.l-h-19
+   [infusion-summary name level include-name? subheader-size]
+    (when item (infusion-item-field "Item" item attunement?) (infusion-attunement-field attunement?))
+   [:div.m-t-10
+    (if description
+      (paragraphs description)
+      [:div
+       (if summary (paragraphs summary))
+       #_[:span (str "(" (disp/source-description source page) " for more details)")]])]])
+
+(defn infusion-row [id infused-infusions key expanded? on-click infuse-count infused-count]
+  (let [infusion-map @(subscribe [::spells/infusions-map])
+        infusion (infusion-map key)
+        remaining-preps (- infuse-count
+                           infused-count)
+        always-prepared? false
+        selected? (or always-prepared? (contains? infused-infusions key))
+        enabled? (and (not always-prepared?) (or selected? (pos? remaining-preps)))]
+    [[:tr.spell.pointer
+      {:on-click on-click}
+      [:td.p-l-10.p-b-5.p-t-5.f-w-b
+       [:span.m-r-5
+        {:class-name (if always-prepared?
+                       "cursor-disabled")
+         :on-click (fn [e]
+                     (when enabled?
+                       (dispatch [::char/toggle-infusion id key]))
+                     (.stopPropagation e))}
+         (comps/checkbox
+          selected?
+          (and (not selected?)
+               (or always-prepared?
+                   (not (pos? remaining-preps)))))]
+       (:name infusion)]
+      [:td.p-l-10.p-b-5.p-t-5 (if (:attunement? infusion) "Yes" "No")]
+      [:td.p-l-10.p-b-5.p-t-5 (if (:item infusion) (:item infusion) " ")]
+      [:td.p-l-10.p-b-5.p-t-5.pointer.orange
+       [:i.fa
+        {:class-name (if expanded? "fa-caret-up" "fa-caret-down")}]]]
+     (when expanded?
+       [:tr {:style expanded-spell-background-style}
+        [:td {:col-span 7}
+         [:div.p-10
+          [infusion-component infusion false 14]]]])]))
+
+(defn infusions-table []
+  (let [expanded-spells (r/atom {})
+        mobile? @(subscribe [:mobile?])]
+    (fn [id infusions]
+      (let [infuse-count @(subscribe [::char/infuse-count id])
+            infused-infusions @(subscribe [::char/infused-infusions id])]
+        [:div.f-s-14.f-w-n
+         [:div.m-t-10.m-b-30
+          [:table.w-100-p.t-a-l.striped
+           [:tbody.spells
+            [:tr.f-w-b.f-s-12
+             [:th.p-l-10.p-b-5.p-t-5 "Infused? / Name"]
+             [:th.p-l-10.p-b-5.p-t-5 (if mobile? "Att?" "Attunement?")]
+             [:th.p-l-10.p-b-5.p-t-5 "Item"]
+             [:th.p-l-10.p-b-5.p-t-5]]
+            (doall
+             (map-indexed
+              (fn [i r]
+                (with-meta r {:key i}))
+              (mapcat
+               (fn [key]
+                 (let [k (str key)
+                       infused-count (count infused-infusions)]
+                     (infusion-row id
+                                infused-infusions
+                                key
+                                (@expanded-spells k)
+                                (toggle-spell-expanded! expanded-spells k)
+                                infuse-count
+                                infused-count)))
+               (sort-by :key infusions))))]]]]))))
+
 (defn finish-long-rest-fn [id]
   #(dispatch [::char/finish-long-rest id]))
 
@@ -2025,7 +2124,7 @@
    {:on-click (finish-short-rest-handler-warlock id)}
    "finish short rest"])
 
-(defn spells-known-section [id spells-known spell-slots spell-modifiers spell-slot-factors total-spellcaster-levels levels]
+(defn spells-known-section [id spells-known spell-slots spell-modifiers spell-slot-factors total-spellcaster-levels levels infusions-known]
   (let [mobile? @(subscribe [:mobile?])
         multiclass? (> (count spell-slot-factors) 1)
         prepares-spells @(subscribe [::char/prepares-spells id])
@@ -2060,7 +2159,11 @@
              prepares-spells))]]
          [:div.f-s-14.f-w-n.i.m-t-5 "You don't need to prepare spells"])]
       [:div.m-b-20
-       [spells-tables id spells-known spell-slots spell-modifiers]]]
+       [spells-tables id spells-known spell-slots spell-modifiers]]
+      (when (contains? classes :artificer)
+       [:div.m-b-20
+        [:span.f-w-b.f-s-16 "Infusions"]
+        [infusions-table id infusions-known]])]
      nil
      [[finish-long-rest-button id]
       (when (contains? classes :warlock) [finish-short-rest-button-warlock id])]]))
@@ -3283,7 +3386,8 @@
         spell-modifiers @(subscribe [::char/spell-modifiers id])
         spell-slot-factors @(subscribe [::char/spell-slot-factors id])
         total-spellcaster-levels @(subscribe [::char/total-spellcaster-levels id])
-        levels @(subscribe [::char/levels id])]
+        levels @(subscribe [::char/levels id])
+        infusions-known @(subscribe [::char/infusions-known id])]
     [:div.details-columns
      {:class-name (if (= 2 num-columns) "flex")}
      [:div.flex-grow-1.details-column-2
@@ -3295,7 +3399,8 @@
                               spell-modifiers
                               spell-slot-factors
                               total-spellcaster-levels
-                              levels])]]))
+                              levels
+                              infusions-known])]]))
 
 (defn equipment-details [num-columns id]
   [:div
