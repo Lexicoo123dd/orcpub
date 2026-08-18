@@ -91,8 +91,6 @@
                              {:name "Flash of Genius"
                               :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/int)))
                               :summary "you've gained the ability to come up with solutions under pressure. When you or another creature you can see within 30 feet of you makes an ability check or a saving throw, you can use your reaction to add your Intelligence modifier to the roll."})]}
-             8 {:selections [(opt5e/infusion-selection spells5e/infusion-map 2)]
-                :modifiers [(mod5e/infuse-count 1)]}
              10 {:selections [(opt5e/infusion-selection spells5e/infusion-map 2)]
                 :modifiers [(mod5e/infuse-count 1)]}
              14 {:selections [(opt5e/infusion-selection spells5e/infusion-map 2)]

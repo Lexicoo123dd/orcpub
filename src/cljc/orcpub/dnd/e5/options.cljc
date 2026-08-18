@@ -4294,7 +4294,7 @@
 (defn infusion-option [infusions-map key]
   (let [{:keys [name level edit-event] :as infusion} (infusions-map key)]
     (t/option-cfg
-     {:name name
+     {:name (str level " - " name)
       :key key
       :edit-event edit-event
       :help (infusion-help infusion)

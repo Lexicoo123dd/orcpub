@@ -1339,8 +1339,8 @@ A creature caught in the wall can move by swimming. Because of the force of the 
 (spec/def ::attunement? boolean?)
 (spec/def ::item string?)
 
-(spec/def ::infusion (spec/keys :req-un [::name ::key]
-                                :opt-un [::level
+(spec/def ::infusion (spec/keys :req-un [::name ::key ::level]
+                                :opt-un [
                                          ::attunement?
                                          ::item
                                          ::summary
@@ -1357,6 +1357,7 @@ A creature caught in the wall can move by swimming. Because of the force of the 
                       "\n\u2022 The armor can't be removed against the wearer's will."
                       "\n\u2022 If the wearer is missing any limbs, the armor replaces those limbs - hands, arms, feet, legs, or similar appendages. The replacements function identically to the body parts they replace.")}
    {:name "Armor of Magical Strength"
+    :level 2
     :attunement? true
     :item "A suit of armor"
     :description (str "This armor has 6 charges. The wearer can expend the armor's charges in the following ways:"
@@ -1371,16 +1372,19 @@ A creature caught in the wall can move by swimming. Because of the force of the 
     :description "While wearing these boots, a creature can teleport up to 15 feet as a bonus action to an unoccupied space the creature can see. The creature must have occupied that space at some point during the current turn."
     }
    {:name "Enhanced Arcane Focus"
+    :level 2
     :attunement? true
     :item "A rod, staff or wand"
     :description (str "While holding this item, a creature gains +1 bonus to spell attack rolls. In addition, the creature ignores half cover when making a spell attack."
                       "\nThe bonus increases to +2 when you reach 10th level in this class.")}
    {:name "Enhanced Defense"
+    :level 2
     :attunement? false
     :item "A suit of armor or a shield"
     :description (str "A creature gains a +1 bonus to Armor Class while wearing (armor) or wielding (shield) the infused item."
                       "\nThe bonus increases to +2 when you reach 10th level in this class.")}
    {:name "Enhanced Weapon"
+    :level 2
     :attunement? false
     :item "A simple or martial weapon"
     :description (str "This magic weapon grants a +1 bonus to attack and damage rolls made with it."
@@ -1391,6 +1395,7 @@ A creature caught in the wall can move by swimming. Because of the force of the 
     :item "A helmet"
     :description "While wearing this helmet, a creature has advantage on initiative rolls. In addition, the wearer can’t be surprised, provided it isn’t incapacitated."}
    {:name "Mind Sharpener"
+    :level 2
     :attunement? false
     :item "A suit of armor or robes"
     :description "The infused item can send a jolt to the wearer to refocus their mind. The item has 4 charges. When the wearer fails a Constitution saving throw to maintain concentration on a spell, the wearer can use its reaction to expend 1 of the item's charges to succeed instead. The item regains 1d4 expended charges daily at dawn."}
@@ -1401,6 +1406,7 @@ A creature caught in the wall can move by swimming. Because of the force of the 
     :description (str "This magic weapon grants a +1 bonus to attack and damage rolls made with it. While holding it, the wielder can take a bonus action to cause it to shed bright light in a 30-foot radius and dim light for an additional 30 feet. The wielder can extinguish the light as a bonus action."
                       "\nThe weapon has 4 charges. As a reaction immediately after being hit by an attack, the wielder can expend 1 charge and cause the attacker to be blinded until the end of the attacker's next turn, unless the attacker succeeds on a Constitution saving throw against your spell save DC. The weapon regains 1d4 expended charges daily at dawn.")}
    {:name "Repeating Shot"
+    :level 2
     :attunement? true
     :item "A simple or martial weapon with the ammunition property"
     :description (str "This magic weapon grants a +1 bonus to attack and damage rolls made with it when it's used to make a ranged attack, and it ignores the loading property if it has it."
@@ -1417,6 +1423,7 @@ A creature caught in the wall can move by swimming. Because of the force of the 
     :item "A suit of armor"
     :description "While wearing this armor, a creature has resistance to one of the following damage types, which you choose when you infuse the item: acid, cold, fire, force, lightning, necrotic, poison, psychic, radiant, or thunder."}
    {:name "Returning Weapon"
+    :level 2
     :attunement? false
     :item "A simple or martial weapon with the thrown property"
     :description "This magic weapon grants a +1 bonus to attack and damage rolls made with it, and it returns to the wielder’s hand immediately after it is used to make a ranged attack."}

@@ -214,6 +214,10 @@
      :db/valueType :db.type/keyword
      :db/cardinality :db.cardinality/many
      :db/noHistory true}
+    {:db/ident ::char5e/infused-infusions
+     :db/valueType :db.type/keyword
+     :db/cardinality :db.cardinality/many
+     :db/noHistory true}
     {:db/ident ::char5e/current-hit-points
      :db/valueType :db.type/long
      :db/cardinality :db.cardinality/one

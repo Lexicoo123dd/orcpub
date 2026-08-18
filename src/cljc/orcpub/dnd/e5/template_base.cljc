@@ -308,6 +308,7 @@
     ?saving-throw-advantage []
     ?saving-throws #{}
     ?spells-known (sorted-map)
+    ?infuse-count 0
     ?speed-overrides []
     ?flying-speed-overrides []
     ?swimming-speed-overrides []

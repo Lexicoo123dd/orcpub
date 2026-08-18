@@ -660,6 +660,21 @@
          ::se/game-version :e5
          ::se/type :character))
 
+(defn scalar-many-retractions
+  "Datomic map-form transactions only assert. For :db.cardinality/many scalar
+   attributes, values the client dropped are never retracted, so they silently
+   reappear on the next pull. update-character's retract-ids diff only handles
+   whole entities (:db/retractEntity), which covers :db/isComponent refs but is
+   blind to loose scalar values. Emit explicit retractions for the difference."
+  [current-character new-character attrs]
+  (let [current-values (::se/values current-character)
+        new-values     (::se/values new-character)]
+    (when-let [e (:db/id current-values)]
+      (for [attr attrs
+            v (sets/difference (set (get current-values attr))
+                               (set (get new-values attr)))]
+        [:db/retract e attr v]))))
+
 (defn update-character [db conn character username]
   (let [id (:db/id character)]
     (if (owns-entity? db username id)
@@ -689,10 +704,15 @@
                                (fn [retract-id]
                                  [:db/retractEntity retract-id])
                                retract-ids)
-                  tx (conj retractions
-                           (-> new-character
-                               (assoc :orcpub.entity.strict/owner username)
-                               add-dnd-5e-character-tags))]
+                  value-retractions (scalar-many-retractions
+                                     current-character
+                                     new-character
+                                     #{::char5e/infused-infusions})
+                  tx (concat retractions
+                             value-retractions
+                             [(-> new-character
+                                  (assoc :orcpub.entity.strict/owner username)
+                                  add-dnd-5e-character-tags)])]
               @(d/transact conn tx)
               (d/pull (d/db conn) '[*] id)))))
       (throw (ex-info "Not user character"

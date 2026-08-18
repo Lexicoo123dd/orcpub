@@ -2052,6 +2052,7 @@
                    (not (pos? remaining-preps)))))]
        (:name infusion)]
       [:td.p-l-10.p-b-5.p-t-5 (if (:attunement? infusion) "Yes" "No")]
+      [:td.p-l-10.p-b-5.p-t-5 (:level infusion)]
       [:td.p-l-10.p-b-5.p-t-5 (if (:item infusion) (:item infusion) " ")]
       [:td.p-l-10.p-b-5.p-t-5.pointer.orange
        [:i.fa
@@ -2075,6 +2076,7 @@
             [:tr.f-w-b.f-s-12
              [:th.p-l-10.p-b-5.p-t-5 "Infused? / Name"]
              [:th.p-l-10.p-b-5.p-t-5 (if mobile? "Att?" "Attunement?")]
+             [:th.p-l-10.p-b-5.p-t-5 (if mobile? "Lvl" "Level")]
              [:th.p-l-10.p-b-5.p-t-5 "Item"]
              [:th.p-l-10.p-b-5.p-t-5]]
             (doall

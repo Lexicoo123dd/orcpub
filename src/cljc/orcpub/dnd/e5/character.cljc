@@ -321,7 +321,12 @@
         (map
          (fn [[k v]]
            [k (into #{} v)])
-         (dissoc features-used :db/id)))))))
+         (dissoc features-used :db/id)))))
+    (update-in
+     [::entity/values
+      ::infused-infusions]
+     (fn [infused-infusions]
+       (set infused-infusions)))))
 
 (defn from-strict [raw-character]
   (-> (entity/from-strict raw-character)
@@ -547,6 +552,9 @@
 
 (defn infuse-count [built-char]
   (get-prop built-char :infuse-count))
+
+(defn infused-infusions [built-char]
+  (get-prop built-char ::infused-infusions))
 
 (defn traits [built-char]
   (get-prop built-char :traits))
@@ -857,6 +865,9 @@
 
 (defn prepared-spells-by-class [built-character]
   (get built-character ::prepared-spells-by-class))
+
+(defn infused-infusions [built-character]
+  (get built-character ::infused-infusions))
 
 (defn spell-prepared? [{:keys [hide-unprepared?
                                always-prepared?

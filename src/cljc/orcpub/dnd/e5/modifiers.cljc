@@ -300,9 +300,8 @@
      (infusion-data
       infusion-key))))
 
-(defn infuse-count [bonus]
-  (mods/modifier ?infuse-count
-                 (+ (or ?infuse-count 0) bonus)))
+(defn infuse-count [value]
+  (mods/cum-sum-mod ?infuse-count value "infuse" (mods/bonus-str value)))
 
 (defn trait-cfg [{:keys [name description class-key level summary page conditions source] :as cfg}]
   (let [class-key? (not (nil? class-key))]
