@@ -3874,7 +3874,7 @@
                     :levels {6 {:modifiers [(mod5e/reaction
                                              {:name "Projected Ward"
                                               :page 115
-                                              :range units5e/ft-30
+                                              ; :range units5e/ft-30
                                               :summary "when a creature that you can see within 30 feet of you takes damage, you can use your reaction to cause your Arcane Ward to absorb that damage. If this damage reduces the ward to 0 hit points, the warded creature takes any remaining damage"})]}
                              10 {:modifiers [(mod5e/dependent-trait
                                               {:name "Improved Abjuration"
@@ -3887,147 +3887,217 @@
                               :level 14
                               :page 116
                               :summary "you have advantage on saving throws against spells. Furthermore, you have resistance against the damage of spells."}]}
-                 #_{:name "School of Conjuration"
-                    :levels {6 {:modifiers [(mod5e/action
-                                             {:name "Benign Transposition"
-                                              :page 116
-                                              :range units5e/ft-30
-                                              :summary "Teleport to unoccupied space or swap spaces with willing Small or Medium creature"})]}}
-                    :traits [(spell-school-savant "conjuration" 116)
-                             {:name "Minor Conjuration"
-                              :level 2
-                              :page 116
-                              :duration units5e/hours-1
-                              :summary "conjure an inanimate object 3 ft per side or less and 15 lbs or less, it radiates dim light to 5 ft."}
-                             {:name "Focused Conjuration"
-                              :level 10
-                              :page 116
-                              :summary "concentration on conjuration spells cannot be broken by taking damage"}
-                             {:name "Durable Summons"
-                              :level 14
-                              :summary "creatures you conjure have 30 temp hit points"}]}
-                 #_{:name "School of Divination"
-                    :levels {10 {:modifiers [(mod5e/action
-                                              {:name "The Third Eye"
-                                               :level 10
-                                               :page 117
-                                               :frequency units5e/long-rests-1
-                                               :summary "gain one: 1) darkvision 60 ft., 2) see etherial plane 60 ft. 3) read any language 4) see invisible within 10 ft."})]}}
-                    :traits [(spell-school-savant "divination" 116)
-                             {:name "Portent"
-                              :level 2
-                              :frequency units5e/long-rests-1
-                              :summary "roll 2 d20s after long rest, can replace rolls you or a creature you can see make with these"}
-                             {:name "Expert Divination"
-                              :level 6
-                              :page 117
-                              :summary "when you cast divination spell 2nd level or higher, regain a spell slot of lower level (max 5th level)"}
-                             {:name "Greater Portent"
-                              :level 14
-                              :page 117
-                              :summary "roll 3 d20s for your Portent feature"}]}
-                 #_{:name "School of Enchantment"
-                    :levels {2 {:modifiers [(mod5e/action
-                                             {:name "Hypnotic Gaze"
-                                              :level 2
-                                              :page 117
-                                              :range units5e/ft-5
-                                              :summary (str "charm a creature until end of your next turn unless it succeeds on a DC " (?spell-save-dc ::char5e/int) " WIS save, it is incapacitated and dazed")})]}
-                             6 {:modifiers [(mod5e/reaction
-                                             {:name "Instinctive Charm"
-                                              :page 117
-                                              :range units5e/ft-30
-                                              :frequency units5e/long-rests-1
-                                              :summary (str "redirect a creature's attack against you to the creature closest to it, not including you, if it fails a DC " (?spell-save-dc ::char5e/int) " WIS save")})]}
-                             14 {:modifiers [(mod5e/dependent-trait
-                                              {:name "Alter Memories"
-                                               :level 14
-                                               :page 117
-                                               :summary (str "make a creature unaware of your charm on it, can also use your action to erase up to " (inc (?ability-bonuses ::char5e/cha)) " hours from it's memory if it fails a DC " (?spell-save-dc ::char5e/int) " INT check")})]}}
-                    :traits [(spell-school-savant "enchantment" 117)
-                             {:name "Split Enchantment"
-                              :level 10
-                              :page 117
-                              :summary "target 2 creatures with an enchantment spell that normally targets 1"}]}
-                 #_{:name "School of Illusion"
-                    :modifiers [(mod5e/spells-known-cfg 0
-                                                        {:key :minor-illusion
-                                                         :ability ::char5e/int
-                                                         :class "Wizard"
-                                                         :illusionist-cantrip? true}
-                                                        0
-                                                        [(not (spell-in-spells-known? ?spells-known 0 :minor-illusion))])]
-                    :selections [(t/selection-cfg
-                                  {:name "Illusionist Cantrip"
-                                   :order 0
-                                   :tags (opt5e/spell-tags :wizard 0)
-                                   :options (opt5e/spell-options (get-in sl/spell-lists [:wizard 0]) ::char5e/int "Wizard")
-                                   :prereq-fn (fn [c]
-                                                (let [spells-known @(subscribe [::char5e/spells-known nil c])
-                                                      passes? (or (nil? spells-known)
-                                                                  (some
-                                                                   (fn [s]
-                                                                     (and (= :minor-illusion (:key s))
-                                                                          (not (:illusionist-cantrip? s))))
-                                                                   (vals (spells-known 0))))]
-                                                  passes?))})]
-                    :levels {6 {:modifiers [(mod5e/action
-                                             {:name "Malleable Illusions"
-                                              :page 118
-                                              :summary "change the nature of an illusion you cast"})]}
-                             10 {:modifiers [(mod5e/reaction
-                                              {:name "Illusory Self"
-                                               :page 118
-                                               :frequency units5e/rests-1
-                                               :summary "attacker hits an illusion of you instead of you"})]}
-                             14 {:modifiers [(mod5e/bonus-action
-                                              {:name "Illusory Reality"
-                                               :page 119
-                                               :summary "make an illusory object real for 1 minute"})]}}
-                    :traits [(spell-school-savant "illusion" 118)
-                             {:name "Improved Minor Illusion"
-                              :page 118
-                              :summary "can create a sound and an image with the same casting of minor illusion"}]}
-                 #_{:name "School of Necromancy"
-                    :levels {10 {:modifiers [(mod5e/damage-resistance :necrotic)]}
-                             14 {:modifiers [(mod5e/action
-                                              {:name "Command Undead"
-                                               :page 119
-                                               :summary (str "bring undead under your control unless it succeeds on a DC " (?spell-save-dc ::char5e/int) " CHA save")})]}}
-                    :traits [(spell-school-savant "necromancy" 118)
-                             {:name "Grim Harvest"
-                              :level 2
-                              :page 118
-                              :frequency units5e/turns-1
-                              :summary "when you kill a creature with a spell, you regain HPs equal to 2X the spell level or 3X the spell level for necromancy spells"}
-                             {:name "Undead Thralls"
-                              :page 119
-                              :level 6
-                              :summary (str "target one additional corpse or pile of bones for animate dead; whenever you create an undead it's HP max is increased by your wizard level amount and it adds your prof bonus to weapon damage rolls")}
-                             {:name "Inured to Undeath"
-                              :level 10
-                              :summary "resistant to necrotic damage; your HP max cannot be reduced"}]}
-                 #_{:name "School of Transmutation"
-                    :modifiers [(mod5e/spells-known 4 :polymorph ::char5e/int "Wizard")]
-                    :levels {14 {:modifiers [(mod5e/action
-                                              {:name "Master Transmuter"
-                                               :page 119
-                                               :summary "expend your transmuter's stone for 1 effect: 1) convert a non-magical object into another non-magical object, 2) remove curses, poisons, diseases and damage from a creature 3) raise dead 4) reduce a willing creature's apparent age by 3d10"})]}}
-                    :traits [(spell-school-savant "transmutation" 119)
-                             {:name "Minor Alchemy"
-                              :level 2
-                              :page 119
-                              :duration units5e/hours-1
-                              :summary "transform an object of one substance to another substance"}
-                             {:name "Transmuter's Stone"
-                              :level 6
-                              :page 119
-                              :summary "create a stone with 1 benefit: 1) darkvision 60 ft. 2) +10 speed 3) prof in CON saves 4) resistance to acid, fire, cold, lightning, or thunder damage"}
-                             {:name "Shapechanger"
-                              :level 10
-                              :page 119
-                              :frequency units5e/long-rests-1
-                              :summary "cast polymorph without a spell slot to turn into a CR 1 or less beast"}]}]}))
+                 {:name "Chronurgy Magic"
+                  :modifiers [(mod5e/reaction
+                               {:name "Chronal Shift"
+                                :frequency (units5e/long-rests 2)
+                                :summary "you can magically exert limited control over the flow of time around a creature. As a reaction, after you or a creature you can see within 30 feet of you makes an attack roll, an ability check, or a saving throw, you can force the creature to reroll. You make this decision after you see whether the roll succeeds or fails. The target must use the result of the second roll"})]
+                  :levels {6 {:modifiers [(mod5e/action
+                                           {:name "Momentary Stasis"
+                                            :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/int)))
+                                            :summary (str "as an action, you can magically force a Large or smaller creature you can see within 60 feet of you to make a Constitution saving throw against your spell save DC. Unless the saving throw is a success, the creature is encased in a field of magical energy until the end of your next turn or until the creature takes any damage. While encased in this way, the creature is incapacitated and has a speed of 0."
+                                                          "\n\nYou can use this feature a number of times equal to your Intelligence modifier (a minimum of once). You regain all expended uses when you finish a long rest")})]}
+                           14 {:modifiers [(mod5e/reaction
+                                            {:name "Convergent Future"
+                                             :summary (str "you can peer through possible futures and magically pull one of them into events around you, ensuring a particular outcome. When you or a creature you can see within 60 feet of you makes an attack roll, an ability check, or a saving throw, you can use your reaction to ignore the die roll and decide whether the number rolled is the minimum needed to succeed or one less than that number (your choice)."
+                                                           "\n\nWhen you use this feature, you gain one level of exhaustion. Only by finishing a long rest can you remove a level of exhaustion gained in this way")})]}}
+                  :traits [{:name "Temporal Awareness"
+                            :level 2
+                            :summary "you can add your Intelligence modifiers to your initiative rolls"}
+                           {:name "Arcane Abeyance"
+                            :level 10
+                            :frequency units5e/rests-1
+                            :summary (str "when you cast a spell using a spell slot of 4th level or lower, you can condense the spell's magic into a mote. The spell is frozen in time at the moment of casting and held within a gray bead for 1 hour. This bead is a Tiny object with AC 15 and 1 hit point, and it is immune to poison and psychic damage. When the duration ends, or if the bead is destroyed, it vanishes in aflash of light, and the spell is lost."
+                                          "\n\nA creature holding the bead can use its action to release the spell within, whereupon the bead disappears. The spell uses your spell attack bonus and save DC, and the spell treats the creature who released it as the caster for all other purposes.")}]}
+                 {:name "School of Conjuration"
+                  :levels {6 {:modifiers [(mod5e/action
+                                           {:name "Benign Transposition"
+                                            :page 116
+                                            ; :range units5e/ft-30
+                                            :summary (str "you can use your action to teleport up to 30 feet to an unoccupied space that you can see. Alternatively, you can choose a space within range that is occupied by a Small or Medium creature. If that creature is willing, you both teleport, swapping places."
+                                                          "\n\nOnce you use this feature, you can't use it again until you finish a long rest or you cast a conjuration spell of 1st level or higher.")})]}}
+                  :traits [(spell-school-savant "conjuration" 116)
+                           {:name "Minor Conjuration"
+                            :level 2
+                            :page 116
+                            ; :duration units5e/hours-1
+                            :summary (str "you can use your action to conjure up an inanimate object in your hand or on the ground in an unoccupied space that you can see within 10 feet of you. This object can be no larger than 3 feet on a side and weigh no more than 10 pounds, and its form must be that of a nonmagical object that you have seen. The object is visibly magical, radiating dim light out to 5 feet."
+                                          "\n\nThe object disappears after 1 hour, when you use this feature again, or if it takes or deals any damage.")}
+                           {:name "Focused Conjuration"
+                            :level 10
+                            :page 116
+                            :summary "while you are concentrating on a conjuration spell, your concentration can't be broken as a result of taking damage"}
+                           {:name "Durable Summons"
+                            :level 14
+                            :summary "any creature that you summon or create with a conjuration spell has 30 temporary hit points"}]}
+                 {:name "School of Divination"
+                  :levels {10 {:modifiers [(mod5e/action
+                                            {:name "The Third Eye"
+                                             :level 10
+                                             :page 117
+                                             ; :frequency units5e/long-rests-1
+                                             :summary (str "you can use your action to increase your powers of perception. When you do so, choose one of the following benefits, which lasts until you are incapacitated or you take a short or long rest. You can't use the feature again until you finish a short or long rest."
+                                                           "\n\u2022 Darkvision. You gain darkvision out to a range of 60 feet."
+                                                           "\n\u2022 Ethereal Sight. You can see into the Ethereal Plane within 60 feet of you."
+                                                           "\n\u2022 Greater Comprehension. You can read any language."
+                                                           "\n\u2022 See Invisibility. You can see invisible creatures and objects within 10 feet of you that are within line of sight.")})]}}
+                  :traits [(spell-school-savant "divination" 116)
+                           {:name "Portent"
+                            :level 2
+                            ; :frequency units5e/long-rests-1
+                            :summary (str "glimpses of the future begin to press in on your awareness. When you finish a long rest, roll two d20s and record the numbers rolled. You can replace any attack roll, saving throw, or ability check made by you or a creature that you can see with one of these foretelling rolls. You must choose to do so before the roll, and you can replace a roll in this way only once per turn."
+                                          "\n\nEach foretelling roll can be used only once. When you finish a long rest, you lose any unused foretelling rolls.")}
+                           {:name "Expert Divination"
+                            :level 6
+                            :page 117
+                            :summary "casting divination spells comes so easily to you that it expends only a fraction of your spellcasting efforts. When you cast a divination spell of 2nd level or higher using a spell slot, you regain one expended spell slot. The slot you regain must be of a level lower than the spell you cast and can't be higher than 5th level"}
+                           {:name "Greater Portent"
+                            :level 14
+                            :page 117
+                            :summary "the visions in your dreams intensify and paint a more accurate picture in your mind of what is to come. You roll three d20s for your Portent feature, rather than two"}]}
+                 {:name "School of Enchantment"
+                  :levels {2 {:modifiers [(mod5e/action
+                                           {:name "Hypnotic Gaze"
+                                            :level 2
+                                            :page 117
+                                            ; :range units5e/ft-5
+                                            :summary (str "your soft words and enchanting gaze can magically enthrall another creature. As an action, choose one creature that you can see within 5 feet of you. If the target can see or hear you, it must succeed on a Wisdom saving throw against your wizard spell save DC or be charmed by you until the end of your next turn. The charmed creature's speed drops to 0, and the creature is incapacitated and visibly dazed."
+                                                          "\n\nOn subsequent turns, you can use your action to maintain this effect, extending its duration until the end of your next turn. However, the effect ends if you move more than 5 feet away from the creature, if the creature can neither see nor hear you, or if the creature takes damage."
+                                                          "\n\nOnce the effect ends, or if the creature succeeds on its initial saving throw against this effect, you can't use this feature on that creature again until you finish a long rest.")})]}
+                           6 {:modifiers [(mod5e/reaction
+                                           {:name "Instinctive Charm"
+                                            :page 117
+                                            ; :range units5e/ft-30
+                                            ; :frequency units5e/long-rests-1
+                                            :summary (str "when a creature you can see within 30 feet of you makes an attack roll against you, you can use your reaction to divert the attack, provided that another creature is within the attack's range. The attacker must make a Wisdom saving throw against your wizard spell save DC. On a failed save, the attacker must target the creature that is closest to it, not including you or itself. If multiple creatures are closest, the attacker chooses which one to target."
+                                                          "\n\nOn a successful save, you can't use this feature on the attacker again until you finish a long rest."
+                                                          "\n\nYou must choose to use this feature before knowing whether the attack hits or misses. Creatures that can't be charmed are immune to this effect.")})]}
+                           14 {:modifiers [(mod5e/dependent-trait
+                                            {:name "Alter Memories"
+                                             :level 14
+                                             :page 117
+                                             :summary (str "you gain the ability to make a creature unaware of your magical influence on it. When you cast an enchantment spell to charm one or more creatures, you can alter one creature's understanding so that it remains unaware of being charmed."
+                                                           "\n\nAdditionally, once before the spell expires, you can use your action to try to make the chosen creature forget some of the time it spent charmed. The creature must succeed on an Intelligence saving throw against your wizard spell save DC or lose a number of hours of its memories equal to 1 + your Charisma modifier (minimum 1). You can make the creature forget less time, and the amount of time can't exceed the duration of your enchantment spell.")})]}}
+                  :traits [(spell-school-savant "enchantment" 117)
+                           {:name "Split Enchantment"
+                            :level 10
+                            :page 117
+                            :summary "when you cast an enchantment spell of 1st level or higher that targets only one creature, you can have it target a second creature"}]}
+                 {:name "School of Illusion"
+                  :modifiers [(mod5e/spells-known-cfg 0
+                                                      {:key :minor-illusion
+                                                       :ability ::char5e/int
+                                                       :class "Wizard"
+                                                       :illusionist-cantrip? true}
+                                                      0
+                                                      [(not (spell-in-spells-known? ?spells-known 0 :minor-illusion))])]
+                  :selections [(t/selection-cfg
+                                {:name "Illusionist Cantrip"
+                                 :order 0
+                                 :tags (opt5e/spell-tags :wizard 0)
+                                 :options (opt5e/spell-options spells-map (get-in sl5e/spell-lists [:wizard 0]) ::char5e/int "Wizard")
+                                 :prereq-fn (fn [c]
+                                              (let [spells-known @(subscribe [::char5e/spells-known nil c])
+                                                    passes? (or (nil? spells-known)
+                                                                (some
+                                                                 (fn [s]
+                                                                   (and (= :minor-illusion (:key s))
+                                                                        (not (:illusionist-cantrip? s))))
+                                                                 (vals (spells-known 0))))]
+                                                passes?))})]
+                  :levels {6 {:modifiers [(mod5e/action
+                                           {:name "Malleable Illusions"
+                                            :page 118
+                                            :summary "when you cast an illusion spell that has a duration of 1 minute or longer, you can use your action to change the nature of that illusion (using the spell's normal parameters for the illusion), provided that you can see the illusion"})]}
+                           10 {:modifiers [(mod5e/reaction
+                                            {:name "Illusory Self"
+                                             :page 118
+                                             :frequency units5e/rests-1
+                                             :summary "you can create an illusory duplicate of yourself as an instant, almost instinctual reaction to danger. When a creature makes an attack roll against you, you can use your reaction to interpose the illusory duplicate between the attacker and yourself. The attack automatically misses you, then the illusion dissipates"})]}
+                           14 {:modifiers [(mod5e/bonus-action
+                                            {:name "Illusory Reality"
+                                             :page 119
+                                             :summary (str "you have learned the secret of weaving shadow magic into your illusions to give them a semi-reality. When you cast an illusion spell of 1st level or higher, you can choose one inanimate, nonmagical object that is part of the illusion and make that object real. You can do this on your turn as a bonus action while the spell is ongoing. The object remains real for 1 minute. For example, you can create an illusion of a bridge over a chasm and then make it real long enough for your allies to cross."
+                                                           "\n\nThe object can't deal damage or otherwise directly harm anyone")})]}}
+                  :traits [(spell-school-savant "illusion" 118)
+                           {:name "Improved Minor Illusion"
+                            :page 118
+                            :summary "When you cast Minor Illusion, you can create both a sound and an image with a single casting of the spell"}]}
+                 {:name "School of Necromancy"
+                  :levels {6 {:modifiers [(mod5e/spells-known 3 :animate-dead ::char5e/int "Wizard")]}
+                           10 {:modifiers [(mod5e/damage-resistance :necrotic)]}
+                           14 {:modifiers [(mod5e/action
+                                            {:name "Command Undead"
+                                             :page 119
+                                             :summary (str "you can use magic to bring undead under your control, even those created by other wizards. As an action, you can choose one undead that you can see within 60 feet of you. That creature must make a Charisma saving throw against your wizard spell save DC. If it succeeds, you can't use this feature on it again. If it fails, it becomes friendly to you and obeys your commands until you use this feature again."
+                                                           "\n\nIntelligent undead are harder to control in this way. If the target has an Intelligence of 8 or higher, it has advantage on the saving throw. If it fails the saving throw and has an Intelligence of 12 or higher, it can repeat the saving throw at the end of every hour until it succeeds and breaks free")})]}}
+                  :traits [(spell-school-savant "necromancy" 118)
+                           {:name "Grim Harvest"
+                            :level 2
+                            :page 118
+                            ; :frequency units5e/turns-1
+                            :summary "you gain the ability to reap life energy from creatures you kill with your spells. Once per turn when you kill one or more creatures with a spell of 1st level or higher, you regain hit points equal to twice the spell's level, or three times its level if the spell belongs to the School of Necromancy. You don't gain this benefit for killing constructs or undead"}
+                           {:name "Undead Thralls"
+                            :page 119
+                            :level 6
+                            :summary (str "you add the Animate Dead spell to your spellbook if it is not there already. When you cast Animate Dead, you can target one additional corpse or pile of bones, creating another zombie or skeleton, as appropriate."
+                                          "\n\nWhenever you create an undead using a necromancy spell, it has additional benefits:"
+                                          "\n\u2022 The creature's hit point maximum is increased by an amount equal to your wizard level."
+                                          "\n\u2022 The creature adds your proficiency bonus to its weapon damage rolls")}
+                           {:name "Inured to Undeath"
+                            :level 10
+                            :summary "you have resistance to necrotic damage, and your hit point maximum can't be reduced. You have spent so much time dealing with undead and the forces that animate them that you have become inured to some of their worst effects"}]}
+                 {:name "School of Transmutation"
+                  :levels {10 {:modifiers [(mod5e/spells-known 4 :polymorph ::char5e/int "Wizard")]}
+                           14 {:modifiers [(mod5e/action
+                                            {:name "Master Transmuter"
+                                             :page 119
+                                             :summary (str "you can use your action to consume the reserve of transmutation magic stored within your transmuter's stone in a single burst. When you do so, choose one of the following effects. Your transmuter's stone is destroyed and can't be remade until you finish a long rest."
+                                                           "\n\u2022 Major Transformation. You can transmute one nonmagical object – no larger than a 5-foot cube – into another nonmagical object of similar size and mass and of equal or lesser value. You must spend 10 minutes handling the object to transform it."
+                                                           "\n\u2022 Panacea. You remove all curses, diseases, and poisons affecting a creature that you touch with the transmuter's stone. The creature also regains all its hit points."
+                                                           "\n\u2022 Restore Life. You cast the Raise Dead spell on a creature you touch with the transmuter's stone, without expending a spell slot or needing to have the spell in your spellbook."
+                                                           "\n\u2022 Restore Youth. You touch the transmuter's stone to a willing creature, and that creature's apparent age is reduced by 3d10 years, to a minimum of 13 years. This effect doesn't extend the creature's lifespan.")})]}}
+                  :traits [(spell-school-savant "transmutation" 119)
+                           {:name "Minor Alchemy"
+                            :level 2
+                            :page 119
+                            ; :duration units5e/hours-1
+                            :summary "when you select this school, you can temporarily alter the physical properties of one nonmagical object, changing it from one substance into another. You perform a special alchemical procedure on one object composed entirely of wood, stone (but not a gemstone), iron, copper, or silver, transforming it into a different one of those materials. For each 10 minutes you spend performing the procedure, you can transform up to 1 cubic foot of material. After 1 hour, or until you lose your concentration (as if you were concentrating on a spell), the material reverts to its original substance"}
+                           {:name "Transmuter's Stone"
+                            :level 6
+                            :page 119
+                            :summary (str "you can spend 8 hours creating a transmuter's stone that stores transmutation magic. You can benefit from the stone yourself or give it to another creature. A creature gains a benefit of your choice as long as the stone is in the creature's possession. When you create the stone, choose the benefit from the following options:"
+                                          "\n\u2022 Darkvision out to a range of 60 feet"
+                                          "\n\u2022 An increase to speed of 10 feet while the creature is unencumbered"
+                                          "\n\u2022 Proficiency in Constitution saving throws"
+                                          "\n\u2022 Resistance to acid, cold, fire, lightning, or thunder damage (your choice whenever you choose this benefit)"
+                                          "\n\nEach time you cast a transmutation spell of 1st level or higher, you can change the effect of your stone if the stone is on your person."
+                                          "\n\nIf you create a new transmuter's stone, the previous one ceases to function.")}
+                           {:name "Shapechanger"
+                            :level 10
+                            :page 119
+                            ; :frequency units5e/long-rests-1
+                            :summary (str "you add the Polymorph spell to your spellbook, if it is not there already. You can cast Polymorph without expending a spell slot. When you do so, you can target only yourself and transform into a beast whose challenge rating is 1 or lower"
+                                          "\n\nOnce you cast Polymorph in this way, you can't do so again until you finish a short or long rest, though you can still cast it normally using an available spell slot")}]}
+                 {:name "War Magic"
+                  :modifiers [(mod5e/reaction
+                               {:name "Arcane Deflection"
+                                :summary (str "you have learned to weave your magic to fortify yourself against harm. When you are hit by an attack or you fail a saving throw, you can use your reaction to gain a +2 bonus to your AC against that attack or a +4 bonus to that saving throw."
+                                              "\n\nWhen you use this feature, you can't cast spells other than cantrips until the end of your next turn")})]
+                  :traits [{:name "Tactical Wit"
+                            :level 2
+                            :summary "your keen ability to assess tactical situations allows you to act quickly in battle. You can give yourself a bonus to your initiative rolls equal to your Intelligence modifier"}
+                           {:name "Power Surge"
+                            :level 6
+                            :summary (str "you can store magical energy within yourself to later empower your damaging spells."
+                                          "\n\nYou can store a maximum number of power surges equal to your Intelligence modifier (minimum of one). Whenever you finish a long rest, your number of power surges resets to one. Whenever you successfully end a spell with Dispel Magic or Counterspell, you gain one power surge, as you steal magic from the spell you foiled. If you end a short rest with no power surges, you gain one power surge."
+                                          "\n\nOnce per turn when you deal damage to a creature or object with a wizard spell, you can spend one power surge to deal extra force damage to that target. The extra damage equals half your wizard level")}
+                           {:name "Durable Magic"
+                            :level 10
+                            :summary "the magic you channel helps ward off harm. While you maintain concentration on a spell, you have a +2 bonus to AC and all saving throws"}
+                           {:name "Deflecting Shroud"
+                            :level 14
+                            :summary "your Arcane Deflection becomes infused with deadly magic. When you use your Arcane Deflection feature, you can cause magical energy to arc from you. Up to three creatures of your choice within 60 feet of you each take force damage equal to half your wizard level"}]}]}))
 
 (def melee-weapons-xform
   (comp
