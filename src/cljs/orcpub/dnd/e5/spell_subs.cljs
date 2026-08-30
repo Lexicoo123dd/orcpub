@@ -1145,7 +1145,7 @@ You can call upon the hospitality of your people, and those allied with your tri
   {:name "Powerful Build"
    :page page
    :source :vgm
-   :summary "Count as one size larger for purposes of determining weight you can carry, push, drag, or lift."})
+   :summary "You count as one size larger when determining your carrying capacity and the weight you can push, drag, or lift."})
 
 (def elf-weapon-training-mods
   (opt5e/weapon-prof-modifiers [:longsword :shortsword :shortbow :longbow]))
@@ -1535,6 +1535,8 @@ You can call upon the hospitality of your people, and those allied with your tri
                              :level 3
                              :page 7
                              :source :mpmm
+                             :frequency units5e/long-rests-1
+                             :duration units5e/minutes-1
                              :summary (str "Your eyes briefly become pools of darkness, and ghostly, flightless wings sprout from your back temporarily. Creatures other than your allies within 10 feet of you that can see you must succeed on a Charisma saving throw (DC 8 + your proficiency bonus + your Charisma modifier ["
                                            (?spell-save-dc ::char5e/cha) "]) or become frightened of you until the end of your next turn. Until the transformation ends, once on each of your turns, you can deal extra necrotic damage to one target when you deal damage to it with an attack or a spell. The extra damage equals your proficiency bonus")})]}
               {:name "Radiant Consumption"
@@ -1543,6 +1545,8 @@ You can call upon the hospitality of your people, and those allied with your tri
                              :level 3
                              :page 7
                              :source :mpmm
+                             :frequency units5e/long-rests-1
+                             :duration units5e/minutes-1
                              :summary (str "Searing light temporarily radiates from your eyes and mouth. For the duration, you shed bright light in a 10-foot radius and dim light for an additional 10 feet, and at the end of each of your turns, each creature within 10 feet of you takes radiant damage equal to your proficiency bonus. Until the transformation ends, once on each of your turns, you can deal extra radiant damage to one target when you deal damage to it with an attack or a spell. The extra damage equals your proficiency bonus")})]}
               {:name "Radiant Soul"
                :modifiers [(mod5e/bonus-action
@@ -1550,7 +1554,9 @@ You can call upon the hospitality of your people, and those allied with your tri
                              :level 3
                              :page 7
                              :source :mpmm
-                             :summary (str "For 1 minute, sprout wings (flying speed equal to walking speed) and once per turn, deal an additional " ?prof-bonus " radiant damage to one target you deal damage to with a spell or attack.")})]}]
+                             :frequency units5e/long-rests-1
+                             :duration units5e/minutes-1
+                             :summary "Two luminous, spectral wings sprout from your back temporarily. Until the transformation ends, you have a flying speed equal to your walking speed, and once on each of your turns, you can deal extra radiant damage to one target when you deal damage to it with an attack or a spell. The extra damage equals your proficiency bonus."})]}]
    :modifiers [(mod5e/action
                 {:name "Healing Hands"
                  :page 7
@@ -1758,6 +1764,103 @@ You can call upon the hospitality of your people, and those allied with your tri
    :traits [(powerful-build 21)
             {:name "Mountain Born"
              :summary "You have resistance to cold damage. You also naturally acclimate to high altitudes, even if you've never been to one. This includes elevations above 20,000 feet"}]})
+
+(defn goliath-aoa-option-cfg [language-map]
+  {:name "Goliath (WoPV)"
+   :key :goliath-aoa
+   ;; :abilities {::char5e/str 2 ::char5e/con 1}
+   :custom-ability-scores true
+   :size :medium
+   :speed 30
+   :languages ["Common" "Giant"]
+   :profs {:skill {:athletics true}}
+   :modifiers [(mod5e/reaction
+                {:name "Great Endurance"
+                 :frequency (units5e/long-rests ?prof-bonus)
+                 :summary (str "You can supernaturally draw on unyielding stone to shrug off harm. When you take damage, you can use your reaction to roll a d12. Add your Constitution modifier to the number rolled and reduce the damage by that total")})]
+   :traits [(powerful-build 21)]
+   :selections [(t/selection-cfg
+                 {:name "Jotun Heritage"
+                  :tags #{:race}
+                  :order 1
+                  :options [(t/option-cfg
+                             {:name "Cyclops/Ettin/Ogre/Hill Giant"
+                              :modifiers [(mod5e/saving-throw-advantage [:poisoned])
+                                          (mod5e/damage-resistance :poison)
+                                          (mod5e/trait-cfg
+                                           {:name "Jotun Heritage: Cyclops/Ettin/Ogre/Hill Giant"
+                                            :summary "You have advantage on saving throws against poison, and you have resistance against poison damage"})]})
+                            (t/option-cfg
+                             {:name "Stone Giant"
+                              :selections [(opt5e/tool-selection [:smiths-tools :brewers-supplies :masons-tools] 1)]})
+                            (t/option-cfg
+                             {:name "Fire Giant"
+                              :selections [(t/selection-cfg
+                                            {:name "Fire Giant Benefit"
+                                             :tags #{:race}
+                                             :order 2
+                                             :options [(t/option-cfg
+                                                        {:name "Resistance"
+                                                         :modifiers [(mod5e/damage-resistance :fire)]})
+                                                       (t/option-cfg
+                                                        {:name "Spells"
+                                                         :modifiers [(mod5e/spells-known 0 :produce-flame ::char5e/con "Fire Giant Goliath")
+                                                                     (mod5e/trait-cfg
+                                                                      {:name "Jotun Heritage: Fire Giant"
+                                                                       :frequency units5e/rests-1
+                                                                       :summary "you learn the produce flame cantrip. You can also cast Burning Hands at first level once, recharging on a short or long rest. Constitution is your spellcasting ability for these spells"})]})]})]})
+                            (t/option-cfg
+                             {:name "Ice Giant"
+                              :selections [(t/selection-cfg
+                                            {:name "Ice Giant Benefit"
+                                             :tags #{:race}
+                                             :order 2
+                                             :options [(t/option-cfg
+                                                        {:name "Resistance"
+                                                         :modifiers [(mod5e/damage-resistance :cold)]})
+                                                       (t/option-cfg
+                                                        {:name "Spells"
+                                                         :modifiers [(mod5e/spells-known 0 :frostbite ::char5e/con "Ice Giant Goliath")
+                                                                     (mod5e/trait-cfg
+                                                                      {:name "Jotun Heritage: Ice Giant"
+                                                                       :frequency units5e/rests-1
+                                                                       :summary "you learn the frostbite cantrip. You can also cast Armor of Agathys at first level once, recharging on a short or long rest. Constitution is your spellcasting ability for these spells"})]})]})]})
+                            (t/option-cfg
+                             {:name "Cloud Giant"
+                              :selections [(t/selection-cfg
+                                            {:name "Cloud Giant Benefit"
+                                             :tags #{:race}
+                                             :order 2
+                                             :options [(t/option-cfg
+                                                        {:name "Resistance"
+                                                         :modifiers [(mod5e/damage-resistance :thunder)]})
+                                                       (t/option-cfg
+                                                        {:name "Grapple and Restrain Advantage"
+                                                         :modifiers [(mod5e/saving-throw-advantage [:grappled :restrained])
+                                                                     (mod5e/trait-cfg
+                                                                      {:name "Jotun Heritage: Cloud Giant"
+                                                                       :summary "You have advantage on rolls and saving throws against being grappled or restrained"})]})]})]})
+                            (t/option-cfg
+                             {:name "Storm Giant"
+                              :selections [(t/selection-cfg
+                                            {:name "Storm Giant Benefit"
+                                             :tags #{:race}
+                                             :order 2
+                                             :options [(t/option-cfg
+                                                        {:name "Resistance"
+                                                         :modifiers [(mod5e/damage-resistance :lightning)]})
+                                                       (t/option-cfg
+                                                        {:name "Blinded Immunity"
+                                                         :modifiers [(mod5e/condition-immunity :blinded)
+                                                                     (mod5e/trait-cfg
+                                                                      {:name "Jotun Heritage: Storm Giant"
+                                                                       :summary "You are immune to being blinded"})]})]})]})
+                            (t/option-cfg
+                             {:name "Sea Giant"
+                              :modifiers [(mod5e/swimming-speed-override 30)
+                                          (mod5e/trait-cfg
+                                           {:name "Jotun Heritage: Sea Giant"
+                                            :summary "You can breath underwater and gain a swim speed of 30 ft"})]})]})]})
 
 (defn halfling-option-cfg [spell-lists spells-map]
   {:name "Halfling"
@@ -2780,6 +2883,7 @@ You can call upon the hospitality of your people, and those allied with your tri
         genasi-option-cfg
         (goblin-aoa-option-cfg spell-lists spells-map)
         (goliath-option-cfg language-map)
+        (goliath-aoa-option-cfg language-map)
         (halfling-option-cfg spell-lists spells-map)
         harpy-option-cfg
         hobgoblin-option-cfg

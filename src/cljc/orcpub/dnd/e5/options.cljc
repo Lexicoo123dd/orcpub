@@ -3300,7 +3300,7 @@
   (t/selection-cfg
     {:name "Additional Options"
     :tags #{:race}
-    :order 10
+    :order 9
     :min 0
     :max 1
     :options [(t/option-cfg
