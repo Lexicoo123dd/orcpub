@@ -1394,6 +1394,15 @@ A creature caught in the wall can move by swimming. Because of the force of the 
     :attunement? true
     :item "A helmet"
     :description "While wearing this helmet, a creature has advantage on initiative rolls. In addition, the wearer can’t be surprised, provided it isn’t incapacitated."}
+   {:name "Homunculus Servant"
+    :level 2
+    :item "A gem or crystal worth at least 100 gp"
+    :description (str "You learn intricate methods for magically creating a special homunculus that serves you. The item you infuse serves as the creature's heart, around which the creature's body instantly forms."
+                      "\n\nYou determine the homunculus's appearance. Some artificers prefer mechanical-looking birds, whereas some like winged vials or miniature, animate cauldrons."
+                      "\n\nThe homunculus is friendly to you and your companions, and it obeys your commands. See this creature's game statistics in the Homunculus Servant stat block, which uses your proficiency bonus (PB) in several places."
+                      "\n\nIn combat, the homunculus shares your initiative count, but it takes its turn immediately after yours. It can move and use its reaction on its own, but the only action it takes on its turn is the Dodge action, unless you take a bonus action on your turn to command it to take another action. That action can be one in its stat block or some other action. If you are incapacitated, the homunculus can take any action of its choice, not just Dodge."
+                      "\n\nThe homunculus regains 2d6 hit points if the mending spell is cast on it. If you or the homunculus dies, it vanishes, leaving its heart in its space."
+                      "\nhttps://2014.5e.tools/bestiary.html#homunculus%20servant_tce")}
    {:name "Mind Sharpener"
     :level 2
     :attunement? false

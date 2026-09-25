@@ -64,11 +64,13 @@
     :profs {:armor {:light true :medium true :shields true}
             :weapon {:simple true}
             :save {::char5e/con true ::char5e/int true}
-            :skill-options {:choose 2 :options {:arcana true :history true :investigation true :medicine true :nature true :perception true :sleight-of-hand true}}}
+            :skill-options {:choose 2 :options {:arcana true :history true :investigation true :medicine true :nature true :perception true :sleight-of-hand true}}
+            :tool {:thieves-tools true :tinkers-tools true}
+            :tool-options {:artisans-tool 1}}
     :multiclass-prereqs [(opt5e/ability-prereq ::char5e/int 13)]
     :selections[(opt5e/simple-weapon-selection-numbered 1 :artificer weapon-map)
                 (opt5e/simple-weapon-selection-numbered 2 :artificer weapon-map)]
-    :weapons {:crossbow-light 1 :bolt 20}
+    :weapons {:crossbow-light 1 :crossbow-bolt 20}
     :armor-choices [{:name "Armor"
                      :options {:studded 1
                                :scale-mail 1}}]
@@ -128,9 +130,54 @@
              ]
     :subclass-level 3
     :subclass-title "Artificer Specialist"
-    :subclasses [{:name "Armorer"
-                  :profs {:armor {:heavy true}
-                          :tool-options {:smiths-tools true}}
+    :subclasses [{:name "Alchemist"
+                  :selections [(opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]
+                  :modifiers [(opt5e/artificer-spell 1 :healing-word 3)
+                              (opt5e/artificer-spell 1 :ray-of-sickness 3)
+                              (opt5e/artificer-spell 2 :flaming-sphere 5)
+                              (opt5e/artificer-spell 2 :melfs-acid-arrow 5)
+                              (opt5e/artificer-spell 3 :gaseous-form 9)
+                              (opt5e/artificer-spell 3 :mass-healing-word 9)
+                              (opt5e/artificer-spell 4 :blight 13)
+                              (opt5e/artificer-spell 4 :death-ward 13)
+                              (opt5e/artificer-spell 5 :cloudkill 17)
+                              (opt5e/artificer-spell 5 :raise-dead 17)]
+                  :levels {9 {:modifiers [(mod5e/dependent-trait
+                                           {:name "Restorative Reagents"
+                                            :frequency (units5e/long-rests (max 1 (?ability-bonuses ::char5e/int)))
+                                            :summary (str "you can incorporate restorative reagents into some of your works:"
+                                                          "\n\u2022 Whenever a creature drinks an experimental elixir you created, the creature gains temporary hit points equal to 2d6 + your Intelligence modifier (minimum of 1 temporary hit point)."
+                                                          "\n\u2022 You can cast Lesser Restoration without expending a spell slot and without preparing the spell, provided you use alchemist's supplies as the spellcasting focus. You can do so a number of times equal to your Intelligence modifier (minimum of once), and you regain all expended uses when you finish a long rest")
+                                            })]}
+                           15 {:modifiers [(mod5e/damage-resistance :acid)
+                                           (mod5e/damage-resistance :poison)
+                                           (mod5e/condition-immunity :poisoned)
+                                           (mod5e/spells-known 5 :greater-restoration nil "Alchemist Artificer")
+                                           (mod5e/spells-known 6 :heal nil "Alchemist Artificer")
+                                           (mod5e/trait-cfg
+                                            {:name "Chemical Mastery"
+                                             :summary (str "you have been exposed to so many chemicals that they pose little risk to you, and you can use them to quickly end certain ailments:"
+                                                           "\n\u2022 You gain resistance to acid damage and poison damage, and you are now immune to the poisoned condition."
+                                                           "\n\u2022 You can cast Greater Restoration and Heal without expending a spell slot, without preparing the spell, and without providing the material component, provided you use alchemist’s supplies as the spellcasting focus. Once you cast either spell with this feature, you can't cast that spell with it again until you finish a long rest")})]}}
+                  :traits [{:name "Experimental Drinker"
+                            :level 3
+                            :summary (str "whenever you finish a long rest, you can magically produce an experimental elixir in an empty flask you touch. Roll on the Experimental Elixir table for the elixir's effect (d6), which is triggered when someone drinks the elixir. As an action, a creature can drink the elixir or administer it to an incapacitated creature."
+                                          "\n\nYou can create additional experimental elixirs by expending a spell slot of 1st level or higher for each one. When you do so, you use your action to create the elixir in an empty flask you touch, and you choose the elixir's effect from the Experimental Elixir table."
+                                          "\n\nCreating an experimental elixir requires you to have alchemist supplies on your person, and any elixir you create with this feature lasts until it is drunk or until the end of your next long rest."
+                                          "\n\nWhen you reach certain levels in this class, you can make more elixirs at the end of a long rest: two at 6th level and three at 15th level. Roll for each elixir's effect separately. Each elixir requires its own flask."
+                                          "\n\n1. Healing. The drinker regains a number of hit points equal to 2d4 + your Intelligence Modifier"
+                                          "\n2. Swiftness. The drinker's walking speed increases by 10 feet for 1 hour."
+                                          "\n3. Resilience. The drinker gains a +1 bonus to AC for 10 minutes."
+                                          "\n4. Boldness. The drinker can roll a d4 and add the number rolled to every attack roll and saving throw they make for the next minute."
+                                          "\n5. Flight. The drinker gains a flying speed of 10 feet for 10 minutes."
+                                          "\n6. Transformation. The drinker's body is transformed as if by the Alter Self spell. The drinker determines the transformation caused by the spell, the effects of which last for 10 minutes.")}
+                           {:name "Alchemical Savant"
+                            :level 5
+                            :summary "you've developed masterful command of magical chemicals, enhancing the healing and damage you create through them. Whenever you cast a spell using your alchemist's supplies as the spellcasting focus, you gain a bonus to one roll of the spell. That roll must restore hit points or be a damage roll that deals acid, fire, necrotic, or poison damage, and the bonus equals your Intelligence modifier (minimum of +1)."}]
+                  }
+                 {:name "Armorer"
+                  :profs {:armor {:heavy true}}
+                  :selections [(opt5e/tool-selection (map :key equipment5e/artisans-tools) 1)]
                   :modifiers [(opt5e/artificer-spell 1 :magic-missile 3)
                               (opt5e/artificer-spell 1 :thunderwave 3)
                               (opt5e/artificer-spell 2 :mirror-image 5)
