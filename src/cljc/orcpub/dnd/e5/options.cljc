@@ -1359,6 +1359,52 @@
                               :summary "Enter a prophetic state for 1 minute or until you're incapacitated. Until the state ends, when you or another creature you can see within 60 feet of you makes an attack roll, a saving throw, or an ability check, you can use your reaction to cause the roll to have advantage or disadvantage"})]})
               ]}))
 
+(def strike-of-the-giants-summary
+  "You have absorbed primeval magic that gives you an echo of the might of giants. Once per turn, when you hit a target with a melee weapon attack or a ranged weapon attack using a thrown weapon, you can imbue the attack with an additional effect depending on the benefit you chose:\n\n")
+
+(defn strike-of-the-giants-selection []
+  (t/selection-cfg
+   {:name "Strike of the Giants"
+    :tags #{:feats}
+    :options [(t/option-cfg
+               {:name "Cloud Strike"
+                :modifiers [(modifiers/trait-cfg
+                             {:name "Strike of the Giants: Cloud Strike"
+                              :summary (str strike-of-the-giants-summary
+                                            "Cloud Strike. The target takes an extra 1d4 thunder damage. If the target is a creature, it must succeed on a Wisdom saving throw, or you become invisible to it until the start of your next turn or until immediately after you make an attack roll or cast a spell.")})]})
+              (t/option-cfg
+               {:name "Fire Strike"
+                :modifiers [(modifiers/trait-cfg
+                             {:name "Strike of the Giants: Fire Strike"
+                              :summary (str strike-of-the-giants-summary
+                                            "Fire Strike. The target takes an extra 1d10 fire damage.")})]})
+              (t/option-cfg
+               {:name "Frost Strike"
+                :modifiers [(modifiers/trait-cfg
+                             {:name "Strike of the Giants: Frost Strike"
+                              :summary (str strike-of-the-giants-summary
+                                            "Frost Strike. The target takes an extra 1d6 cold damage. If the target is a creature, it must succeed on a Constitution saving throw, or its speed is reduced to 0 until the start of your next turn.")})]})
+              (t/option-cfg
+               {:name "Hill Strike"
+                :modifiers [(modifiers/trait-cfg
+                             {:name "Strike of the Giants: Hill Strike"
+                              :summary (str strike-of-the-giants-summary
+                                            "Hill Strike. The target takes an extra 1d6 damage of the weapon's type. If the target is a creature, it must succeed on a Strength saving throw or have the prone condition.")})]})
+              (t/option-cfg
+               {:name "Stone Strike"
+                :modifiers [(modifiers/trait-cfg
+                             {:name "Strike of the Giants: Stone Strike"
+                              :summary (str strike-of-the-giants-summary
+                                            "Stone Strike. The target takes an extra 1d6 force damage. If the target is a creature, it must succeed on a Strength saving throw or be pushed 10 feet from you in a straight line.")})]})
+              (t/option-cfg
+               {:name "Storm Strike"
+                :modifiers [(modifiers/trait-cfg
+                             {:name "Strike of the Giants: Storm Strike"
+                              :summary (str strike-of-the-giants-summary
+                                            "Storm Strike. The target takes an extra 1d6 lightning damage. If the target is a creature, it must succeed on a Constitution saving throw, or it has disadvantage on attack rolls until the start of your next turn."
+                                            "\nThe saving throw DC for these effects equals 8 + your proficiency bonus + your Strength or Constitution modifier."
+                                            "\nYou can use this feat a number of times equal to your proficiency bonus, and you regain all expended uses when you finish a long rest.")})]})]}))
+
 (def can-cast-spell-prereq
   (t/option-prereq "Requires the ability to cast at least one spell."
                    (fn [c] (some (fn [[k v]] (seq v)) @(subscribe [::character/spells-known nil c])))))
@@ -2431,6 +2477,72 @@
                                 (spell-sniper-option spells-map :sorcerer "Sorcerer" ::character/cha spell-lists)
                                 (spell-sniper-option spells-map :warlock "Warlock" ::character/cha spell-lists)
                                 (spell-sniper-option spells-map :wizard "Wizard" ::character/int spell-lists)]})]})
+   (feat-option
+      {:name "Strike of the Giants"
+       :exclude-trait? true
+       :summary "once per turn, deal extra damage and an additional effect depending on the benefit chosen"
+       :selections [(strike-of-the-giants-selection)]
+       ;; Add martial weapon proficiency prereq
+       })
+   (feat-option
+      {:name "Ember of the Fire Giant"
+       :exclude-trait? true
+       :summary "increase STR, CON, or WIS by 1; gain resistance to fire damage; replace an attack with a fire aoe that blinds up to PB times"
+       :selections [(ability-increase-selection [::character/str ::character/con ::character/wis] 1 false)]
+       :modifiers [(modifiers/damage-resistance :fire)
+                   (modifiers/dependent-trait
+                    {:name "Ember of the Fire Giant: Searing Ignition"
+                     :frequency (units5e/long-rests ?prof-bonus)
+                     :summary "Once per turn when you take the Attack action on your turn, you can replace a single attack with a magical burst of flame. Each creature of your choice in a 15-foot-radius sphere centered on you must make a Dexterity saving throw (DC equals 8 + your proficiency bonus + the modifier of the ability increased by this feat). On a failed save, a creature takes fire damage equal to 1d8 + your proficiency bonus, and it has the blinded condition until the start of your next turn. On a successful save, the creature takes half as much damage only"})]})
+   (feat-option
+      {:name "Fury of the Frost Giant"
+       :exclude-trait? true
+       :summary "increase STR, CON, or WIS by 1; gain resistance to cold damage; after getting hit, retaliate with a blast of ice that deals damage and sets their speed to 0 PB times"
+       :selections [(ability-increase-selection [::character/str ::character/con ::character/wis] 1 false)]
+       :modifiers [(modifiers/damage-resistance :cold)
+                   (modifiers/reaction
+                    {:name "Fury of the Frost Giant: Frigid Retaliation"
+                     :frequency (units5e/long-rests ?prof-bonus)
+                     :summary "Immediately after a creature you can see within 30 feet of you hits you with an attack roll and deals damage, you can use your reaction to retaliate with a conjured blast of ice. The creature must make a Constitution saving throw (DC equals 8 + your proficiency bonus + the modifier of the ability increased by this feat). On a failed save, the creature takes cold damage equal to 1d8 + your proficiency bonus, and its speed is reduced to 0 until the end of its next turn"})]})
+   (feat-option
+      {:name "Guile of the Cloud Giant"
+       :exclude-trait? true
+       :summary "increase STR, CON, or CHA by 1; when hit by an attack, use reaction to gain resistance and teleport away PB times"
+       :selections [(ability-increase-selection [::character/str ::character/con ::character/cha] 1 false)]
+       :modifiers [(modifiers/reaction
+                    {:name "Guile of the Cloud Giant: Cloudy Escape"
+                     :frequency (units5e/long-rests ?prof-bonus)
+                     :summary "When a creature you can see hits you with an attack roll, you can use your reaction to give yourself resistance to that attack's damage. You then teleport to an unoccupied space that you can see within 30 feet of yourself"})]})
+   (feat-option
+      {:name "Keeness of the Stone Giant"
+       :exclude-trait? true
+       :summary "increase STR, CON, or WIS by 1; increase darkvision range by 60 ft.; as a bonus action, make a ranged attack with a magical stone the can cause the enemy to be prone PB times"
+       :selections [(ability-increase-selection [::character/str ::character/con ::character/wis] 1 false)]
+       :modifiers [(modifiers/darkvision-bonus 60)
+                   (modifiers/bonus-action
+                    {:name "Keeness of the Stone Giant: Stone Throw"
+                     :frequency (units5e/long-rests ?prof-bonus)
+                     :summary "As a bonus action, you can take a rock and make a magical attack with it. The attack is a ranged spell attack with a range of 60 feet that uses the ability score you increased with this feat as the spellcasting ability. On a hit, the rock deals 1d10 force damage, and the target must succeed on a Strength saving throw (DC equals 8 + your proficiency bonus + the spellcasting ability modifier) or have the prone condition"})]})
+   (feat-option
+      {:name "Soul of the Storm Giant"
+       :exclude-trait? true
+       :summary "increase STR, CON, or CHA by 1; as a bonus action, surround yourself with magical wind and lightning until start of next turn, giving resistance to lightning and thunder damage, disadvantage on attack rolls against you, and enemies starting their turn in it and fail STR save get speed halved"
+       :selections [(ability-increase-selection [::character/str ::character/con ::character/cha] 1 false)]
+       :modifiers [(modifiers/bonus-action
+                    {:name "Soul of the Storm Giant: Maelstrom Aura"
+                     :frequency (units5e/long-rests ?prof-bonus)
+                     :summary "As a bonus action, you surround yourself with an aura of magical wind and lightning that extends 10 feet from you in every direction but not through total cover. The aura lasts until the start of your next turn or until you are incapacitated. While the aura is active, you have resistance to lightning and thunder damage. In addition, attack rolls against you have disadvantage, and whenever another creature starts its turn within the aura, you can force the creature to make a Strength saving throw (DC equals 8 + your proficiency bonus + the modifier of the ability increased by this feat). On a failed save, the creature's speed is halved until the start of its next turn"})]})
+   (feat-option
+      {:name "Vigor of the Hill Giant"
+       :exclude-trait? true
+       :summary "increase STR, CON, or WIS by 1; use reaction to avoid getting moved or going prone; regain additional HP during short rests"
+       :selections [(ability-increase-selection [::character/str ::character/con ::character/wis] 1 false)]
+       :modifiers [(modifiers/reaction
+                    {:name "Vigor of the Hill Giant: Bulwark"
+                     :summary "When you are subjected to an effect that would move you at least 5 feet or give you the prone condition, you can use your reaction to steady yourself. You aren't moved and don't have the prone condition"})
+                   (modifiers/trait-cfg
+                    {:name "Iron Stomach"
+                     :summary "Whenever you eat food as part of a short rest and spend one or more Hit Dice to regain hit points, you regain additional hit points equal to your Constitution modifier + your proficiency bonus"})]})
    (feat-option
       {:name "Tavern Brawler"
        :icon "broken-bottle"
