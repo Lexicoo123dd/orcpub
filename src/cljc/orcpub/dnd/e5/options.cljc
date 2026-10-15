@@ -794,7 +794,52 @@
       :min num
       :max num}))
 
+(defn nuitari-spell-selection [name]
+  (spell-selection sl/spell-lists
+                   spells/spell-map
+                   {:title (str "Initiate of High Sorcery: " name " Spells Known")
+                    :spellcasting-ability nil
+                    :class-name "Initiate of High Sorcery"
+                    :num 2
+                    :prepend-level? false
+                    :spell-keys [:dissonant-whispers :false-life :hex :ray-of-sickness]
+                    :exclude-ref? true}))
 
+(defn lunitari-spell-selection [name]
+  (spell-selection sl/spell-lists
+                   spells/spell-map
+                   {:title (str "Initiate of High Sorcery: " name " Spells Known")
+                    :spellcasting-ability nil
+                    :class-name "Initiate of High Sorcery"
+                    :num 2
+                    :prepend-level? false
+                    :spell-keys [:color-spray :disguise-self :feather-fall :longstrider]
+                    :exclude-ref? true}))
+
+(defn solinari-spell-selection [name]
+  (spell-selection sl/spell-lists
+                   spells/spell-map
+                   {:title (str "Initiate of High Sorcery: " name " Spells Known")
+                    :spellcasting-ability nil
+                    :class-name "Initiate of High Sorcery"
+                    :num 2
+                    :prepend-level? false
+                    :spell-keys [:comprehend-languages :detect-evil-and-good :protection-from-evil-and-good :shield]
+                    :exclude-ref? true}))
+
+(defn initiate-of-high-sorcery-order-selection []
+  (t/selection-cfg
+   {:name "initiate of High Sorcery: Order"
+    :tags #{:spells}
+    :options [(t/option-cfg
+               {:name "Black"
+                :selections [(nuitari-spell-selection "Black Robes")]})
+              (t/option-cfg
+               {:name "Red"
+                :selections [(lunitari-spell-selection "Red Robes")]})
+              (t/option-cfg
+               {:name "White"
+                :selections [(solinari-spell-selection "White Robes")]})]}))
 
 (defn fey-touched-spell-selection [spellcasting-ability]
   (spell-selection sl/spell-lists
@@ -1946,6 +1991,27 @@
                    :summary (str "\u2022 You have resistance to cold and poison damage."
                                  "\n\u2022 You have advantage on saving throws against being poisoned.")})]
      :prereqs [(race-prereq ["Tiefling" "Tiefling (AoA)"])]})
+   (feat-option
+    {:name "Initiate of High Sorcery (WoPV)"
+     :page 75
+     :exclude-trait? true
+     :summary (str "learn one wizard cantrip; learn two 1st-level spells based on one of three orders")
+     :modifiers [()
+                 (modifiers/trait-cfg
+                  {:name "Infernal Constitution"
+                   :summary (str "\u2022 You have resistance to cold and poison damage."
+                                 "\n\u2022 You have advantage on saving throws against being poisoned.")})]
+     :selections [(spell-selection spell-lists spells-map
+                   {:class-key :wizard
+                    :level 0
+                    :exclude-ref? true
+                    :spellcasting-ability nil
+                    :class-name "Initiate of High Sorcery"
+                    :num 1})
+                  (initiate-of-high-sorcery-order-selection)
+                  ]
+     
+     })
    (feat-option
       {:name "Inspiring Leader"
        :icon "public-speaker"
